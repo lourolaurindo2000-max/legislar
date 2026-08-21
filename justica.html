@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordem do Dia</title>
+    <style>
+        :root {
+            --primary-blue: #003366;
+            --secondary-blue: #00509d;
+            --light-bg: #f4f7f9;
+            --white: #ffffff;
+            --text-dark: #333333;
+            --accent: #eef2f7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 4px solid var(--secondary-blue);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Status de Sessão */
+        .session-info {
+            background: var(--white);
+            padding: 1rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-left: 5px solid var(--secondary-blue);
+        }
+
+        .status-badge {
+            background: #28a745;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Grid de Conteúdo */
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        section {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Lista de Pautas */
+        .agenda-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--accent);
+            transition: background 0.3s;
+        }
+
+        .agenda-item:hover {
+            background: var(--accent);
+        }
+
+        /* Membros Responsivo */
+        .members-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .member-card {
+            text-align: center;
+            padding: 1rem;
+            background: var(--accent);
+            border-radius: 5px;
+        }
+
+        .member-card img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #ccc;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsividade para Smartphones */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .session-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            header h1 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Comissão de Justiça e Redação</h1>
+        <marquee><p>Plenário Jonas Plínio - Sessão Ordinária 2026</p></marquee>
+    </header>
+
+    <div class="container">
+        
+        <div class="session-info">
+            <div>
+                <strong>Sessão nº 01/2026</strong> | 17 de Fevereiro de 2026
+            </div>
+            <div class="status-badge">EM ANDAMENTO</div>
+        </div>
+
+        <div class="grid">
+            <main>
+                <section>
+                    <h2>Ordem do Dia</h2>
+                    <div class="agenda-item">
+                        <strong>PL 1234/2025</strong>
+                        <p>Dispõe sobre a regulamentação de inteligência artificial em órgãos públicos.</p>
+                        <small>Relator: Ver. Sylas Souza</small>
+                    </div>
+                    <div class="agenda-item">
+                        <strong>PEC 56/2025</strong>
+                        <p>Altera o regime de tributação simplificada para pequenas empresas.</p>
+                        <small>Relator: Ver. Maria Nilza</small>
+                    </div>
+                </section>
+            </main>
+
+            <aside>
+                <section>
+                    <h2>Presença</h2>
+                    <p><strong>Quórum:</strong> 15 / 08 presentes</p>
+                    <div class="members-list">
+                        <div class="member-card">
+                            <div style="width:40px; height:40px; background:#003366; border-radius:50%; margin:0 auto 5px;"></div>
+                            <small>Pres. Rogério</small>
+                        </div>
+                        <div class="member-card">
+                            <div style="width:40px; height:40px; background:#003366; border-radius:50%; margin:0 auto 5px;"></div>
+                            <small>Ver. Dilson Junior</small>
+                        </div>
+                        <div class="member-card">
+                            <div style="width:40px; height:40px; background:#003366; border-radius:50%; margin:0 auto 5px;"></div>
+                            <small>Ver. Wilson Freitas</small>
+                        </div>
+                    </div>
+                </section>
+
+                <section style="margin-top: 2rem;">
+                    <h2>Painel de Votação</h2>
+                    <div style="display: flex; justify-content: space-around; margin-top: 1rem;">
+                        <span style="color: green;">✔ 09</span>
+                        <span style="color: red;">✘ 03</span>
+                        <span style="color: gray;">⚪ 02</span>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plenário Digital - Galeria</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #003366;
+            --accent-blue: #00a8ff;
+            --bg-gradient: radial-gradient(circle, #001f3f 0%, #000a12 100%);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-gradient);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; /* Mantém o foco no painel */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        /* Container Principal */
+        #plenario-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 90%;
+            max-width: 1000px;
+            text-align: center;
+        }
+
+        /* Card do Parlamentar */
+        .parlamentar-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--accent-blue);
+            border-radius: 15px;
+            padding: 15px;
+            transition: all 0.5s ease;
+            position: relative;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Efeito de flutuação variado para cada card */
+        .parlamentar-card:nth-child(even) { animation-duration: 5s; }
+        .parlamentar-card:nth-child(3n) { animation-duration: 6s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .parlamentar-card.active {
+            background: rgba(0, 168, 255, 0.2);
+            box-shadow: 0 0 30px var(--accent-blue);
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .parlamentar-card img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid white;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        .parlamentar-card h3 {
+            margin: 10px 0 5px;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+        }
+
+        /* Cronômetro Centralizado */
+        #timer-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+            text-shadow: 0 0 20px rgba(0, 168, 255, 0.7);
+            margin-bottom: 30px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            #plenario-container { grid-template-columns: repeat(2, 1fr); }
+            #timer-display { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="plenario-container">
+        <div class="parlamentar-card" id="p1">
+            <img src="https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=256" alt="Parlamentar">
+            <h3>Pres. Rogério Gotado</h3>
+        </div>
+        <div class="parlamentar-card" id="p2">
+            <img src="https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=256" alt="Parlamentar">
+            <h3>Ver. Sylas Oliveira Souza</h3>
+        </div>
+        <div class="parlamentar-card" id="p3">
+            <img src="https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=256" alt="Parlamentar">
+            <h3>Ver. Lucas Cavalcante</h3>
+        </div>
+        <div class="parlamentar-card" id="p4">
+            <img src="https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=256" alt="Parlamentar">
+            <h3>Ver. Dilson Junior</h3>
+        </div>
+        <div class="parlamentar-card" id="p5">
+            <img src="https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=256" alt="Parlamentar">
+            <h3>Ver. Wilson Freitas</h3>
+        </div>
+        <div class="parlamentar-card" id="p6">
+            <img src="https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=256" alt="Parlamentar">
+            <h3>Vera. Marilene Costa Santos</h3>
+        </div>
+        <div class="parlamentar-card" id="p7">
+            <img src="https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=256" alt="Parlamentar">
+            <h3>Vera. Maria Nilza Damasceno</h3>
+        </div>
+        <div class="parlamentar-card" id="p8">
+            <img src="https://2.gravatar.com/userimage/277172047/8039d08ed8a294328b8f8b70bbbeb765?size=256" alt="Parlamentar">
+            <h3>Ver. Jackson Souza</h3>
+        </div>
+        <div class="parlamentar-card" id="p9">
+            <img src="https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=256" alt="Parlamentar">
+            <h3>José Lindomar Ferreira</h3>
+        </div>
+    </div>
+
+<script>
+$(document).ready(function() {
+    let tempoInicial = 5 * 60; // 5 minutos em segundos
+    let tempoRestante = tempoInicial;
+    let indiceParlamentar = 0;
+    const cards = $('.parlamentar-card');
+
+    function atualizarCronometro() {
+        let minutos = Math.floor(tempoRestante / 60);
+        let segundos = tempoRestante % 60;
+        
+        // Formatação 00:00
+        segundos = segundos < 10 ? '0' + segundos : segundos;
+        minutos = minutos < 10 ? '0' + minutos : minutos;
+
+        $('#timer-display').text(`${minutos}:${segundos}`);
+
+        if (tempoRestante > 0) {
+            tempoRestante--;
+        } else {
+            proximoParlamentar();
+        }
+    }
+
+    function proximoParlamentar() {
+        // Remove destaque do anterior
+        cards.removeClass('active');
+        
+        // Destaca o atual
+        $(cards[indiceParlamentar]).addClass('active');
+
+        // Reinicia o tempo
+        tempoRestante = tempoInicial;
+
+        // Incrementa o índice para o próximo (volta ao zero se chegar ao fim)
+        indiceParlamentar = (indiceParlamentar + 1) % cards.length;
+    }
+
+    // Inicia o ciclo
+    proximoParlamentar(); 
+    setInterval(atualizarCronometro, 1000);
+});
+</script>
+</body>
+</html>

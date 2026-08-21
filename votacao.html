@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votação Plenária</title>
+    <style>
+        :root {
+            --primary-blue: #1a3a5f;
+            --secondary-blue: #2c5282;
+            --bg-light: #f8fafc;
+            --text-dark: #2d3748;
+            --success: #2f855a;
+            --danger: #c53030;
+            --neutral: #718096;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-top: 8px solid var(--primary-blue);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-blue);
+            font-size: 1.5rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .meta-info {
+            font-size: 0.9rem;
+            color: var(--neutral);
+            margin-top: 8px;
+        }
+
+        /* Tabela Responsiva */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        thead {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .voto-cell {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .sim { color: var(--success); }
+        .nao { color: var(--danger); }
+        .abstencao { color: var(--neutral); }
+
+        /* Estilo para Mobile */
+        @media (max-width: 600px) {
+            thead { display: none; }
+            
+            tr {
+                display: block;
+                margin-bottom: 15px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 10px;
+                background: #fff;
+            }
+
+            td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid #f1f5f9;
+                padding: 10px 5px;
+            }
+
+            td:last-child { border-bottom: none; }
+
+            td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                color: var(--secondary-blue);
+                text-transform: uppercase;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Resumo da Votação */
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #edf2f7;
+        }
+
+        .summary-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f1f5f9;
+        }
+
+        .summary-card span {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+
+        .summary-card label {
+            font-size: 0.75rem;
+            color: var(--neutral);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Lista Nominal de Votação</h1>
+        <div class="meta-info">Sessão Plenária Ordinária nº 042/2025 | Matéria: Projeto de Lei 123/2024</div>
+    </header>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Parlamentar</th>
+                <th>Partido</th>
+                <th>Voto</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td data-label="Parlamentar">Ver. José Lindomar</td>
+                <td data-label="Partido">PL</td>
+                <td data-label="Voto" class="voto-cell sim">Sim</td>
+            </tr>
+            <tr>
+                <td data-label="Parlamentar">Ver. Sylas Souza</td>
+                <td data-label="Partido">PT</td>
+                <td data-label="Voto" class="voto-cell nao">Não</td>
+            </tr>
+            <tr>
+                <td data-label="Parlamentar">Ver. Lucas Cavalcante</td>
+                <td data-label="Partido">MDB</td>
+                <td data-label="Voto" class="voto-cell sim">Sim</td>
+            </tr>
+            <tr>
+                <td data-label="Parlamentar">Ver. Dilson Junior</td>
+                <td data-label="Partido">PSDB</td>
+                <td data-label="Voto" class="voto-cell abstencao">Abstenção</td>
+            </tr>
+            <tr>
+                <td data-label="Parlamentar">Ver. Wilson Freitas</td>
+                <td data-label="Partido">PP</td>
+                <td data-label="Voto" class="voto-cell sim">Sim</td>
+            </tr>
+            <tr>
+                <td data-label="Parlamentar">Ver. Maria Nilza</td>
+                <td data-label="Partido">PDT</td>
+                <td data-label="Voto" class="voto-cell nao">Não</td>
+            </tr>
+            <tr>
+                <td data-label="Parlamentar">Ver. Marilene Costa</td>
+                <td data-label="Partido">PSD</td>
+                <td data-label="Voto" class="voto-cell sim">Sim</td>
+            </tr>
+            <tr>
+                <td data-label="Parlamentar">Ver. Jackson Souza</td>
+                <td data-label="Partido">PSOL</td>
+                <td data-label="Voto" class="voto-cell nao">Não</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="summary">
+        <div class="summary-card">
+            <span>4</span>
+            <label>Sim</label>
+        </div>
+        <div class="summary-card">
+            <span>3</span>
+            <label>Não</label>
+        </div>
+        <div class="summary-card">
+            <span>1</span>
+            <label>Abstenções</label>
+        </div>
+        <div class="summary-card">
+            <span>8</span>
+            <label>Total</label>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

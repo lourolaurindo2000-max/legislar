@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Almadina-BA | Portal Municipal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-blue: #003399;
+            --secondary-red: #c0392b;
+            --accent-gold: #f1c40f;
+            --white: #ffffff;
+            --light-grey: #f4f4f4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* --- Header & Navegação --- */
+        header {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 1rem 5%;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-container img {
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--white);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: var(--accent-gold);
+        }
+
+        .menu-toggle {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            height: 80vh;
+            background: linear-gradient(rgba(0,51,153,0.7), rgba(0,51,153,0.7)), 
+                        url('https://images.unsplash.com/photo-1596436805366-5d59a1a4768e?auto=format&fit=crop&q=80') center/cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            padding-top: 80px;
+        }
+
+        .hero h1 { font-size: 3.5rem; margin-bottom: 1rem; }
+        .hero p { font-size: 1.2rem; max-width: 600px; }
+
+        /* --- Seções de Conteúdo --- */
+        section { padding: 80px 10%; }
+        
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-bottom: 5px solid var(--secondary-red);
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        .card i {
+            font-size: 3rem;
+            color: var(--primary-blue);
+            margin-bottom: 15px;
+        }
+
+        /* --- Footer --- */
+        footer {
+            background: #222;
+            color: white;
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* --- Responsividade --- */
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+            nav ul {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: var(--primary-blue);
+                text-align: center;
+            }
+            nav ul.active { display: flex; }
+            .hero h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <img src="img/logoCamara.PNG" alt="Brasão Almadina">
+            <strong>Almadina - BA</strong>
+        </div>
+        <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+        <nav>
+            <ul>
+                <li><a href="#inicio">Início</a></li>
+                <li><a href="#historia">História</a></li>
+                <li><a href="#economia">Economia</a></li>
+                <li><a href="#contato">Contato</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero" id="inicio">
+        <h1>Bem-vindo a Almadina</h1>
+        <p>Terra de progresso, celebrando nossa história desde 15 de Março de 1962.</p>
+    </section>
+
+    <section id="economia">
+        <h2 style="text-align: center;">Nossas Riquezas</h2>
+        <div class="card-container">
+            <div class="card">
+                <i class="fas fa-seedling"></i>
+                <h3>Cacau</h3>
+                <p>O ouro doce da nossa terra, base da nossa cultura e economia agrícola.</p>
+            </div>
+            <div class="card">
+                <i class="fas fa-cow"></i>
+                <h3>Pecuária</h3>
+                <p>Tradição e força na criação, simbolizada com orgulho em nosso brasão.</p>
+            </div>
+            <div class="card">
+                <i class="fas fa-users"></i>
+                <h3>Povo</h3>
+                <p>A maior riqueza de Almadina é a hospitalidade e garra de sua gente.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Todos os Direitos Reservados à André Almeida.</p>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 1. Menu Mobile Toggle
+            $('.menu-toggle').click(function() {
+                $('nav ul').slideToggle().toggleClass('active');
+            });
+
+            // 2. Smooth Scroll (Rolagem Suave)
+            $('a[href^="#"]').on('click', function(e) {
+                e.preventDefault();
+                var target = $(this.hash);
+                if (target.length) {
+                    $('html, body').animate({
+                        scrollTop: target.offset().top - 70
+                    }, 800);
+                }
+                // Fecha menu mobile ao clicar
+                if ($(window).width() < 768) {
+                    $('nav ul').slideUp();
+                }
+            });
+
+            // 3. Efeito de surgimento dos cards ao rolar (Scroll Reveal)
+            $(window).scroll(function() {
+                $('.card').each(function() {
+                    var bottom_of_object = $(this).offset().top + $(this).outerHeight() / 3;
+                    var bottom_of_window = $(window).scrollTop() + $(window).height();
+                    
+                    if (bottom_of_window > bottom_of_object) {
+                        $(this).animate({'opacity':'1', 'margin-top':'0'}, 600);
+                    }
+                });
+            });
+
+            // Trigger inicial caso os cards já estejam visíveis
+            $(window).trigger('scroll');
+        });
+    </script>
+</body>
+</html>

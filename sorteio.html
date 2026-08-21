@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio Eletrônico de Vereadores</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #27ae60;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 { color: var(--primary-color); margin-bottom: 1.5rem; }
+
+        #display-sorteio {
+            font-size: 1.8rem;
+            font-weight: bold;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px dashed #bdc3c7;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            color: #7f8c8d;
+            transition: all 0.3s ease;
+            padding: 10px;
+        }
+
+        .highlight {
+            color: var(--accent-color) !important;
+            border-color: var(--accent-color) !important;
+            transform: scale(1.05);
+            background-color: #e8f8f0;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        button:hover { background-color: #34495e; }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+
+        .lista-vereadores {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #95a5a6;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Sorteio de Vereadores</h1>
+    
+    <div id="display-sorteio">
+        Aguardando Início...
+    </div>
+
+    <button id="btn-sortear">Iniciar Sorteio (5s)</button>
+
+    <div class="lista-vereadores">
+        <strong>Participantes:</strong>
+        <p id="lista-nomes"></p>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Lista de 09 vereadores fictícios
+    const vereadores = [
+        "Vera. Maria Nilza", "Ver. Sylas Souza", "Ver. Wilson Freitas",
+        "Ver. Dilson Junior", "Vera. Marilene Costa", "Ver. Sylas Souza",
+        "Ver. josé Lindomar", "Ver. Jackson Costa", "Ver. Lucas Cavalcante"
+    ];
+
+    // Exibir lista na tela
+    $('#lista-nomes').text(vereadores.join(", "));
+
+    $('#btn-sortear').click(function() {
+        const btn = $(this);
+        const display = $('#display-sorteio');
+        
+        // Desabilitar botão durante o sorteio
+        btn.prop('disabled', true).text('Sorteando...');
+        display.removeClass('highlight');
+
+        let tempoTotal = 5000; // 5 segundos
+        let intervaloTroca = 100; // Velocidade do efeito (ms)
+        let decorrido = 0;
+
+        // Efeito de embaralhar nomes
+        const efeito = setInterval(function() {
+            const aleatorio = vereadores[Math.floor(Math.random() * vereadores.length)];
+            display.text(aleatorio);
+            decorrido += intervaloTroca;
+
+            // Se atingir 5 segundos, para o efeito e escolhe o vencedor
+            if (decorrido >= tempoTotal) {
+                clearInterval(efeito);
+                
+                // Escolha final
+                const vencedor = vereadores[Math.floor(Math.random() * vereadores.length)];
+                display.text(vencedor).addClass('highlight');
+                
+                // Reabilitar botão
+                btn.prop('disabled', false).text('Sortear Novamente');
+                
+                // Alerta sonoro ou visual extra (opcional)
+                console.log("Sorteado: " + vencedor);
+            }
+        }, intervaloTroca);
+    });
+});
+</script>
+
+</body>
+</html>
