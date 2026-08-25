@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Câmara de Vereadores - Painel de Presença</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #f0f4f9 0%, #dbeafe 100%);
+      --card-bg: #ffffff;
+      --primary-blue: #2563eb;
+      --dark-blue: #1e3a8a;
+      --header-text: #0f172a;
+      --text-main: #334155;
+      --text-muted: #64748b;
+      --present-green: #15803d;
+      --present-bg: #dcfce7;
+      --absent-red: #b91c1c;
+      --absent-bg: #fee2e2;
+      --accent-soft: #eff6ff;
+      --border-color: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5vw 2vw;
+    }
+
+    header {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.2vw 2vw;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.08);
+      border-left: 8px solid var(--primary-blue);
+      margin-bottom: 1.5vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title h1 {
+      font-size: 2.2rem;
+      color: var(--dark-blue);
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .header-title .date-display {
+      font-size: 1.15rem;
+      color: var(--primary-blue);
+      font-weight: 600;
+      margin-top: 4px;
+      text-transform: capitalize;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 1.5vw;
+    }
+
+    .stat-badge {
+      background-color: var(--accent-soft);
+      padding: 0.8vw 1.5vw;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid #bfdbfe;
+      min-width: 120px;
+    }
+
+    .stat-badge .num {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: var(--primary-blue);
+    }
+
+    .stat-badge .lbl {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.8vw;
+    }
+
+    .panel-section {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.2vw 1.5vw;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.06);
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #e2e8f0;
+    }
+
+    .section-title {
+      font-size: 1.35rem;
+      color: var(--dark-blue);
+      font-weight: 700;
+      margin-bottom: 1vw;
+      padding-bottom: 0.6vw;
+      border-bottom: 2px solid var(--accent-soft);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-title span {
+      font-size: 0.85rem;
+      background-color: #dbeafe;
+      color: var(--primary-blue);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+
+    .member-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55vw;
+      flex: 1;
+    }
+
+    .member-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75vw 1.2vw;
+      border-radius: 8px;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+
+    .member-card:hover {
+      border-color: #93c5fd;
+      background-color: #ffffff;
+    }
+
+    .member-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .member-number {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      width: 26px;
+    }
+
+    .member-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--header-text);
+    }
+
+    .member-party {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-left: 6px;
+      font-weight: 500;
+    }
+
+    .status-tag {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s ease;
+    }
+
+    .status-tag:active {
+      transform: scale(0.96);
+    }
+
+    .status-tag.present {
+      background-color: var(--present-bg);
+      color: var(--present-green);
+      border: 1px solid #bbf7d0;
+    }
+
+    .status-tag.absent {
+      background-color: var(--absent-bg);
+      color: var(--absent-red);
+      border: 1px solid #fca5a5;
+    }
+
+    footer {
+      margin-top: 1.5vw;
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 0.9vw 2vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      border: 1px solid #e2e8f0;
+    }
+
+    footer strong {
+      color: var(--dark-blue);
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .header-stats {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-title">
+      <h1>Câmara de Vereadores</h1>
+      <div class="date-display" id="current-date">Sessão Plenária</div>
+    </div>
+    <div class="header-stats">
+    </div>
+  </header>
+
+  <main>
+    <!-- Primeiro Expediente -->
+    <section class="panel-section">
+      <div class="section-title">
+        Primeiro Expediente
+        <span id="count-exp1">0 / 9</span>
+      </div>
+      <ul class="member-list" id="list-exp1"></ul>
+    </section>
+
+    <!-- Grande Expediente -->
+    <section class="panel-section">
+      <div class="section-title">
+        Grande Expediente
+        <span id="count-exp2">0 / 0</span>
+      </div>
+      <ul class="member-list" id="list-exp2"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <div>Sistema Eletrônico de Plenário</div>
+    <div>Todos os Direitos Reservados à: <strong>André Almeida</strong></div>
+  </footer>
+
+  <script>
+    // Formatação e exibição dinâmica da data
+    function updateDate() {
+      const now = new Date();
+      const options = { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' };
+      const formattedDate = now.toLocaleDateString('pt-BR', options);
+      document.getElementById('current-date').innerText = formattedDate;
+    }
+
+    const parlamentaresExp1 = [
+      { id: 1, nome: "Ver. José Lindomar Ferreira Santos", partido: "PODEMOS", presente: true },
+      { id: 2, nome: "Ver. Sylas Oliveira Souza", partido: "PODEMOS", presente: true },
+      { id: 3, nome: "Ver. Lucas da Silva Calvalcante", partido: "PODEMOS", presente: false },
+      { id: 4, nome: "Ver. Dilson Junior", partido: "PV", presente: true },
+      { id: 5, nome: "Ver. Rogério de Jesus Gotado", partido: "PT", presente: true },
+      { id: 6, nome: "Ver. Wilson de Jesus Freitas", partido: "PC do B", presente: true },
+      { id: 7, nome: "Verª. Maria Nilza dos Santos Damasceno", partido: "PODEMOS", presente: false },
+      { id: 8, nome: "Verª. Marilene Costa Santos", partido: "PP", presente: true },
+      { id: 9, nome: "Ver. Jackson Costa Souza", partido: "AVANTE", presente: true }
+    ];
+
+    const parlamentaresExp2 = [
+     { id: 1, nome: "Ver. José Lindomar Ferreira Santos", partido: "PODEMOS", presente: true },
+      { id: 2, nome: "Ver. Sylas Oliveira Souza", partido: "PODEMOS", presente: true },
+      { id: 3, nome: "Ver. Lucas da Silva Calvalcante", partido: "PODEMOS", presente: false },
+      { id: 4, nome: "Ver. Dilson Junior", partido: "PV", presente: true },
+      { id: 5, nome: "Ver. Rogério de Jesus Gotado", partido: "PT", presente: true },
+      { id: 6, nome: "Ver. Wilson de Jesus Freitas", partido: "PC do B", presente: true },
+      { id: 7, nome: "Verª. Maria Nilza dos Santos Damasceno", partido: "PODEMOS", presente: false },
+      { id: 8, nome: "Verª. Marilene Costa Santos", partido: "PP", presente: true },
+      { id: 9, nome: "Ver. Jackson Costa Souza", partido: "AVANTE", presente: true }
+    ];
+
+    function renderList(list, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = "";
+
+      list.forEach((p, index) => {
+        const li = document.createElement("li");
+        li.className = "member-card";
+        li.innerHTML = `
+          <div class="member-info">
+            <span class="member-number">${String(index + 1).padStart(2, '0')}</span>
+            <div>
+              <span class="member-name">${p.nome}</span>
+              <span class="member-party">(${p.partido})</span>
+            </div>
+          </div>
+          <span class="status-tag ${p.presente ? 'present' : 'absent'}" onclick="toggleStatus('${containerId}', ${p.id})">
+            ${p.presente ? 'Presente' : 'Ausente'}
+          </span>
+        `;
+        container.appendChild(li);
+      });
+    }
+
+    function toggleStatus(containerId, id) {
+      const list = containerId === 'list-exp1' ? parlamentaresExp1 : parlamentaresExp2;
+      const item = list.find(p => p.id === id);
+      if (item) {
+        item.presente = !item.presente;
+        updateUI();
+      }
+    }
+
+    function updateUI() {
+      renderList(parlamentaresExp1, "list-exp1");
+      renderList(parlamentaresExp2, "list-exp2");
+
+      const presExp1 = parlamentaresExp1.filter(p => p.presente).length;
+      const presExp2 = parlamentaresExp2.filter(p => p.presente).length;
+
+      document.getElementById("count-exp1").innerText = `${presExp1} / ${parlamentaresExp1.length}`;
+      document.getElementById("count-exp2").innerText = `${presExp2} / ${parlamentaresExp2.length}`;
+
+      const totalPres = presExp1 + presExp2;
+      const totalAus = (parlamentaresExp1.length + parlamentaresExp2.length) - totalPres;
+
+      document.getElementById("total-presentes").innerText = totalPres;
+      document.getElementById("total-ausentes").innerText = totalAus;
+    }
+
+    updateDate();
+    updateUI();
+  </script>
+</body>
+</html>
