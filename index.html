@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acesso ao Sistema</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background-color: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .login-card {
+      background-color: #ffffff;
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 51, 102, 0.1);
+      width: 100%;
+      max-width: 400px;
+      border-top: 5px solid #0056b3;
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .login-header h2 {
+      color: #003366;
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .login-header p {
+      color: #668099;
+      font-size: 0.9rem;
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #003366;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #cce0ff;
+      border-radius: 6px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus {
+      border-color: #0056b3;
+      box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.15);
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 0.85rem;
+      background-color: #0056b3;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .btn-submit:hover {
+      background-color: #003366;
+    }
+    .alert-error {
+      display: none;
+      background-color: #ffe6e6;
+      color: #cc0000;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+      text-align: center;
+      border: 1px solid #ffcccc;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <div class="login-header">
+      <h2>Portal de Acesso</h2>
+      <p>Insira suas credenciais para continuar</p>
+    </div>
+
+    <div id="errorMessage" class="alert-error">
+      Usuário ou senha incorretos!
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">Usuário</label>
+        <input type="text" id="username" placeholder="Digite seu usuário" required autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="password">Senha</label>
+        <input type="password" id="password" placeholder="Digite sua senha" required>
+      </div>
+      <button type="submit" class="btn-submit">Entrar no Sistema</button>
+    </form>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      // Credenciais fictícias de teste
+      const USER_VALIDO = "vereador";
+      const SENHA_VALIDA = "123456";
+
+      $('#loginForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const user = $('#username').val().trim();
+        const pass = $('#password').val().trim();
+
+        if (user === USER_VALIDO && pass === SENHA_VALIDA) {
+          // Salva estado de autenticação simples
+          localStorage.setItem('autenticado', 'true');
+          window.location.href = 'dashboard.html';
+        } else {
+          $('#errorMessage').fadeIn().delay(3000).fadeOut();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
