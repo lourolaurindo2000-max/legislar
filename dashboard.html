@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Legislativo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2c5282;
+            --light-blue: #ebf8ff;
+            --accent-blue: #90cdf4;
+            --card-bg: #718096;
+            --text-white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: var(--primary-blue);
+            color: var(--text-white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1000px;
+            width: 100%;
+            gap: 40px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Lado Esquerdo: Texto */
+        .hero-text {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .hero-text h1 {
+            font-size: 3rem;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        .divider {
+            width: 80px;
+            height: 8px;
+            background-color: var(--accent-blue);
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+
+        .hero-text p {
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        /* Lado Direito: Celular */
+        .phone-mockup {
+            background: white;
+            border-radius: 40px;
+            padding: 15px;
+            width: 320px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            color: #333;
+        }
+
+        .phone-header {
+            text-align: left;
+            padding: 10px;
+        }
+
+        .phone-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #1a202c;
+        }
+
+        .phone-header span {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .grid-menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+
+        .card i {
+            font-size: 1.2rem;
+        }
+
+        .card span {
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                text-align: center;
+            }
+            .divider { margin: 0 auto 30px; }
+            .hero-text h1 { font-size: 2.2rem; }
+            .phone-mockup { margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="hero-text">
+            <h1>Informação na palma da sua mão.</h1>
+            <div class="divider"></div>
+            <div class=""></div>
+            <p>Acompanhe às Sessões da Câmara, clicando no botão abaixo.</p>
+        </div>
+
+        <div class="phone-mockup">
+            <div class="phone-header">
+                <h2><marquee>Câmara Municipal de Almadina.</marquee></h2>
+                <span>Atividade legislativa</span>
+            </div>
+
+            <div class="grid-menu">
+                <a href="farm.html" class="card">
+                    <i class="fas fa-university"></i>
+                    <span>A Câmara</span>
+                </a>
+                <a href="justica.html" class="card"target="_blank">
+                    <i class="fas fa-users"></i>
+                    <span>Ordem do Dia</span>
+                </a>
+                <a href="galeria.html" class="card"target="_blank">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Vereadores</span>
+                </a>
+               <a href="comissao.html" class="card">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Pautas das Sessões</span>
+                </a>
+                <a href="PDF/Ata_Decima_Quarta_Sessao_(2026).pdf" class="card"target="_blank">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Atas das Sessões Plenárias</span>
+                </a>
+                <a href="sorteio.html" class="card"target="_blank">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Sorteio aleatório</span>
+                </a>
+                <a href="https://www.youtube.com/channel/UC8CnnLxMSo_TSm22LnNVGCg" class="card"target="_blank">
+                    <i class="fas fa-play-circle"></i>
+                    <span>Acompanhe as Sessões</span>
+                </a>
+                <a href="list_presense.html" class="card"target="_blank">
+                    <i class="fas fa-list-ol"></i>
+                    <span>Presença em Plenário</span>
+                </a>
+            </div>
+
+
+
+
+</body>
+</html>
