@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio - Câmara de Vereadores</title>
+    <style>
+        :root {
+            --primary-navy: #0A192F;
+            --secondary-navy: #172A45;
+            --accent-gold: #C5A059;
+            --pure-white: #FFFFFF;
+            --text-light: #E6F1FF;
+            --glow: rgba(197, 160, 89, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at center, var(--secondary-navy), var(--primary-navy));
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Logo Fictícia */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--pure-white), #B0C4DE);
+            border-radius: 50%;
+            border: 2px solid var(--accent-gold);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .logo-svg {
+            width: 40px;
+            height: 40px;
+            fill: var(--primary-navy);
+        }
+
+        .titles h1 {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            letter-spacing: 4px;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .titles h2 {
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            color: var(--pure-white);
+            text-transform: uppercase;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Container Principal */
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 900px;
+            flex-grow: 1;
+        }
+
+        /* Card do Parlamentar */
+        .card-display {
+            background: rgba(23, 42, 69, 0.8);
+            border: 2px solid var(--accent-gold);
+            border-radius: 12px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 15px rgba(197, 160, 89, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .avatar-container {
+            width: clamp(140px, 25vw, 200px);
+            height: clamp(140px, 25vw, 200px);
+            margin: 0 auto 1.5rem auto;
+            border-radius: 50%;
+            border: 4px solid var(--accent-gold);
+            overflow: hidden;
+            background-color: var(--primary-navy);
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .avatar-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .parlamentar-nome {
+            font-size: clamp(1.4rem, 4vw, 2.2rem);
+            color: var(--pure-white);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            min-height: 2.5rem;
+        }
+
+        .parlamentar-partido {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            color: var(--accent-gold);
+            font-weight: 500;
+            letter-spacing: 1px;
+            min-height: 1.5rem;
+        }
+
+        /* Efeito Visual de Sorteio */
+        .card-display.sorteando {
+            animation: pulse-border 0.2s infinite alternate;
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: var(--accent-gold); box-shadow: 0 0 10px var(--glow); }
+            100% { border-color: var(--pure-white); box-shadow: 0 0 30px var(--glow); }
+        }
+
+        /* Controles e Botões */
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-sortear {
+            background: linear-gradient(135deg, #C5A059, #9A7B3E);
+            color: var(--primary-navy);
+            border: none;
+            padding: 1rem 3.5rem;
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .btn-sortear:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--glow);
+            background: linear-gradient(135deg, #D4AF37, #C5A059);
+        }
+
+        .btn-sortear:focus {
+            outline: 3px solid var(--pure-white);
+        }
+
+        .btn-sortear:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .status-msg {
+            font-size: 0.95rem;
+            color: #8892B0;
+            letter-spacing: 1px;
+        }
+
+        /* Otimizações para Telas Grandes / Smart TVs */
+        @media (min-width: 1200px) {
+            body { padding: 3rem; }
+            .card-display { max-width: 600px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        
+        <div class="titles">
+            <h1>Sorteio</h1>
+            <h2>Plenário Jonas Plínio</h2>
+        </div>
+    </header>
+
+    <main>
+        <div class="card-display" id="cardPanel">
+            <div class="avatar-container">
+                <img src="https://1.gravatar.com/userimage/277172047/ece539c2e94b37ca6e47ae679ff1e7c8?size=512' viewBox='0 0 24 24' fill='%23172A45'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>" id="fotoParlamentar" alt="Foto do Parlamentar">
+            </div>
+            <div class="parlamentar-nome" id="nomeParlamentar">Aguardando Início</div>
+            <div class="parlamentar-partido" id="partidoParlamentar">Presidente - Rogério Gotado</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-sortear" id="btnSortear" onclick="iniciarSorteio()">Sortear</button>
+            <div class="status-msg" id="statusMsg">09 Vereadores na urna</div>
+        </div>
+    </main>
+
+    <script>
+        // Lista com os 09 parlamentares fictícios
+        const parlamentaresIniciais = [
+            { nome: "Sylas Souza", partido: "PODEMOS - PODEMOS", foto: "https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=256" },
+            { nome: "Rogério Gotádo", partido: "PT - PT", foto:
+"https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=256" },
+            { nome: "Lucas Calvalcante", partido: "PODEMOS - PODEMOS", foto:  "https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=256" },
+            { nome: "Dilson junior", partido: "PV - PV", foto: "https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=256" },
+            { nome: "Wilson Freitas", partido: "PCdoB - PCdoB", foto: "https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=256" },
+            { nome: "Nilza Damasceno", partido: "PODEMOS - PODEMOS", foto: "https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=256" },
+            { nome: "Jackson Costa", partido: "AVANTE - AVANTE", foto: "https://2.gravatar.com/userimage/277172047/8039d08ed8a294328b8f8b70bbbeb765?size=256" },
+            { nome: "José Lindomar", partido: "PODEMOS - PODEMOS", foto: "https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=256" },
+            { nome: "Marilene Costa", partido: "PP - PP", foto: "https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=256" }
+        ];
+
+        // Cópia para controle do sorteio sem repetição
+        let disponiveis = [...parlamentaresIniciais];
+
+        const cardPanel = document.getElementById('cardPanel');
+        const imgElement = document.getElementById('fotoParlamentar');
+        const nomeElement = document.getElementById('nomeParlamentar');
+        const partidoElement = document.getElementById('partidoParlamentar');
+        const btnSortear = document.getElementById('btnSortear');
+        const statusMsg = document.getElementById('statusMsg');
+
+        function iniciarSorteio() {
+            if (disponiveis.length === 0) return;
+
+            // Interface em estado de sorteio
+            btnSortear.disabled = true;
+            cardPanel.classList.add('sorteando');
+            
+            let giros = 0;
+            const totalGiros = 100; // Quantidade de alternâncias rápidas antes de parar
+            const velocidade = 100; // Milissegundos entre giros
+
+            const intervalo = setInterval(() => {
+                // Exibe temporariamente um parlamentar aleatório da lista completa para efeito
+                const tempIndex = Math.floor(Math.random() * parlamentaresIniciais.length);
+                const tempParlamentar = parlamentaresIniciais[tempIndex];
+
+                imgElement.src = tempParlamentar.foto;
+                nomeElement.textContent = tempParlamentar.nome;
+                partidoElement.textContent = tempParlamentar.partido;
+
+                giros++;
+
+                if (giros >= totalGiros) {
+                    clearInterval(intervalo);
+                    finalizarSorteio();
+                }
+            }, velocidade);
+        }
+
+        function finalizarSorteio() {
+            // Seleciona e remove um parlamentar do array de disponíveis (sem repetição)
+            const indexSorteado = Math.floor(Math.random() * disponiveis.length);
+            const sorteado = disponiveis.splice(indexSorteado, 1)[0];
+
+            // Renderiza o resultado final
+            imgElement.src = sorteado.foto;
+            nomeElement.textContent = sorteado.nome;
+            partidoElement.textContent = sorteado.partido;
+
+            // Finaliza efeitos de interface
+            cardPanel.classList.remove('sorteando');
+
+            // Atualiza mensagens e estado do botão
+            const restantes = disponiveis.length;
+            if (restantes > 0) {
+                statusMsg.textContent = `${restantes} vereadores restantes`;
+                btnSortear.disabled = false;
+            } else {
+                statusMsg.textContent = "Todos os vereadores já foram sorteados!";
+                btnSortear.textContent = "Concluído";
+                btnSortear.disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>
