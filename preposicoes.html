@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preposições</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- jsPDF para exportação de relatórios -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        gov: {
+                            50: '#f0f5fa',
+                            100: '#e1ebf5',
+                            200: '#c7d9ec',
+                            300: '#9ebfdf',
+                            400: '#6f9ecc',
+                            500: '#4a7db8',
+                            600: '#36619a',
+                            700: '#2a4d7c',
+                            800: '#1b3252',
+                            900: '#0b192e',
+                            950: '#050d1a',
+                        },
+                        gold: {
+                            300: '#f6e090',
+                            400: '#f1d053',
+                            500: '#e5b828',
+                            600: '#c8991c',
+                            700: '#9f7317',
+                        }
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(11, 25, 46, 0.12)',
+                        'glow': '0 0 20px rgba(229, 184, 40, 0.25)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f4f7fb;
+            background-image: radial-gradient(#d5e2f0 0.75px, transparent 0.75px), radial-gradient(#d5e2f0 0.75px, #f4f7fb 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .glass-header {
+            background: linear-gradient(135deg, rgba(11, 25, 46, 0.98) 0%, rgba(27, 50, 82, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #f6e090 0%, #e5b828 50%, #9f7317 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tab-btn {
+            position: relative;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-btn.active-tab {
+            background: #ffffff;
+            color: #0b192e;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+
+        .tab-btn.active-tab::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 20%;
+            width: 60%;
+            height: 3px;
+            background: linear-gradient(90deg, #e5b828, #f6e090);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #36619a;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-800 antialiased selection:bg-gold-500 selection:text-gov-950">
+
+    <header class="glass-header text-white sticky top-0 z-40 border-b border-gold-500/30 shadow-2xl">
+        
+        <!-- Faixa Superior: Mesa Diretora da Câmara -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 border-b border-white/10">
+            <div class="flex flex-wrap justify-between items-center gap-3 text-xs md:text-sm">
+                
+                <!-- Esquerda: 1º Secretário Dilson -->
+                <div class="flex items-center gap-2.5 bg-white/10 hover:bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 transition shadow-sm">
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-gold-600 to-gold-400 flex items-center justify-center text-gov-950 font-bold shadow-inner">
+                        <i class="fa-solid fa-user-tie text-xs"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase tracking-wider text-blue-200/80 block leading-tight">1º Secretário</span>
+                        <span class="font-bold text-white tracking-wide">Dilson Junior</span>
+                    </div>
+                </div>
+
+                <!-- Centro: Nome do Plenário Destacado -->
+                <div class="text-center order-first sm:order-none w-full sm:w-auto my-1 sm:my-0">
+                    <div class="inline-flex items-center gap-2 bg-gov-900/80 px-4 py-1 rounded-full border border-gold-500/40 shadow-glow">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-[11px] font-semibold uppercase tracking-widest text-gold-300">Sessão Plenária Ao Vivo</span>
+                    </div>
+                    <h1 class="text-xl md:text-2xl font-black text-white tracking-tight mt-0.5 flex items-center justify-center gap-2.5">
+                        <i class="fa-solid fa-landmark text-gold-400 text-lg"></i>
+                        PLENÁRIO <span class="gold-gradient-text font-extrabold">JONAS PLÍNIO</span>
+                    </h1>
+                </div>
+
+                <!-- Direita: Presidente Rogério e Vice-Presidente Lucas -->
+                <div class="flex items-center gap-2 sm:gap-3 bg-white/10 hover:bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 transition shadow-sm">
+                    <!-- Pres. -->
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-gold-500 to-amber-300 flex items-center justify-center text-gov-950 font-bold">
+                            <i class="fa-solid fa-crown text-xs"></i>
+                        </div>
+                        <div class="text-left">
+                            <span class="text-[10px] uppercase tracking-wider text-blue-200/80 block leading-tight">Presidente</span>
+                            <span class="font-bold text-white tracking-wide">Rogério Gotado</span>
+                        </div>
+                    </div>
+                    
+                    <span class="h-6 w-px bg-white/20 my-auto mx-1"></span>
+
+                    <!-- Vice-Pres. -->
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full bg-blue-500/40 flex items-center justify-center text-blue-200 font-bold border border-blue-300/30">
+                            <i class="fa-solid fa-shield-halved text-xs"></i>
+                        </div>
+                        <div class="text-left">
+                            <span class="text-[10px] uppercase tracking-wider text-blue-200/80 block leading-tight">Vice-Presidente</span>
+                            <span class="font-bold text-white tracking-wide">Lucas Calvalcante</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Faixa Principal do Header: Logo e Ações -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="bg-gradient-to-br from-white to-slate-100 p-2.5 rounded-2xl shadow-lg border border-gold-400/40 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-gov-900" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 1L2 6v2h20V6L12 1zm-8 9v8h3v-8H4zm6 0v8h4v-8h-4zm7 0v8h3v-8h-3zM2 20v2h20v-2H2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-lg md:text-xl font-black tracking-tight text-white leading-none uppercase">
+                        Câmara Municipal de Almadina
+                    </h2>
+                    <p class="text-xs text-blue-200 font-medium mt-1 flex items-center gap-1.5">
+                        <span class="inline-block w-1.5 h-1.5 rounded-full bg-gold-400"></span>
+                        O LEGISLATIVO POR UMA CIDADANIA SOBERANA.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Botões Principais no Topo -->
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button id="btnGroupAll" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 text-xs md:text-sm border border-emerald-400/30">
+                    <i class="fa-solid fa-file-pdf text-base"></i>
+                    <span>Relatório Plenário</span>
+                </button>
+                <button id="btnOpenUploadModal" class="bg-gradient-to-r from-gold-500 to-amber-600 hover:from-gold-400 hover:to-amber-500 text-gov-950 font-extrabold px-4 py-2.5 rounded-xl shadow-glow transition duration-200 flex items-center justify-center gap-2 text-xs md:text-sm border border-gold-300">
+                    <i class="fa-solid fa-plus-circle text-base"></i>
+                    <span>Anexar Proposição</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex-grow w-full space-y-6">
+
+        <!-- Barra de Filtros e Busca -->
+        <div class="glass-panel p-4 md:p-6 rounded-2xl shadow-glass flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="w-full md:w-1/2 relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchInput" placeholder="Pesquisar por título, nº da proposição ou vereador autor..." class="w-full pl-11 pr-4 py-3 bg-white/80 border border-slate-200 rounded-xl focus:ring-2 focus:ring-gov-600 focus:bg-white outline-none text-sm transition shadow-inner">
+            </div>
+
+            <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                <div class="flex items-center gap-2 bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600">
+                    <i class="fa-solid fa-database text-gov-600"></i>
+                    <span>IndexedDB Binary Storage</span>
+                </div>
+                <div class="flex items-center gap-2 bg-emerald-50 px-3.5 py-2 rounded-xl border border-emerald-200 text-xs font-bold text-emerald-800">
+                    <i class="fa-solid fa-shield-check text-emerald-600"></i>
+                    <span>Persistência Garantida</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABAS DE CATEGORIAS -->
+        <div class="glass-panel p-2 rounded-2xl shadow-glass">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-center" id="categoryTabs">
+                
+                <button data-category="projeto" class="tab-btn active-tab p-3.5 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2.5">
+                    <div class="p-2 rounded-lg bg-blue-50 text-gov-700">
+                        <i class="fa-solid fa-scroll text-base"></i>
+                    </div>
+                    <span>Projetos</span>
+                    <span class="badge ml-1 px-2.5 py-0.5 text-xs bg-gov-900 text-white font-black rounded-full shadow-sm">0</span>
+                </button>
+
+                <button data-category="indicacao" class="tab-btn p-3.5 rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-2.5">
+                    <div class="p-2 rounded-lg bg-amber-50 text-amber-700">
+                        <i class="fa-solid fa-lightbulb text-base"></i>
+                    </div>
+                    <span>Indicações</span>
+                    <span class="badge ml-1 px-2.5 py-0.5 text-xs bg-slate-200 text-slate-700 font-bold rounded-full">0</span>
+                </button>
+
+                <button data-category="requerimento" class="tab-btn p-3.5 rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-2.5">
+                    <div class="p-2 rounded-lg bg-emerald-50 text-emerald-700">
+                        <i class="fa-solid fa-file-contract text-base"></i>
+                    </div>
+                    <span>Requerimentos</span>
+                    <span class="badge ml-1 px-2.5 py-0.5 text-xs bg-slate-200 text-slate-700 font-bold rounded-full">0</span>
+                </button>
+
+                <button data-category="outros" class="tab-btn p-3.5 rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-2.5">
+                    <div class="p-2 rounded-lg bg-purple-50 text-purple-700">
+                        <i class="fa-solid fa-folder-open text-base"></i>
+                    </div>
+                    <span>Outros Arquivos</span>
+                    <span class="badge ml-1 px-2.5 py-0.5 text-xs bg-slate-200 text-slate-700 font-bold rounded-full">0</span>
+                </button>
+
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl shadow-glass overflow-hidden border border-slate-200/80">
+            
+            <div class="p-5 bg-gradient-to-r from-gov-900 via-gov-800 to-gov-900 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h3 id="currentCategoryTitle" class="font-extrabold text-lg flex items-center gap-2.5">
+                        <i class="fa-solid fa-folder-tree text-gold-400"></i>
+                        Projetos de Lei Anexados
+                    </h3>
+                    <p class="text-xs text-blue-200 mt-0.5">Selecione uma matéria para leitura no plenário ou para fazer download em PDF.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <div class="text-xs bg-white/10 px-3 py-1.5 rounded-lg border border-white/15">
+                        Total: <strong id="currentCategoryCount" class="text-gold-300">0</strong> documentos
+                    </div>
+                    <button id="btnCategoryUpload" class="bg-gradient-to-r from-gold-500 to-amber-500 hover:from-gold-400 hover:to-amber-400 text-gov-950 font-extrabold px-3.5 py-1.5 rounded-lg text-xs shadow-md transition flex items-center gap-1.5 border border-gold-300">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span id="btnCategoryUploadText">Anexar Projeto de Lei</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabela de Documentos -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100/90 text-slate-600 uppercase text-[11px] font-extrabold tracking-wider border-b border-slate-200">
+                            <th class="py-4 px-6">Título / Proposição</th>
+                            <th class="py-4 px-6">Autor / Parlamentar</th>
+                            <th class="py-4 px-6 text-center">Status</th>
+                            <th class="py-4 px-6">Data de Anexo</th>
+                            <th class="py-4 px-6 text-center">Tamanho PDF</th>
+                            <th class="py-4 px-6 text-right">Ações em Plenário</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documentTableBody" class="divide-y divide-slate-200/80 text-sm">
+                        <!-- Conteúdo injetado via jQuery -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="p-16 text-center hidden">
+                <div class="w-20 h-20 bg-blue-50 text-gov-600 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-sm">
+                    <i class="fa-solid fa-folder-open text-4xl"></i>
+                </div>
+                <h4 class="text-lg font-bold text-slate-700">Nenhum documento nesta categoria</h4>
+                <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">Nenhum PDF foi anexado para esta aba. Use o botão "Anexar Proposição" para enviar arquivos.</p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODAL 1: UPLOAD / ANEXAR PDF -->
+    <div id="uploadModal" class="fixed inset-0 bg-gov-950/70 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 transform transition-all max-h-[90vh] flex flex-col">
+            
+            <div class="bg-gradient-to-r from-gov-900 to-gov-800 text-white p-5 flex justify-between items-center border-b border-gold-500/30 flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-white/10 rounded-xl">
+                        <i class="fa-solid fa-cloud-arrow-up text-gold-400 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 id="uploadModalHeaderTitle" class="font-bold text-lg leading-tight">Anexar Proposição em PDF</h3>
+                        <p class="text-xs text-blue-200">Envio seguro com persistência garantida</p>
+                    </div>
+                </div>
+                <button class="closeModal text-white/70 hover:text-white p-2 rounded-xl transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="uploadForm" class="p-6 space-y-4 overflow-y-auto flex-grow">
+                <input type="hidden" id="editDocId" value="">
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Tipo de Proposição *</label>
+                    <select id="docCategory" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gov-600 outline-none text-sm font-semibold">
+                        <option value="projeto">Projeto de Lei</option>
+                        <option value="indicacao">Indicação</option>
+                        <option value="requerimento">Requerimento</option>
+                        <option value="outros">Outros Arquivos</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Título / Número da Proposição *</label>
+                    <input type="text" id="docTitle" required placeholder="Ex: Projeto de Lei Nº 045/2026" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gov-600 outline-none text-sm font-medium">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Autor / Vereador Proponente *</label>
+                    <input type="text" id="docAuthor" required placeholder="Ex: Ver. Rogério / Bancada" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gov-600 outline-none text-sm font-medium">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Status Inicial *</label>
+                    <select id="docStatus" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gov-600 outline-none text-sm font-semibold">
+                        <option value="Em Pauta">Em Pauta (Sessão)</option>
+                        <option value="Em Tramitação">Em Tramitação</option>
+                        <option value="Aprovado">Aprovado</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Observações / Ementa (Opcional)</label>
+                    <textarea id="docNotes" rows="2" placeholder="Resumo ou observações sobre a proposição..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-gov-600 outline-none text-sm font-medium resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Arquivo PDF <span id="pdfRequiredStar">*</span></label>
+                    <div class="relative border-2 border-dashed border-slate-300 hover:border-gov-600 rounded-2xl p-5 text-center cursor-pointer bg-slate-50/50 hover:bg-blue-50/30 transition group" id="dropArea">
+                        <input type="file" id="pdfFileInput" accept="application/pdf" class="hidden">
+                        <i class="fa-solid fa-file-pdf text-4xl text-rose-500 mb-2 transition transform group-hover:scale-110"></i>
+                        <p class="text-sm text-slate-700 font-bold" id="fileNameDisplay">Clique ou arraste o PDF aqui</p>
+                        <p class="text-xs text-slate-400 mt-1">Formatos aceitos: apenas PDF sem limitação de tamanho</p>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                    <button type="button" class="closeModal px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-sm transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btnSubmitUpload" class="px-6 py-2.5 bg-gradient-to-r from-gov-800 to-gov-900 hover:from-gov-700 hover:to-gov-800 text-white font-extrabold rounded-xl text-sm shadow-md transition flex items-center gap-2">
+                        <i class="fa-solid fa-check"></i>
+                        <span id="btnSubmitText">Anexar Proposição</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: LEITOR DE PDF COMPLETO -->
+    <div id="viewPdfModal" class="fixed inset-0 bg-gov-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-2 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[92vh] flex flex-col overflow-hidden border border-slate-700">
+            
+            <div class="bg-gov-900 text-white p-4 flex flex-wrap justify-between items-center gap-3 border-b border-gold-500/40">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-rose-500/20 border border-rose-500/30 rounded-xl text-rose-400">
+                        <i class="fa-solid fa-file-pdf text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 id="pdfModalTitle" class="font-extrabold text-base md:text-lg leading-tight">Leitura de Proposição</h3>
+                        <p id="pdfModalMeta" class="text-xs text-blue-200"></p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <a id="btnDownloadPdf" download="" href="#" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md">
+                        <i class="fa-solid fa-download"></i>
+                        <span class="hidden sm:inline">Baixar PDF</span>
+                    </a>
+                    <button class="closeModal text-white/70 hover:text-white p-2 rounded-xl transition text-2xl">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-grow bg-slate-900 relative">
+                <iframe id="pdfViewerFrame" class="w-full h-full border-none"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: CONFIRMAÇÃO DE EXCLUSÃO -->
+    <div id="deleteModal" class="fixed inset-0 bg-gov-950/70 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 text-center border border-slate-100">
+            <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-200">
+                <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">Confirmar Exclusão</h3>
+            <p class="text-sm text-slate-500 mt-2">Tem certeza que deseja remover esta proposição e seu arquivo PDF anexado do plenário?</p>
+            
+            <div class="mt-6 flex justify-center gap-3">
+                <button id="cancelDeleteBtn" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-sm transition">
+                    Cancelar
+                </button>
+                <button id="confirmDeleteBtn" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold rounded-xl text-sm transition flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Excluir Definitivamente</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 bg-gov-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 flex items-center gap-3.5 border-l-4 border-gold-400 transform translate-y-24 opacity-0 transition-all duration-300">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-gold-400 text-2xl"></i>
+        <div>
+            <h5 id="toastTitle" class="font-bold text-sm leading-none">Aviso do Sistema</h5>
+            <p id="toastMessage" class="text-xs text-slate-300 mt-1">Operação concluída.</p>
+        </div>
+    </div>
+
+    <!-- RODAPÉ MANTIDO -->
+    <footer class="bg-gov-950 text-white/70 py-5 border-t border-gold-500/20 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-building-columns text-gold-400"></i>
+                <span class="font-semibold text-white">Câmara de Vereadores de Almadina-BA</span> &bull; Mesa Diretora Plenária
+            </div>
+            <div class="text-slate-400 font-medium">
+                todos os direitos reservados à André Almeida.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        $(document).ready(function () {
+            
+            /* -------------------------------------------------------------
+               1. BANCO INDEXEDDB COM BINÁRIO ARRAYBUFFER (SEM ERRO DE UPLOAD)
+               ------------------------------------------------------------- */
+            const DB_NAME = 'PlenarioJonasPlinio_BinaryDB';
+            const DB_VERSION = 4;
+            const STORE_NAME = 'proposicoes_binary_store';
+            let db = null;
+
+            let currentCategory = 'projeto';
+            let activePdfBlobUrl = null;
+            let docToDeleteId = null;
+
+            const categoryNames = {
+                'projeto': 'Projetos de Lei',
+                'indicacao': 'Indicações',
+                'requerimento': 'Requerimentos',
+                'outros': 'Outros Arquivos'
+            };
+
+            const categoryUploadLabels = {
+                'projeto': 'Anexar Projeto de Lei',
+                'indicacao': 'Anexar Indicação',
+                'requerimento': 'Anexar Requerimento',
+                'outros': 'Anexar Outro Arquivo'
+            };
+
+            function updateCategoryUI() {
+                $('#currentCategoryTitle').html(`<i class="fa-solid fa-folder-tree text-gold-400"></i> ${categoryNames[currentCategory]} Anexados`);
+                $('#btnCategoryUploadText').text(categoryUploadLabels[currentCategory] || 'Anexar Proposição');
+            }
+
+            // Converter arquivo File para ArrayBuffer binário nativo
+            function fileToArrayBuffer(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+
+            function saveDocDB(docRecord) {
+                return new Promise((resolve, reject) => {
+                    if (!db) return reject("Banco não pronto.");
+                    const tx = db.transaction([STORE_NAME], 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.put(docRecord);
+
+                    req.onsuccess = () => resolve();
+                    req.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            function getAllDocsDB() {
+                return new Promise((resolve, reject) => {
+                    if (!db) return resolve([]);
+                    const tx = db.transaction([STORE_NAME], 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.getAll();
+
+                    req.onsuccess = () => resolve(req.result || []);
+                    req.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            function getDocByIdDB(id) {
+                return new Promise((resolve, reject) => {
+                    if (!db) return resolve(null);
+                    const tx = db.transaction([STORE_NAME], 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.get(id);
+
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            function deleteDocDB(id) {
+                return new Promise((resolve, reject) => {
+                    if (!db) return reject("DB não pronto.");
+                    const tx = db.transaction([STORE_NAME], 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.delete(id);
+
+                    req.onsuccess = () => resolve();
+                    req.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            function initDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+                    request.onupgradeneeded = (e) => {
+                        const dbInstance = e.target.result;
+                        if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
+                            dbInstance.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        }
+                    };
+                    request.onsuccess = (e) => {
+                        db = e.target.result;
+                        resolve(db);
+                    };
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            initDB().then(() => {
+                refreshUI();
+            }).catch(err => {
+                console.error("Erro na inicialização:", err);
+            });
+
+            async function refreshUI() {
+                try {
+                    const docs = await getAllDocsDB();
+                    updateBadges(docs);
+
+                    const searchQuery = $('#searchInput').val().toLowerCase().trim();
+                    let filtered = docs.filter(d => d.category === currentCategory);
+
+                    if (searchQuery) {
+                        filtered = filtered.filter(d => 
+                            d.title.toLowerCase().includes(searchQuery) || 
+                            d.author.toLowerCase().includes(searchQuery) ||
+                            (d.notes && d.notes.toLowerCase().includes(searchQuery))
+                        );
+                    }
+
+                    renderFilteredTable(filtered);
+                } catch (err) {
+                    console.error("Erro ao atualizar interface:", err);
+                }
+            }
+
+            $('.tab-btn').on('click', function () {
+                $('.tab-btn').removeClass('active-tab').addClass('text-slate-600 hover:bg-slate-50');
+                $(this).addClass('active-tab').removeClass('text-slate-600 hover:bg-slate-50');
+
+                $('.tab-btn .badge').removeClass('bg-gov-900 text-white').addClass('bg-slate-200 text-slate-700');
+                $(this).find('.badge').removeClass('bg-slate-200 text-slate-700').addClass('bg-gov-900 text-white');
+
+                currentCategory = $(this).data('category');
+                updateCategoryUI();
+
+                refreshUI();
+            });
+
+            $('#btnCategoryUpload').on('click', function() {
+                $('#btnOpenUploadModal').click();
+            });
+
+            $('#searchInput').on('input', function () {
+                refreshUI();
+            });
+
+            $('#btnOpenUploadModal').on('click', function () {
+                $('#editDocId').val('');
+                $('#docCategory').val(currentCategory);
+                $('#uploadForm')[0].reset();
+                $('#pdfFileInput').val('');
+                $('#pdfRequiredStar').show();
+                $('#uploadModalHeaderTitle').text('Anexar Proposição em PDF');
+                $('#btnSubmitText').text('Anexar Proposição');
+                $('#fileNameDisplay').text('Clique ou arraste o PDF aqui');
+                $('#uploadModal').removeClass('hidden');
+            });
+
+            $('.closeModal').on('click', function () {
+                $('#uploadModal').addClass('hidden');
+                $('#viewPdfModal').addClass('hidden');
+                $('#deleteModal').addClass('hidden');
+                $('#pdfViewerFrame').attr('src', '');
+
+                if (activePdfBlobUrl) {
+                    URL.revokeObjectURL(activePdfBlobUrl);
+                    activePdfBlobUrl = null;
+                }
+            });
+
+            // Prevenção de loop de cliques e erro de propagação no input
+            $('#dropArea').on('click', function (e) {
+                if (e.target.id !== 'pdfFileInput') {
+                    $('#pdfFileInput').trigger('click');
+                }
+            });
+
+            $('#pdfFileInput').on('click', function (e) {
+                e.stopPropagation();
+            });
+
+            // Drag & Drop Handlers sem recarregar navegador
+            $('#dropArea').on('dragover dragenter', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).addClass('border-gov-600 bg-blue-50/50');
+            });
+
+            $('#dropArea').on('dragleave dragend drop', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).removeClass('border-gov-600 bg-blue-50/50');
+            });
+
+            $('#dropArea').on('drop', function (e) {
+                const files = e.originalEvent.dataTransfer.files;
+                if (files && files.length > 0) {
+                    const file = files[0];
+                    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        $('#pdfFileInput')[0].files = dataTransfer.files;
+                        $('#pdfFileInput').trigger('change');
+                    } else {
+                        showToast('Formato Inválido', 'Apenas arquivos PDF são permitidos.', 'error');
+                    }
+                }
+            });
+
+            $('#pdfFileInput').on('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+                        showToast('Formato Inválido', 'Por favor selecione apenas arquivos em formato PDF.', 'error');
+                        this.value = '';
+                        $('#fileNameDisplay').text('Clique ou arraste o PDF aqui');
+                        return;
+                    }
+                    $('#fileNameDisplay').html(`<span class="text-gov-900 font-bold"><i class="fa-solid fa-file-pdf text-rose-500 mr-1.5"></i> ${escapeHtml(file.name)}</span> (${formatSize(file.size)})`);
+                }
+            });
+
+            $('#uploadForm').on('submit', async function (e) {
+                e.preventDefault();
+
+                const editId = $('#editDocId').val();
+                const category = $('#docCategory').val();
+                const title = $('#docTitle').val().trim();
+                const author = $('#docAuthor').val().trim();
+                const status = $('#docStatus').val();
+                const notes = $('#docNotes').val().trim();
+                const fileInput = $('#pdfFileInput')[0];
+
+                const hasFile = fileInput.files && fileInput.files.length > 0;
+
+                if (!editId && !hasFile) {
+                    showToast('Selecione um Arquivo', 'O envio de um PDF é obrigatório para cadastrar uma nova proposição.', 'error');
+                    return;
+                }
+
+                const $btn = $('#btnSubmitUpload');
+                $btn.prop('disabled', true).addClass('opacity-50');
+
+                try {
+                    let binaryArrayBuffer = null;
+                    let fileName = '';
+                    let fileSize = '';
+
+                    if (hasFile) {
+                        const file = fileInput.files[0];
+                        fileName = file.name;
+                        fileSize = formatSize(file.size);
+                        // Lê como ArrayBuffer sem estourar limite do browser
+                        binaryArrayBuffer = await fileToArrayBuffer(file);
+                    }
+
+                    let docRecord;
+
+                    if (editId) {
+                        const existingDoc = await getDocByIdDB(editId);
+                        if (!existingDoc) throw new Error("Registro não encontrado.");
+
+                        docRecord = {
+                            ...existingDoc,
+                            category: category,
+                            title: title,
+                            author: author,
+                            status: status,
+                            notes: notes,
+                            pdfArrayBuffer: binaryArrayBuffer ? binaryArrayBuffer : existingDoc.pdfArrayBuffer,
+                            fileName: fileName ? fileName : existingDoc.fileName,
+                            size: fileSize ? fileSize : existingDoc.size,
+                            lastModified: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+                        };
+                    } else {
+                        docRecord = {
+                            id: 'doc_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                            category: category,
+                            title: title,
+                            author: author,
+                            status: status,
+                            notes: notes,
+                            pdfArrayBuffer: binaryArrayBuffer,
+                            fileName: fileName,
+                            size: fileSize,
+                            date: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+                        };
+                    }
+
+                    await saveDocDB(docRecord);
+
+                    $('#uploadModal').addClass('hidden');
+                    showToast('Proposição Anexada', editId ? 'Matéria e PDF atualizados com sucesso!' : 'Proposição salva com sucesso sem erros!');
+
+                    if (category !== currentCategory) {
+                        $(`button[data-category="${category}"]`).click();
+                    } else {
+                        await refreshUI();
+                    }
+                } catch (err) {
+                    console.error("Erro no envio do PDF:", err);
+                    showToast('Erro no Upload', 'Ocorreu uma falha ao salvar o PDF no armazenamento local.', 'error');
+                } finally {
+                    $btn.prop('disabled', false).removeClass('opacity-50');
+                }
+            });
+
+            function renderFilteredTable(docs) {
+                const $tbody = $('#documentTableBody');
+                $tbody.empty();
+                $('#currentCategoryCount').text(docs.length);
+
+                if (docs.length === 0) {
+                    $('#emptyState').removeClass('hidden');
+                    return;
+                } else {
+                    $('#emptyState').addClass('hidden');
+                }
+
+                docs.forEach(doc => {
+                    let statusBadge = '';
+                    if (doc.status === 'Aprovado') {
+                        statusBadge = `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full border border-emerald-200"><i class="fa-solid fa-check mr-1"></i> Aprovado</span>`;
+                    } else if (doc.status === 'Em Tramitação') {
+                        statusBadge = `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-[11px] font-bold rounded-full border border-amber-200"><i class="fa-solid fa-clock mr-1"></i> Tramitando</span>`;
+                    } else {
+                        statusBadge = `<span class="px-2.5 py-1 bg-blue-100 text-blue-800 text-[11px] font-bold rounded-full border border-blue-200"><i class="fa-solid fa-list mr-1"></i> Em Pauta</span>`;
+                    }
+
+                    const notesDisplay = doc.notes ? `<div class="text-[11px] text-slate-500 font-normal italic mt-0.5">${escapeHtml(doc.notes)}</div>` : '';
+                    const hasPdf = !!doc.pdfArrayBuffer;
+
+                    const row = `
+                        <tr class="hover:bg-blue-50/40 transition">
+                            <td class="py-4 px-6 font-bold text-slate-900">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2.5 ${hasPdf ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-slate-100 text-slate-400 border-slate-200'} rounded-xl border">
+                                        <i class="fa-solid ${hasPdf ? 'fa-file-pdf' : 'fa-file-slash'} text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-slate-800">${escapeHtml(doc.title)}</div>
+                                        ${notesDisplay}
+                                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">${doc.fileName ? escapeHtml(doc.fileName) : 'Sem PDF anexado'}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 font-semibold text-slate-700">${escapeHtml(doc.author)}</td>
+                            <td class="py-4 px-6 text-center">${statusBadge}</td>
+                            <td class="py-4 px-6 text-slate-500 text-xs">${doc.date}</td>
+                            <td class="py-4 px-6 text-center text-xs font-mono font-semibold text-slate-500">${doc.size || 'N/A'}</td>
+                            <td class="py-4 px-6 text-right">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    ${hasPdf ? `
+                                        <button onclick="viewDoc('${doc.id}')" class="bg-gov-800 hover:bg-gov-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Visualizar / Ler PDF">
+                                            <i class="fa-solid fa-eye"></i>
+                                            <span>Ler</span>
+                                        </button>
+                                        <button onclick="downloadDoc('${doc.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="Baixar PDF">
+                                            <i class="fa-solid fa-download"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="attachOrEditPdf('${doc.id}')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="Anexar ou Substituir PDF">
+                                        <i class="fa-solid fa-paperclip"></i>
+                                    </button>
+                                    <button onclick="requestDeleteDoc('${doc.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="Excluir">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    $tbody.append(row);
+                });
+            }
+
+            window.viewDoc = async function (id) {
+                try {
+                    const doc = await getDocByIdDB(id);
+                    if (!doc || !doc.pdfArrayBuffer) {
+                        showToast('PDF Ausente', 'A proposição não possui arquivo PDF para leitura.', 'error');
+                        return;
+                    }
+
+                    $('#pdfModalTitle').text(doc.title);
+                    $('#pdfModalMeta').text(`Categoria: ${categoryNames[doc.category]} | Autor: ${doc.author} | Status: ${doc.status}`);
+
+                    if (activePdfBlobUrl) {
+                        URL.revokeObjectURL(activePdfBlobUrl);
+                    }
+
+                    const blob = new Blob([doc.pdfArrayBuffer], { type: 'application/pdf' });
+                    activePdfBlobUrl = URL.createObjectURL(blob);
+
+                    $('#btnDownloadPdf')
+                        .attr('href', activePdfBlobUrl)
+                        .attr('download', `${categoryNames[doc.category]}_${slugify(doc.title)}.pdf`);
+
+                    $('#pdfViewerFrame').attr('src', activePdfBlobUrl);
+                    $('#viewPdfModal').removeClass('hidden');
+                } catch (e) {
+                    console.error("Erro ao visualizar PDF:", e);
+                    showToast('Erro ao Visualizar', 'Não foi possível carregar o leitor de PDF.', 'error');
+                }
+            };
+
+            window.downloadDoc = async function (id) {
+                try {
+                    const doc = await getDocByIdDB(id);
+                    if (!doc || !doc.pdfArrayBuffer) return;
+
+                    const blob = new Blob([doc.pdfArrayBuffer], { type: 'application/pdf' });
+                    const url = URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${categoryNames[doc.category]}_${slugify(doc.title)}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                } catch (e) {
+                    showToast('Erro', 'Não foi possível fazer o download do PDF.', 'error');
+                }
+            };
+
+            window.attachOrEditPdf = async function (id) {
+                try {
+                    const doc = await getDocByIdDB(id);
+                    if (!doc) return;
+
+                    $('#editDocId').val(doc.id);
+                    $('#docCategory').val(doc.category);
+                    $('#docTitle').val(doc.title);
+                    $('#docAuthor').val(doc.author);
+                    $('#docStatus').val(doc.status);
+                    $('#docNotes').val(doc.notes || '');
+                    $('#pdfFileInput').val('');
+                    
+                    $('#pdfRequiredStar').hide();
+                    $('#uploadModalHeaderTitle').text('Anexar / Substituir PDF da Proposição');
+                    $('#btnSubmitText').text('Salvar Alterações');
+
+                    if (doc.fileName) {
+                        $('#fileNameDisplay').html(`<span class="text-gov-900 font-bold"><i class="fa-solid fa-file-pdf text-rose-500 mr-1.5"></i> ${escapeHtml(doc.fileName)}</span> (${doc.size || ''})`);
+                    } else {
+                        $('#fileNameDisplay').text('Clique para selecionar um novo PDF');
+                    }
+
+                    $('#uploadModal').removeClass('hidden');
+                } catch (e) {
+                    showToast('Erro', 'Não foi possível carregar os dados da proposição.', 'error');
+                }
+            };
+
+            window.requestDeleteDoc = function (id) {
+                docToDeleteId = id;
+                $('#deleteModal').removeClass('hidden');
+            };
+
+            $('#cancelDeleteBtn').on('click', function () {
+                docToDeleteId = null;
+                $('#deleteModal').addClass('hidden');
+            });
+
+            $('#confirmDeleteBtn').on('click', async function () {
+                if (docToDeleteId) {
+                    try {
+                        await deleteDocDB(docToDeleteId);
+                        docToDeleteId = null;
+                        $('#deleteModal').addClass('hidden');
+                        await refreshUI();
+                        showToast('Excluído', 'Proposição e anexo removidos com sucesso.');
+                    } catch (e) {
+                        showToast('Erro', 'Falha ao remover o documento.', 'error');
+                    }
+                }
+            });
+
+            $('#btnGroupAll').on('click', async function () {
+                const docs = await getAllDocsDB();
+
+                if (docs.length === 0) {
+                    showToast('Plenário Vazio', 'Nenhuma proposição cadastrada para emissão de relatório.', 'error');
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+
+                // Cabeçalho Oficial no PDF
+                pdf.setFillColor(11, 25, 46);
+                pdf.rect(0, 0, 210, 32, 'F');
+                pdf.setTextColor(255, 255, 255);
+                pdf.setFontSize(14);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('CÂMARA MUNICIPAL DE VEREADORES', 105, 13, { align: 'center' });
+                pdf.setFontSize(10);
+                pdf.text('PLENÁRIO JONAS PLÍNIO - RELATÓRIO DE MATÉRIAS DA SESSÃO', 105, 21, { align: 'center' });
+
+                pdf.setTextColor(80, 80, 80);
+                pdf.setFontSize(8.5);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text(`Mesa Diretora: Pres. Rogério | Vice-Pres. Lucas | 1º Sec. Dilson`, 15, 40);
+                pdf.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, 15, 45);
+
+                let y = 55;
+                const cats = ['projeto', 'indicacao', 'requerimento', 'outros'];
+
+                cats.forEach(c => {
+                    const items = docs.filter(d => d.category === c);
+                    if (items.length > 0) {
+                        pdf.setFillColor(240, 245, 250);
+                        pdf.rect(15, y, 180, 8, 'F');
+                        pdf.setTextColor(11, 25, 46);
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.setFontSize(9.5);
+                        pdf.text(`${categoryNames[c].toUpperCase()} (${items.length})`, 18, y + 5.5);
+
+                        y += 12;
+
+                        items.forEach((item, idx) => {
+                            if (y > 270) {
+                                pdf.addPage();
+                                y = 20;
+                            }
+                            pdf.setTextColor(20, 20, 20);
+                            pdf.setFont('helvetica', 'bold');
+                            pdf.setFontSize(9);
+                            pdf.text(`${idx + 1}. ${item.title} [Status: ${item.status}]`, 20, y);
+
+                            pdf.setFont('helvetica', 'normal');
+                            pdf.setFontSize(8);
+                            pdf.setTextColor(100, 100, 100);
+                            let metaText = `Autor: ${item.author} | Anexado em: ${item.date}`;
+                            if (item.notes) metaText += ` | Obs: ${item.notes}`;
+                            pdf.text(metaText, 20, y + 4.5);
+
+                            y += 10;
+                        });
+
+                        y += 4;
+                    }
+                });
+
+                pdf.setFontSize(8);
+                pdf.setTextColor(150, 150, 150);
+                pdf.text('todos os direitos para André Almeida.', 105, 285, { align: 'center' });
+
+                pdf.save(`Relatorio_Plenario_Jonas_Plinio.pdf`);
+                showToast('Relatório Gerado', 'Relatório impresso do plenário exportado com sucesso!');
+            });
+
+            function updateBadges(docs) {
+                ['projeto', 'indicacao', 'requerimento', 'outros'].forEach(cat => {
+                    const count = docs.filter(d => d.category === cat).length;
+                    $(`button[data-category="${cat}"] .badge`).text(count);
+                });
+            }
+
+            function formatSize(bytes) {
+                if (!bytes) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            function showToast(title, message, type = 'success') {
+                const $toast = $('#toastNotification');
+                const $icon = $('#toastIcon');
+
+                $('#toastTitle').text(title);
+                $('#toastMessage').text(message);
+
+                if (type === 'error') {
+                    $toast.removeClass('border-gold-400').addClass('border-rose-500');
+                    $icon.removeClass('fa-circle-check text-gold-400').addClass('fa-circle-xmark text-rose-500');
+                } else {
+                    $toast.removeClass('border-rose-500').addClass('border-gold-400');
+                    $icon.removeClass('fa-circle-xmark text-rose-500').addClass('fa-circle-check text-gold-400');
+                }
+
+                $toast.removeClass('translate-y-24 opacity-0').addClass('translate-y-0 opacity-100');
+
+                setTimeout(() => {
+                    $toast.removeClass('translate-y-0 opacity-100').addClass('translate-y-24 opacity-0');
+                }, 3500);
+            }
+
+            function escapeHtml(text) {
+                return $('<div>').text(text || '').html();
+            }
+
+            function slugify(text) {
+                return text.toString().toLowerCase()
+                    .replace(/\s+/g, '_')
+                    .replace(/[^\w\-]+/g, '')
+                    .replace(/\-\-+/g, '_');
+            }
+        });
+    </script>
+</body>
+</html>
