@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket + STOMP Real-Time Chat System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        stomp: {
+                            50: '#f0f9ff',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-full flex flex-col antialiased selection:bg-sky-500 selection:text-white">
+
+    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+                    <i class="fa-solid fa-comments text-xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-sky-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">
+                            WebSocket + STOMP Real-Time System
+                        </h1>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold">STOMP v1.2</span>
+                    </div>
+                    <p class="text-xs text-slate-400 hidden sm:block">Simulação bidirecional de mensagens e arquivos em tempo real</p>
+                </div>
+            </div>
+
+            <!-- Header Controls & Code Toggle -->
+            <div class="flex items-center space-x-3">
+                <button id="toggleCodeModalBtn" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition border border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-code text-sky-400"></i>
+                    <span>Ver Código Spring Boot / JS</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col space-y-6">
+
+        <!-- Global Status Bar & Protocol Debugger -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-3 w-full md:w-auto">
+                <div class="relative flex items-center justify-center">
+                    <span id="globalConnPing" class="absolute w-3.5 h-3.5 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span id="globalConnDot" class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span id="globalConnText" class="text-xs font-bold text-slate-200">Servidor STOMP Conectado</span>
+                        <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700 font-mono">ws://localhost:8080/ws-chat</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400">Canal ativo: <strong id="activeTopicLabel" class="text-sky-400 font-mono">/topic/public</strong></p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                <label for="roomSelect" class="text-xs text-slate-400 font-medium">Sala (Tópico):</label>
+                <select id="roomSelect" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500 font-mono">
+                    <option value="/topic/public">/topic/public (Geral)</option>
+                    <option value="/topic/tech">/topic/tech (Tecnologia)</option>
+                    <option value="/topic/support">/topic/support (Suporte)</option>
+                </select>
+                <button id="clearChatBtn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs font-medium transition border border-slate-700">
+                    <i class="fa-solid fa-trash-can mr-1"></i> Limpar
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1">
+            
+            <!-- CLIENT A (NOTEBOOK / USER A) -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-2xl relative">
+                <!-- User Header -->
+                <div class="bg-slate-950/80 border-b border-slate-800 p-3.5 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="relative">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Ana" class="w-9 h-9 rounded-full object-cover border border-sky-500">
+                            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-950 rounded-full"></span>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-200">André Almeida (Notebook)</h3>
+                            <span class="text-[10px] text-slate-400 font-mono">SUBSCRIBED &rarr; <span class="roomCurrent">/topic/public</span></span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-mono uppercase bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded">Dispositivo A</span>
+                </div>
+
+                <!-- Chat Feed User A -->
+                <div id="chatFeedA" class="flex-1 p-4 space-y-3 overflow-y-auto min-h-[360px] max-h-[460px] custom-scrollbar bg-slate-950/40">
+                    <!-- Dynamic Messages injected here -->
+                </div>
+
+                <!-- Input & File Upload Bar User A -->
+                <div class="p-3 bg-slate-950 border-t border-slate-800 space-y-2">
+                    <div id="filePreviewContainerA" class="hidden flex items-center gap-2 p-2 bg-slate-900 border border-slate-800 rounded-lg">
+                        <i id="fileIconA" class="fa-solid fa-file text-sky-400 text-sm"></i>
+                        <span id="fileNameA" class="text-xs text-slate-300 font-mono truncate flex-1"></span>
+                        <button id="cancelFileA" class="text-slate-500 hover:text-rose-400 text-xs p-1"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <form id="formUserA" class="flex items-center gap-2">
+                        <input type="file" id="fileInputA" class="hidden" accept="image/*,application/pdf">
+                        <button type="button" id="attachBtnA" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700 text-xs">
+                            <i class="fa-solid fa-paperclip"></i>
+                        </button>
+                        <input type="text" id="inputUserA" placeholder="Digite uma mensagem STOMP..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500 transition">
+                        <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-medium text-xs shadow-lg shadow-sky-600/20 transition flex items-center gap-1.5">
+                            <span>Enviar</span>
+                            <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- CLIENT B (TABLET / USER B) -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-2xl relative">
+                <!-- User Header -->
+                <div class="bg-slate-950/80 border-b border-slate-800 p-3.5 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="relative">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" alt="Carlos" class="w-9 h-9 rounded-full object-cover border border-purple-500">
+                            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-950 rounded-full"></span>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-200">Carlos Lima (Tablet / Celular)</h3>
+                            <span class="text-[10px] text-slate-400 font-mono">SUBSCRIBED &rarr; <span class="roomCurrent">/topic/public</span></span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-mono uppercase bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded">Dispositivo B</span>
+                </div>
+
+                <!-- Chat Feed User B -->
+                <div id="chatFeedB" class="flex-1 p-4 space-y-3 overflow-y-auto min-h-[360px] max-h-[460px] custom-scrollbar bg-slate-950/40">
+                    <!-- Dynamic Messages injected here -->
+                </div>
+
+                <!-- Input & File Upload Bar User B -->
+                <div class="p-3 bg-slate-950 border-t border-slate-800 space-y-2">
+                    <div id="filePreviewContainerB" class="hidden flex items-center gap-2 p-2 bg-slate-900 border border-slate-800 rounded-lg">
+                        <i id="fileIconB" class="fa-solid fa-file text-purple-400 text-sm"></i>
+                        <span id="fileNameB" class="text-xs text-slate-300 font-mono truncate flex-1"></span>
+                        <button id="cancelFileB" class="text-slate-500 hover:text-rose-400 text-xs p-1"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <form id="formUserB" class="flex items-center gap-2">
+                        <input type="file" id="fileInputB" class="hidden" accept="image/*,application/pdf">
+                        <button type="button" id="attachBtnB" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700 text-xs">
+                            <i class="fa-solid fa-paperclip"></i>
+                        </button>
+                        <input type="text" id="inputUserB" placeholder="Responder via STOMP..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-purple-500 transition">
+                        <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-medium text-xs shadow-lg shadow-purple-600/20 transition flex items-center gap-1.5">
+                            <span>Enviar</span>
+                            <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 shadow-xl">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-terminal text-amber-400 text-xs"></i>
+                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Monitor de Frames STOMP (WebSocket Wire Logs)</h3>
+                </div>
+                <span class="text-[10px] font-mono text-slate-500">FORMATO: SEND / MESSAGE / SUBSCRIBE</span>
+            </div>
+            <div id="stompConsole" class="bg-slate-900 rounded-xl p-3 h-32 overflow-y-auto font-mono text-[11px] text-slate-300 space-y-1.5 border border-slate-800 custom-scrollbar">
+                <div class="text-emerald-400">&gt;&gt; CONNECTED: heartbeat:10000,10000 version:1.2</div>
+                <div class="text-sky-400">&gt;&gt; SUBSCRIBE id:sub-0 destination:/topic/public</div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="codeModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-cubes text-sky-400"></i>
+                    <h2 class="text-sm font-bold text-slate-200">Código de Referência: Spring Boot + STOMP.js</h2>
+                </div>
+                <button id="closeCodeModalBtn" class="text-slate-400 hover:text-slate-200 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <!-- Code Tabs -->
+            <div class="flex border-b border-slate-800 bg-slate-950/50 text-xs">
+                <button id="tabJavaConfigBtn" class="px-4 py-2.5 font-mono text-sky-400 border-b-2 border-sky-500 font-semibold bg-slate-900">WebSocketConfig.java</button>
+                <button id="tabJavaControllerBtn" class="px-4 py-2.5 font-mono text-slate-400 hover:text-slate-200 border-b-2 border-transparent">ChatController.java</button>
+                <button id="tabJsClientBtn" class="px-4 py-2.5 font-mono text-slate-400 hover:text-slate-200 border-b-2 border-transparent">stomp-client.js</button>
+            </div>
+
+            <!-- Code Display Area -->
+            <div class="flex-1 p-4 overflow-y-auto bg-slate-950 font-mono text-xs custom-scrollbar">
+                <!-- Tab Java Config -->
+                <pre id="codeJavaConfig" class="text-sky-300"><code>package com.example.chat.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.*;
+
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        // Habilita o broker simples na memória para mensagens em tópicos
+        config.enableSimpleBroker("/topic");
+        // Prefixo para mensagens enviadas ao controller (@MessageMapping)
+        config.setApplicationDestinationPrefixes("/app");
+    }
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // Endpoint WebSocket que os clientes usarão para conectar
+        registry.addEndpoint("/ws-chat")
+                .setAllowedOriginPatterns("*")
+                .withSockJS(); // Suporte de fallback SockJS
+    }
+}</code></pre>
+
+                <!-- Tab Java Controller -->
+                <pre id="codeJavaController" class="hidden text-purple-300"><code>package com.example.chat.controller;
+
+import com.example.chat.model.ChatMessage;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.stereotype.Controller;
+
+@Controller
+public class ChatController {
+
+    // Trata mensagens para /app/chat.sendMessage
+    @MessageMapping("/chat.sendMessage")
+    @SendTo("/topic/public")
+    public ChatMessage sendMessage(@Payload ChatMessage chatMessage) {
+        // Processa e retransmite a mensagem para todos inscritos em /topic/public
+        return chatMessage;
+    }
+
+    // Trata salas dinâmicas: /app/chat.sendMessage/{room}
+    @MessageMapping("/chat.sendMessage/{room}")
+    @SendTo("/topic/{room}")
+    public ChatMessage sendToRoom(@DestinationVariable String room, @Payload ChatMessage chatMessage) {
+        return chatMessage;
+    }
+}</code></pre>
+
+                <!-- Tab JS Client -->
+                <pre id="codeJsClient" class="hidden text-emerald-300"><code>// Exemplo no Frontend com STOMP.js + SockJS
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+
+const socket = new SockJS('http://localhost:8080/ws-chat');
+const stompClient = new Client({
+    webSocketFactory: () => socket,
+    debug: (str) => console.log(str),
+    onConnect: (frame) => {
+        console.log('Conectado ao STOMP Broker:', frame);
+
+        // Inscreve no tópico desejado
+        stompClient.subscribe('/topic/public', (message) => {
+            const body = JSON.parse(message.body);
+            renderMessageInChat(body);
+        });
+    }
+});
+
+stompClient.activate();
+
+// Enviar mensagem / arquivo
+function enviarMensagem(sender, content, fileData) {
+    const chatMessage = {
+        sender: sender,
+        content: content,
+        fileUrl: fileData ? fileData.url : null,
+        fileType: fileData ? fileData.type : null,
+        timestamp: new Date().toISOString()
+    };
+
+    stompClient.publish({
+        destination: '/app/chat.sendMessage',
+        body: JSON.stringify(chatMessage)
+    });
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // App State
+        let currentTopic = '/topic/public';
+        let pendingFileA = null;
+        let pendingFileB = null;
+
+        // Elements
+        const chatFeedA = document.getElementById('chatFeedA');
+        const chatFeedB = document.getElementById('chatFeedB');
+        const stompConsole = document.getElementById('stompConsole');
+        const roomSelect = document.getElementById('roomSelect');
+        const activeTopicLabel = document.getElementById('activeTopicLabel');
+        const roomCurrentLabels = document.querySelectorAll('.roomCurrent');
+
+        // Modal Code Elements
+        const codeModal = document.getElementById('codeModal');
+        const toggleCodeModalBtn = document.getElementById('toggleCodeModalBtn');
+        const closeCodeModalBtn = document.getElementById('closeCodeModalBtn');
+
+        const tabJavaConfigBtn = document.getElementById('tabJavaConfigBtn');
+        const tabJavaControllerBtn = document.getElementById('tabJavaControllerBtn');
+        const tabJsClientBtn = document.getElementById('tabJsClientBtn');
+
+        const codeJavaConfig = document.getElementById('codeJavaConfig');
+        const codeJavaController = document.getElementById('codeJavaController');
+        const codeJsClient = document.getElementById('codeJsClient');
+
+        // File Attachment User A Elements
+        const attachBtnA = document.getElementById('attachBtnA');
+        const fileInputA = document.getElementById('fileInputA');
+        const filePreviewContainerA = document.getElementById('filePreviewContainerA');
+        const fileNameA = document.getElementById('fileNameA');
+        const fileIconA = document.getElementById('fileIconA');
+        const cancelFileA = document.getElementById('cancelFileA');
+
+        // File Attachment User B Elements
+        const attachBtnB = document.getElementById('attachBtnB');
+        const fileInputB = document.getElementById('fileInputB');
+        const filePreviewContainerB = document.getElementById('filePreviewContainerB');
+        const fileNameB = document.getElementById('fileNameB');
+        const fileIconB = document.getElementById('fileIconB');
+        const cancelFileB = document.getElementById('cancelFileB');
+
+        // Logger Function for STOMP Frame Console
+        function logStompFrame(frameType, payload) {
+            const time = new Date().toLocaleTimeString('pt-BR');
+            const div = document.createElement('div');
+            
+            if (frameType === 'SEND') {
+                div.className = 'text-amber-400';
+                div.textContent = `[${time}] SEND destination:${currentTopic} -> ${JSON.stringify(payload)}`;
+            } else if (frameType === 'MESSAGE') {
+                div.className = 'text-sky-300';
+                div.textContent = `[${time}] MESSAGE subscription:sub-0 destination:${currentTopic} payload:${JSON.stringify(payload)}`;
+            } else if (frameType === 'SUBSCRIBE') {
+                div.className = 'text-purple-400';
+                div.textContent = `[${time}] SUBSCRIBE id:sub-0 destination:${payload}`;
+            }
+
+            stompConsole.appendChild(div);
+            stompConsole.scrollTop = stompConsole.scrollHeight;
+        }
+
+        // Render Message HTML Component
+        function renderChatMessage(msgData) {
+            const timeStr = new Date(msgData.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Build Attachment HTML if exists
+            let attachmentHtml = '';
+            if (msgData.file) {
+                if (msgData.file.type.startsWith('image/')) {
+                    attachmentHtml = `
+                        <div class="mt-2 rounded-lg overflow-hidden border border-slate-700 max-w-xs">
+                            <img src="${msgData.file.url}" alt="Attachment" class="w-full h-auto object-cover max-h-48">
+                        </div>
+                    `;
+                } else {
+                    attachmentHtml = `
+                        <div class="mt-2 flex items-center gap-2 p-2 rounded bg-slate-800/80 border border-slate-700 text-xs font-mono">
+                            <i class="fa-solid fa-file-pdf text-rose-400 text-base"></i>
+                            <div class="flex-1 truncate">
+                                <p class="text-slate-200 font-bold truncate">${msgData.file.name}</p>
+                                <span class="text-[10px] text-slate-400">Documento PDF</span>
+                            </div>
+                            <a href="${msgData.file.url}" target="_blank" class="p-1 text-slate-400 hover:text-sky-400"><i class="fa-solid fa-download"></i></a>
+                        </div>
+                    `;
+                }
+            }
+
+            // User A Layout
+            const isUserA = msgData.sender === 'Ana Souza';
+
+            // User A Feed Item
+            const messageElA = document.createElement('div');
+            messageElA.className = `flex ${isUserA ? 'justify-end' : 'justify-start'}`;
+            messageElA.innerHTML = `
+                <div class="max-w-[80%] ${isUserA ? 'bg-sky-600 text-white rounded-2xl rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-2xl rounded-tl-none'} p-3 shadow-md border border-slate-700/50">
+                    <div class="flex items-center justify-between gap-3 mb-1">
+                        <span class="text-[10px] font-bold ${isUserA ? 'text-sky-200' : 'text-purple-300'}">${msgData.sender}</span>
+                        <span class="text-[9px] ${isUserA ? 'text-sky-200/80' : 'text-slate-400'} font-mono">${timeStr}</span>
+                    </div>
+                    ${msgData.text ? `<p class="text-xs leading-relaxed break-words">${msgData.text}</p>` : ''}
+                    ${attachmentHtml}
+                </div>
+            `;
+
+            // User B Feed Item
+            const isUserB = msgData.sender === 'Carlos Lima';
+            const messageElB = document.createElement('div');
+            messageElB.className = `flex ${isUserB ? 'justify-end' : 'justify-start'}`;
+            messageElB.innerHTML = `
+                <div class="max-w-[80%] ${isUserB ? 'bg-purple-600 text-white rounded-2xl rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-2xl rounded-tl-none'} p-3 shadow-md border border-slate-700/50">
+                    <div class="flex items-center justify-between gap-3 mb-1">
+                        <span class="text-[10px] font-bold ${isUserB ? 'text-purple-200' : 'text-sky-300'}">${msgData.sender}</span>
+                        <span class="text-[9px] ${isUserB ? 'text-purple-200/80' : 'text-slate-400'} font-mono">${timeStr}</span>
+                    </div>
+                    ${msgData.text ? `<p class="text-xs leading-relaxed break-words">${msgData.text}</p>` : ''}
+                    ${attachmentHtml}
+                </div>
+            `;
+
+            chatFeedA.appendChild(messageElA);
+            chatFeedB.appendChild(messageElB);
+
+            // Auto-scroll feeds
+            chatFeedA.scrollTop = chatFeedA.scrollHeight;
+            chatFeedB.scrollTop = chatFeedB.scrollHeight;
+        }
+
+        // Send Message Handler
+        function broadcastStompMessage(senderName, textInputId, pendingFile, resetFileCallback) {
+            const textInput = document.getElementById(textInputId);
+            const text = textInput.value.trim();
+
+            if (!text && !pendingFile) return;
+
+            const payload = {
+                sender: senderName,
+                text: text,
+                file: pendingFile ? {
+                    name: pendingFile.name,
+                    type: pendingFile.type,
+                    url: pendingFile.url
+                } : null,
+                timestamp: new Date().toISOString(),
+                destination: currentTopic
+            };
+
+            // 1. Log SEND Frame
+            logStompFrame('SEND', payload);
+
+            // 2. Simulate Broker Broadcasting back via WebSocket (MESSAGE Frame)
+            setTimeout(() => {
+                logStompFrame('MESSAGE', payload);
+                renderChatMessage(payload);
+            }, 150);
+
+            // Reset Input
+            textInput.value = '';
+            if (resetFileCallback) resetFileCallback();
+        }
+
+        // File Handler Setup Helper
+        function setupFileInput(btnEl, inputEl, containerEl, nameEl, iconEl, cancelEl, setFileCb) {
+            btnEl.addEventListener('click', () => inputEl.click());
+
+            inputEl.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const fileObj = {
+                        name: file.name,
+                        type: file.type,
+                        url: URL.createObjectURL(file)
+                    };
+                    setFileCb(fileObj);
+
+                    nameEl.textContent = file.name;
+                    containerEl.classList.remove('hidden');
+
+                    if (file.type.startsWith('image/')) {
+                        iconEl.className = 'fa-solid fa-file-image text-emerald-400 text-sm';
+                    } else {
+                        iconEl.className = 'fa-solid fa-file-pdf text-rose-400 text-sm';
+                    }
+                }
+            });
+
+            cancelEl.addEventListener('click', () => {
+                inputEl.value = '';
+                setFileCb(null);
+                containerEl.classList.add('hidden');
+            });
+        }
+
+        // Setup File Controls
+        setupFileInput(attachBtnA, fileInputA, filePreviewContainerA, fileNameA, fileIconA, cancelFileA, (f) => pendingFileA = f);
+        setupFileInput(attachBtnB, fileInputB, filePreviewContainerB, fileNameB, fileIconB, cancelFileB, (f) => pendingFileB = f);
+
+        // Form Submit Listeners
+        document.getElementById('formUserA').addEventListener('submit', (e) => {
+            e.preventDefault();
+            broadcastStompMessage('Ana Souza', 'inputUserA', pendingFileA, () => {
+                pendingFileA = null;
+                filePreviewContainerA.classList.add('hidden');
+                fileInputA.value = '';
+            });
+        });
+
+        document.getElementById('formUserB').addEventListener('submit', (e) => {
+            e.preventDefault();
+            broadcastStompMessage('Carlos Lima', 'inputUserB', pendingFileB, () => {
+                pendingFileB = null;
+                filePreviewContainerB.classList.add('hidden');
+                fileInputB.value = '';
+            });
+        });
+
+        // Room Topic Switcher
+        roomSelect.addEventListener('change', (e) => {
+            currentTopic = e.target.value;
+            activeTopicLabel.textContent = currentTopic;
+            roomCurrentLabels.forEach(lbl => lbl.textContent = currentTopic);
+            logStompFrame('SUBSCRIBE', currentTopic);
+        });
+
+        // Clear Chat
+        document.getElementById('clearChatBtn').addEventListener('click', () => {
+            chatFeedA.innerHTML = '';
+            chatFeedB.innerHTML = '';
+        });
+
+        // Code Modal Toggle
+        toggleCodeModalBtn.addEventListener('click', () => codeModal.classList.remove('hidden'));
+        closeCodeModalBtn.addEventListener('click', () => codeModal.classList.add('hidden'));
+
+        // Tab Switching Logic
+        tabJavaConfigBtn.addEventListener('click', () => {
+            codeJavaConfig.classList.remove('hidden');
+            codeJavaController.classList.add('hidden');
+            codeJsClient.classList.add('hidden');
+
+            tabJavaConfigBtn.className = 'px-4 py-2.5 font-mono text-sky-400 border-b-2 border-sky-500 font-semibold bg-slate-900';
+            tabJavaControllerBtn.className = 'px-4 py-2.5 font-mono text-slate-400 hover:text-slate-200 border-b-2 border-transparent';
+            tabJsClientBtn.className = 'px-4 py-2.5 font-mono text-slate-400 hover:text-slate-200 border-b-2 border-transparent';
+        });
+
+        tabJavaControllerBtn.addEventListener('click', () => {
+            codeJavaConfig.classList.add('hidden');
+            codeJavaController.classList.remove('hidden');
+            codeJsClient.classList.add('hidden');
+
+            tabJavaControllerBtn.className = 'px-4 py-2.5 font-mono text-purple-400 border-b-2 border-purple-500 font-semibold bg-slate-900';
+            tabJavaConfigBtn.className = 'px-4 py-2.5 font-mono text-slate-400 hover:text-slate-200 border-b-2 border-transparent';
+            tabJsClientBtn.className = 'px-4 py-2.5 font-mono text-slate-400 hover:text-slate-200 border-b-2 border-transparent';
+        });
+
+        tabJsClientBtn.addEventListener('click', () => {
+            codeJavaConfig.classList.add('hidden');
+            codeJavaController.classList.add('hidden');
+            codeJsClient.classList.remove('hidden');
+
+            tabJsClientBtn.className = 'px-4 py-2.5 font-mono text-emerald-400 border-b-2 border-emerald-500 font-semibold bg-slate-900';
+            tabJavaConfigBtn.className = 'px-4 py-2.5 font-mono text-slate-400 hover:text-slate-200 border-b-2 border-transparent';
+            tabJavaControllerBtn.className = 'px-4 py-2.5 font-mono text-slate-400 hover:text-slate-200 border-b-2 border-transparent';
+        });
+
+        // Initial Seed Messages
+        setTimeout(() => {
+            renderChatMessage({
+                sender: 'Ana Souza',
+                text: 'Olá Carlos! Conectei no broker STOMP na sala /topic/public.',
+                file: null,
+                timestamp: new Date().toISOString()
+            });
+        }, 300);
+
+        setTimeout(() => {
+            renderChatMessage({
+                sender: 'Carlos Lima',
+                text: 'Perfeito Ana! Pode me enviar o relatório em PDF por aqui?',
+                file: null,
+                timestamp: new Date().toISOString()
+            });
+        }, 1200);
+    </script>
+</body>
+</html>
