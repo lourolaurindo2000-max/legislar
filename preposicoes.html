@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Câmara Municipal de Vereadores - Plenário Jonas Plínio</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef6ff',
+              100: '#d8eaff',
+              500: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e3a8a',
+              900: '#0f2257',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <!-- jsPDF & autoTable para Relatórios -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: #f1f5f9;
+      touch-action: manipulation;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .modal-backdrop {
+      background-color: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(4px);
+    }
+
+    .active-tab {
+      background-color: #0f2257 !important;
+      color: #ffffff !important;
+      border-bottom: 4px solid #60a5fa;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-800 antialiased bg-slate-100">
+
+  <!-- TOPO / HEADER -->
+  <header class="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 text-white shadow-xl border-b-4 border-brand-500 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row items-center justify-between gap-3">
+        
+        <!-- Esquerda: 1º Secretário -->
+        <div class="w-full lg:w-1/4 flex items-center justify-center lg:justify-start bg-brand-800/60 lg:bg-transparent p-2.5 rounded-xl border border-brand-700/50 lg:border-none shadow-sm lg:shadow-none">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-brand-700 flex items-center justify-center text-brand-100 shadow border border-brand-500/30">
+              <i class="fa-solid fa-pen-nib text-base"></i>
+            </div>
+            <div>
+              <span class="text-[11px] uppercase tracking-wider text-brand-100 font-bold block">Mesa Diretora</span>
+              <span class="text-sm sm:text-base font-extrabold text-white"><span class="text-brand-100">1º Secretário:</span> Dilson Junior</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Centro: Logo da Câmara e Nome do Plenário -->
+        <div class="w-full lg:w-2/4 text-center my-1 lg:my-0">
+          <div class="flex items-center justify-center space-x-3">
+            <div class="bg-white p-2.5 rounded-full shadow-md text-brand-900 flex items-center justify-center border border-brand-100">
+              <i class="fa-solid fa-landmark text-2xl sm:text-3xl"></i>
+            </div>
+            <div>
+              <h1 class="text-xs sm:text-sm font-bold tracking-widest uppercase text-brand-100">Câmara de Vereadores</h1>
+              <h2 class="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight drop-shadow-md">
+                Plenário Jonas Plínio
+              </h2>
+            </div>
+          </div>
+        </div>
+
+        <!-- Direita: Presidente e Vice-Presidente -->
+        <div class="w-full lg:w-1/4 flex items-center justify-center lg:justify-end bg-brand-800/60 lg:bg-transparent p-2.5 rounded-xl border border-brand-700/50 lg:border-none shadow-sm lg:shadow-none">
+          <div class="flex items-center space-x-3 text-right">
+            <div>
+              <span class="text-[11px] uppercase tracking-wider text-brand-100 font-bold block">Presidência</span>
+              <span class="text-xs sm:text-sm font-extrabold text-white block"><span class="text-brand-100">Presidente:</span> Rogério Gotado</span>
+              <span class="text-xs sm:text-sm font-extrabold text-white block"><span class="text-brand-100">Vice-Presidente:</span> Lucas Calvalcante</span>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-brand-700 flex items-center justify-center text-brand-100 shadow border border-brand-500/30">
+              <i class="fa-solid fa-gavel text-base"></i>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 flex-grow">
+
+    <!-- BARRA SUPERIOR DE CONEXÃO E AÇÕES -->
+    <div class="bg-white rounded-2xl shadow-md p-4 mb-6 border border-slate-200">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        
+        <!-- Indicador de Sincronização em Tempo Real -->
+        <div class="flex items-center space-x-3">
+          <span class="relative flex h-3.5 w-3.5" id="syncDot">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
+          </span>
+          <div class="flex flex-col">
+            <span class="text-xs sm:text-sm font-bold text-slate-800" id="syncStatus">
+              Tempo Real Ativo • Sincronizado em Todos os Dispositivos
+            </span>
+            <span class="text-[11px] text-slate-500" id="syncDetail">Qualquer arquivo anexado aparece imediatamente em todas as telas</span>
+          </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+          <button id="btnOpenConfigModal" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2.5 rounded-xl border border-slate-300 transition duration-200 flex items-center justify-center space-x-2 text-xs sm:text-sm" title="Configurar Nuvem / Firebase">
+            <i class="fa-solid fa-cloud text-brand-700"></i>
+            <span class="hidden sm:inline">Configuração Nuvem</span>
+          </button>
+
+          <button id="btnOpenUploadModal" class="flex-1 sm:flex-none bg-brand-700 hover:bg-brand-800 text-white font-bold px-4 py-2.5 rounded-xl shadow transition duration-200 flex items-center justify-center space-x-2 text-xs sm:text-sm">
+            <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+            <span>Anexar PDF / Proposição</span>
+          </button>
+
+          <button id="btnExportPdfReport" class="flex-1 sm:flex-none bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2.5 rounded-xl shadow transition duration-200 flex items-center justify-center space-x-2 text-xs sm:text-sm">
+            <i class="fa-solid fa-file-pdf text-base"></i>
+            <span>Baixar Pauta do Dia (PDF)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABAS / CATEGORIAS (Projetos, Indicações, Requerimentos, Atas, Ordem do Dia) -->
+    <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-6 p-1.5">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5" id="categoryTabs">
+        
+        <button data-category="ALL" class="tab-btn active-tab flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 p-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all">
+          <i class="fa-solid fa-layer-group text-base"></i>
+          <span class="text-center">Todas</span>
+        </button>
+
+        <button data-category="Projeto" class="tab-btn bg-white text-slate-700 hover:bg-brand-50 flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 p-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all">
+          <i class="fa-solid fa-file-contract text-base text-brand-700"></i>
+          <span class="text-center">Projetos</span>
+        </button>
+
+        <button data-category="Indicação" class="tab-btn bg-white text-slate-700 hover:bg-brand-50 flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 p-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all">
+          <i class="fa-solid fa-hand-holding-hand text-base text-brand-700"></i>
+          <span class="text-center">Indicações</span>
+        </button>
+
+        <button data-category="Requerimento" class="tab-btn bg-white text-slate-700 hover:bg-brand-50 flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 p-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all">
+          <i class="fa-solid fa-clipboard-question text-base text-brand-700"></i>
+          <span class="text-center">Requerimentos</span>
+        </button>
+
+        <button data-category="Atas" class="tab-btn bg-white text-slate-700 hover:bg-brand-50 flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 p-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all">
+          <i class="fa-solid fa-book-bookmark text-base text-brand-700"></i>
+          <span class="text-center">ATAS</span>
+        </button>
+
+        <button data-category="Ordem do Dia" class="tab-btn bg-white text-slate-700 hover:bg-brand-50 col-span-2 sm:col-span-1 flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 p-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all">
+          <i class="fa-solid fa-calendar-check text-base text-brand-700"></i>
+          <span class="text-center">Ordem do Dia</span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- FILTROS DE BUSCA E STATUS -->
+    <div class="bg-white rounded-2xl shadow-md p-4 mb-6 border border-slate-200">
+      <div class="flex flex-col sm:flex-row items-center gap-3">
+        <div class="relative w-full">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="searchInput" placeholder="Buscar por Título, Número, Ementa ou Autor/Vereador..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+        </div>
+        <select id="statusFilter" class="w-full sm:w-56 py-2.5 px-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm bg-white font-medium">
+          <option value="ALL">Todos os Status</option>
+          <option value="Em Pauta">Em Pauta</option>
+          <option value="Ordem do Dia">Ordem do Dia</option>
+          <option value="Em Votação">Em Votação</option>
+          <option value="Aprovado">Aprovado</option>
+          <option value="Rejeitado">Rejeitado</option>
+          <option value="Aprovado em Ata">Aprovado em Ata</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- LISTA DE DOCUMENTOS DA PAUTA -->
+    <div id="documentsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- Inserido dinamicamente pelo JavaScript -->
+    </div>
+
+    <!-- ESTADO VAZIO -->
+    <div id="emptyState" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center my-8">
+      <div class="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mx-auto text-brand-700 mb-4">
+        <i class="fa-solid fa-folder-open text-3xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-slate-800 mb-1">Nenhum documento encontrado</h3>
+      <p class="text-slate-500 text-sm max-w-md mx-auto">Não há itens anexados correspondentes a esta categoria ou aos termos da busca.</p>
+    </div>
+
+  </main>
+
+  <!-- MODAL DE UPLOAD / ANEXAR PDF -->
+  <div id="uploadModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 modal-backdrop hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+      
+      <div class="bg-brand-900 text-white px-6 py-4 flex items-center justify-between border-b border-brand-800">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-cloud-arrow-up text-brand-100 text-xl"></i>
+          <div>
+            <h3 class="font-bold text-lg">Anexar Documento ao Plenário</h3>
+            <p class="text-xs text-brand-100">Disponibiliza o PDF instantaneamente em todos os aparelhos</p>
+          </div>
+        </div>
+        <button class="closeModal text-slate-300 hover:text-white p-1 rounded-lg transition">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <form id="uploadForm" class="p-6 overflow-y-auto space-y-4 flex-grow">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Categoria / Tipo *</label>
+            <select id="docCategory" required class="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm bg-white">
+              <option value="Projeto">Projeto</option>
+              <option value="Indicação">Indicação</option>
+              <option value="Requerimento">Requerimento</option>
+              <option value="Atas">Atas</option>
+              <option value="Ordem do Dia">Ordem do Dia</option>
+              <option value="Outros Arquivos">Outros Arquivos</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Número / Identificação *</label>
+            <input type="text" id="docNumber" placeholder="Ex: 042/2026 ou Sessão 05" required class="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Título / Assunto *</label>
+          <input type="text" id="docTitle" placeholder="Ex: Projeto de Lei de Iluminação Pública ou Ata da 12ª Sessão" required class="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Autor / Responsável *</label>
+            <input type="text" id="docAuthor" placeholder="Ex: Ver. João Silva ou Mesa Diretora" required class="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Status da Matéria</label>
+            <select id="docStatus" class="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm bg-white">
+              <option value="Em Pauta">Em Pauta</option>
+              <option value="Ordem do Dia">Ordem do Dia</option>
+              <option value="Em Votação">Em Votação</option>
+              <option value="Aprovado">Aprovado</option>
+              <option value="Rejeitado">Rejeitado</option>
+              <option value="Aprovado em Ata">Aprovado em Ata</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Ementa / Resumo</label>
+          <textarea id="docEmenta" rows="2" placeholder="Breve resumo da proposição..." class="w-full p-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm"></textarea>
+        </div>
+
+        <!-- Anexo PDF -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Arquivo PDF *</label>
+          <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl hover:border-brand-500 transition-colors bg-slate-50">
+            <div class="space-y-2 text-center">
+              <i class="fa-solid fa-file-pdf text-4xl text-brand-700 mb-2"></i>
+              <div class="flex text-sm text-slate-600 justify-center">
+                <label for="docPdfFile" class="relative cursor-pointer bg-white rounded-lg font-bold text-brand-700 hover:text-brand-800">
+                  <span class="px-4 py-2 border border-brand-500 rounded-xl shadow-sm block">Selecionar PDF</span>
+                  <input id="docPdfFile" name="docPdfFile" type="file" accept="application/pdf" class="sr-only" required>
+                </label>
+              </div>
+              <p class="text-xs text-slate-500" id="fileNameDisplay">Apenas documentos em extensão .PDF</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 flex items-center justify-end space-x-3 border-t border-slate-200">
+          <button type="button" class="closeModal px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-100 transition">
+            Cancelar
+          </button>
+          <button type="submit" id="btnSaveDoc" class="px-5 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-sm shadow flex items-center space-x-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Anexar e Sincronizar</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- MODAL VISUALIZADOR DE PDF -->
+  <div id="pdfViewerModal" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 modal-backdrop hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+      
+      <div class="bg-brand-900 text-white px-4 py-3 flex items-center justify-between border-b border-brand-800">
+        <div class="flex items-center space-x-3 overflow-hidden">
+          <i class="fa-solid fa-file-pdf text-red-400 text-xl flex-shrink-0"></i>
+          <div class="truncate">
+            <h3 id="viewerTitle" class="font-bold text-sm sm:text-base truncate">Visualizador de Documento</h3>
+            <p id="viewerSubtitle" class="text-xs text-brand-100 truncate">Plenário Jonas Plínio</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2 flex-shrink-0">
+          <a id="downloadPdfBtn" href="#" download="" class="bg-brand-700 hover:bg-brand-800 text-white text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-download"></i>
+            <span class="hidden sm:inline">Baixar Arquivo</span>
+          </a>
+          <button class="closeViewerModal text-slate-300 hover:text-white p-1 rounded-lg transition text-xl">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-grow bg-slate-800 relative">
+        <iframe id="pdfFrame" class="w-full h-full border-0" title="Visualizador do Documento PDF"></iframe>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIGURAÇÃO DE NUVEM REALTIME (FIREBASE CONFIG) -->
+  <div id="configModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 modal-backdrop hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden border border-slate-200">
+      
+      <div class="bg-brand-900 text-white px-6 py-4 flex items-center justify-between border-b border-brand-800">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-cloud text-brand-100 text-xl"></i>
+          <div>
+            <h3 class="font-bold text-lg">Sincronização em Nuvem (Firebase)</h3>
+            <p class="text-xs text-brand-100">Conecte sua própria nuvem para sincronia ao vivo em vários locais</p>
+          </div>
+        </div>
+        <button class="closeConfigModal text-slate-300 hover:text-white p-1 rounded-lg transition">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 overflow-y-auto max-h-[80vh]">
+        <div class="bg-blue-50 border border-blue-200 text-blue-900 p-3 rounded-xl text-xs leading-relaxed">
+          <i class="fa-solid fa-circle-info text-brand-700 mr-1"></i>
+          <strong>Como funciona a sincronização entre aparelhos:</strong><br>
+          O sistema já conta com sincronização instantânea em abas e dispositivos na mesma rede local. Se hospedado na internet, você pode colar abaixo as credenciais do seu projeto Firebase Realtime Database para que <strong>todos os vereadores vejam as alterações em tempo real de qualquer lugar do mundo</strong>.
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Firebase Realtime Database URL *</label>
+          <input type="text" id="cfgDbUrl" placeholder="https://seu-projeto-default-rtdb.firebaseio.com" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Firebase API Key *</label>
+          <input type="text" id="cfgApiKey" placeholder="AIzaSy..." class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Project ID</label>
+          <input type="text" id="cfgProjectId" placeholder="seu-projeto-id" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-mono">
+        </div>
+
+        <div class="pt-3 flex items-center justify-between border-t border-slate-200">
+          <button type="button" id="btnResetConfig" class="text-xs text-red-600 hover:underline font-bold">
+            Restaurar Padrão
+          </button>
+          <div class="flex items-center space-x-2">
+            <button type="button" class="closeConfigModal px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs">
+              Cancelar
+            </button>
+            <button type="button" id="btnSaveConfig" class="px-4 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs shadow">
+              Salvar Conexão
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RODAPÉ / FOOTER -->
+  <footer class="bg-brand-900 text-brand-100 py-4 px-4 mt-auto border-t-4 border-brand-500 shadow-inner">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs sm:text-sm gap-2">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-shield-halved text-brand-500"></i>
+        <span>SISTEMA DE GESTÃO LEGISLATIVA - CÂMARA DE VEREADORES</span>
+      </div>
+      <div class="font-bold text-white tracking-wide">
+        Todos os direitos para André Almeida
+      </div>
+    </div>
+  </footer>
+
+  <!-- CARREGAMENTO DOS MÓDULOS FIREBASE REALTIME -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set, remove, push } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+    // Canal Broadcast Local para resposta imediata na mesma rede
+    const localChannel = new BroadcastChannel('plenario_jonas_plinio_local_sync');
+
+    // Chaves salvas localmente
+    const STORAGE_KEY = 'plenario_camara_docs_local_v2';
+    const FIREBASE_CFG_KEY = 'plenario_firebase_custom_config';
+
+    let firebaseApp = null;
+    let dbRef = null;
+    let isConnectedToCloud = false;
+
+    // Estado da Aplicação
+    let currentCategory = 'ALL';
+    let currentSearchQuery = '';
+    let currentStatusFilter = 'ALL';
+    let proposicoesCache = [];
+
+    // Tentar inicializar o Firebase com credenciais personalizadas ou padrão
+    function setupFirebase() {
+      const savedConfig = localStorage.getItem(FIREBASE_CFG_KEY);
+      let configObj = null;
+
+      if (savedConfig) {
+        try {
+          configObj = JSON.parse(savedConfig);
+        } catch (e) {
+          console.error("Erro ao ler credenciais do Firebase salvas:", e);
+        }
+      }
+
+      // Se existir config válida, inicializa Firebase Realtime
+      if (configObj && configObj.databaseURL && configObj.apiKey) {
+        try {
+          firebaseApp = initializeApp(configObj, 'plenarioApp');
+          const database = getDatabase(firebaseApp);
+          dbRef = ref(database, 'proposicoes_plenario');
+
+          // Escutar mudanças no Firebase em tempo real (Qualquer aparelho conectado atualiza na hora)
+          onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+              const list = Object.keys(data).map(key => ({ ...data[key], cloudKey: key }));
+              proposicoesCache = list;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+            } else {
+              proposicoesCache = [];
+              localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+            }
+            renderFilteredDocs();
+            updateStatusUI(true, "Conectado à Nuvem Firebase • Sincronia Global em Tempo Real");
+          }, (error) => {
+            console.warn("Erro ao ouvir dados da nuvem:", error);
+            fallbackToLocalMode("Nuvem em Modo Local/Híbrido • Sincronia de Rede");
+          });
+
+          isConnectedToCloud = true;
+          return;
+        } catch (err) {
+          console.error("Falha ao inicializar o Firebase:", err);
+        }
+      }
+
+      fallbackToLocalMode("Sincronia Local & Abas Ativa • Nuvem pronta para configurar");
+    }
+
+    function fallbackToLocalMode(msg) {
+      isConnectedToCloud = false;
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          proposicoesCache = JSON.parse(raw);
+        } catch (e) {
+          proposicoesCache = [];
+        }
+      } else {
+        seedDefaultData();
+      }
+      renderFilteredDocs();
+      updateStatusUI(false, msg);
+    }
+
+    function updateStatusUI(cloudActive, text) {
+      $('#syncStatus').text(text);
+      if (cloudActive) {
+        $('#syncDot span:first').removeClass('bg-amber-400').addClass('bg-emerald-400');
+        $('#syncDot span:last').removeClass('bg-amber-500').addClass('bg-emerald-500');
+        $('#syncDetail').text("Conectado via Firebase Realtime Database. Atualiza automaticamente em todos os tablets/celulares.");
+      } else {
+        $('#syncDot span:first').removeClass('bg-emerald-400').addClass('bg-amber-400');
+        $('#syncDot span:last').removeClass('bg-emerald-500').addClass('bg-amber-500');
+        $('#syncDetail').text("Modo Local ativo. Clique em 'Configuração Nuvem' para colar a URL do seu Firebase.");
+      }
+    }
+
+    // Salvar Documento
+    async function saveDocument(newDoc) {
+      if (isConnectedToCloud && dbRef) {
+        try {
+          const newRef = push(dbRef);
+          newDoc.cloudKey = newRef.key;
+          await set(newRef, newDoc);
+          return;
+        } catch (e) {
+          console.error("Erro ao salvar no Firebase, salvando localmente:", e);
+        }
+      }
+
+      // Fallback Local / Broadcast
+      proposicoesCache.unshift(newDoc);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(proposicoesCache));
+      localChannel.postMessage({ type: 'LOCAL_UPDATED' });
+      renderFilteredDocs();
+    }
+
+    // Excluir Documento
+    async function deleteDocument(docId, cloudKey) {
+      if (isConnectedToCloud && dbRef && cloudKey) {
+        try {
+          const itemRef = ref(getDatabase(firebaseApp), `proposicoes_plenario/${cloudKey}`);
+          await remove(itemRef);
+          return;
+        } catch (e) {
+          console.error("Erro ao remover no Firebase:", e);
+        }
+      }
+
+      // Exclusão local
+      proposicoesCache = proposicoesCache.filter(d => d.id !== docId);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(proposicoesCache));
+      localChannel.postMessage({ type: 'LOCAL_UPDATED' });
+      renderFilteredDocs();
+    }
+
+    // Renderização dos Cards
+    function renderFilteredDocs() {
+      const container = $('#documentsList');
+      container.empty();
+
+      let filtered = proposicoesCache.filter(doc => {
+        if (currentCategory !== 'ALL' && doc.categoria !== currentCategory) return false;
+        if (currentStatusFilter !== 'ALL' && doc.status !== currentStatusFilter) return false;
+
+        if (currentSearchQuery) {
+          const text = `${doc.numero} ${doc.titulo} ${doc.autor} ${doc.ementa}`.toLowerCase();
+          if (!text.includes(currentSearchQuery)) return false;
+        }
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        $('#emptyState').removeClass('hidden');
+      } else {
+        $('#emptyState').addClass('hidden');
+
+        filtered.forEach(doc => {
+          const statusColors = {
+            'Em Pauta': 'bg-amber-100 text-amber-800 border-amber-300',
+            'Ordem do Dia': 'bg-indigo-100 text-indigo-800 border-indigo-300',
+            'Em Votação': 'bg-blue-100 text-blue-800 border-blue-300',
+            'Aprovado': 'bg-emerald-100 text-emerald-800 border-emerald-300',
+            'Rejeitado': 'bg-rose-100 text-rose-800 border-rose-300',
+            'Aprovado em Ata': 'bg-teal-100 text-teal-800 border-teal-300'
+          };
+
+          const categoryIcons = {
+            'Projeto': 'fa-file-contract text-blue-600',
+            'Indicação': 'fa-hand-holding-hand text-amber-600',
+            'Requerimento': 'fa-clipboard-question text-purple-600',
+            'Atas': 'fa-book-bookmark text-emerald-600',
+            'Ordem do Dia': 'fa-calendar-check text-indigo-600',
+            'Outros Arquivos': 'fa-folder-open text-slate-600'
+          };
+
+          const cardHtml = `
+            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl border border-slate-200 transition-all duration-200 flex flex-col justify-between overflow-hidden">
+              <div class="p-5">
+                
+                <div class="flex items-start justify-between gap-2 mb-3">
+                  <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-700">
+                    <i class="fa-solid ${categoryIcons[doc.categoria] || 'fa-file'}"></i>
+                    <span>${doc.categoria} - ${doc.numero}</span>
+                  </span>
+
+                  <span class="px-2.5 py-1 text-xs font-bold rounded-full border ${statusColors[doc.status] || 'bg-slate-100'}">
+                    ${doc.status}
+                  </span>
+                </div>
+
+                <h4 class="font-bold text-slate-900 text-base mb-2 line-clamp-2 hover:text-brand-700 cursor-pointer btn-view-pdf" data-id="${doc.id}">
+                  ${doc.titulo}
+                </h4>
+
+                <p class="text-xs text-slate-600 mb-4 line-clamp-3 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed">
+                  ${doc.ementa}
+                </p>
+
+                <div class="text-xs text-slate-500 space-y-1.5">
+                  <div class="flex items-center space-x-1.5">
+                    <i class="fa-solid fa-user-tie text-brand-700"></i>
+                    <span class="font-semibold text-slate-700">Autor/Responsável:</span>
+                    <span>${doc.autor}</span>
+                  </div>
+                  <div class="flex items-center space-x-1.5">
+                    <i class="fa-regular fa-calendar-days text-slate-400"></i>
+                    <span>Data: ${doc.dataFormatada}</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+                <button data-id="${doc.id}" class="btn-view-pdf text-brand-700 hover:text-brand-900 font-extrabold text-xs flex items-center space-x-1.5 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg transition">
+                  <i class="fa-solid fa-eye text-sm"></i>
+                  <span>Visualizar PDF</span>
+                </button>
+
+                <div class="flex items-center space-x-2">
+                  <a href="${doc.pdfData}" download="${doc.categoria}_${doc.numero.replace('/', '-')}.pdf" class="text-slate-600 hover:text-brand-700 p-2 rounded-lg hover:bg-slate-200 transition" title="Baixar Arquivo PDF">
+                    <i class="fa-solid fa-download"></i>
+                  </a>
+                  <button data-id="${doc.id}" data-cloudkey="${doc.cloudKey || ''}" class="btn-delete-doc text-slate-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition" title="Excluir do Plenário">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          `;
+
+          container.append(cardHtml);
+        });
+      }
+    }
+
+    // Inicialização da Página
+    $(document).ready(function() {
+      setupFirebase();
+
+      // Escutar canal de sincronização local
+      localChannel.onmessage = function(e) {
+        if (e.data && e.data.type === 'LOCAL_UPDATED') {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            proposicoesCache = JSON.parse(raw);
+            renderFilteredDocs();
+          }
+        }
+      };
+
+      // Controle de Abas
+      $('#categoryTabs').on('click', '.tab-btn', function() {
+        $('.tab-btn').removeClass('active-tab').addClass('bg-white text-slate-700 hover:bg-brand-50');
+        $(this).addClass('active-tab').removeClass('bg-white text-slate-700 hover:bg-brand-50');
+        
+        currentCategory = $(this).data('category');
+        renderFilteredDocs();
+      });
+
+      // Busca por Digitação
+      $('#searchInput').on('input', function() {
+        currentSearchQuery = $(this).val().toLowerCase();
+        renderFilteredDocs();
+      });
+
+      // Filtro de Status
+      $('#statusFilter').on('change', function() {
+        currentStatusFilter = $(this).val();
+        renderFilteredDocs();
+      });
+
+      // Modal Upload
+      $('#btnOpenUploadModal').on('click', function() {
+        $('#uploadForm')[0].reset();
+        $('#fileNameDisplay').text('Apenas documentos em extensão .PDF').removeClass('text-emerald-600 font-bold');
+        $('#uploadModal').removeClass('hidden');
+      });
+
+      $('.closeModal').on('click', function() {
+        $('#uploadModal').addClass('hidden');
+      });
+
+      // Validação do Arquivo PDF
+      $('#docPdfFile').on('change', function() {
+        const file = this.files[0];
+        if (file) {
+          if (file.type !== 'application/pdf') {
+            alert('Atenção: Apenas arquivos com formato .PDF são permitidos.');
+            this.value = '';
+            $('#fileNameDisplay').text('Arquivo inválido! Escolha um PDF.').addClass('text-red-500');
+            return;
+          }
+          $('#fileNameDisplay').html(`<i class="fa-solid fa-circle-check text-emerald-500 mr-1"></i> Selecionado: <b>${file.name}</b> (${(file.size/1024/1024).toFixed(2)} MB)`).addClass('text-emerald-600 font-bold');
+        }
+      });
+
+      // Submeter Upload e Enviar para Nuvem/Local
+      $('#uploadForm').on('submit', async function(e) {
+        e.preventDefault();
+
+        const fileInput = $('#docPdfFile')[0];
+        if (!fileInput.files || fileInput.files.length === 0) {
+          alert("Por favor, escolha um arquivo PDF.");
+          return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        $('#btnSaveDoc').prop('disabled', true).html('<i class="fa-solid fa-spinner animate-spin"></i> Anexando e Sincronizando...');
+
+        reader.onload = async function(evt) {
+          const pdfBase64 = evt.target.result;
+
+          const newDoc = {
+            id: 'doc_' + Date.now(),
+            categoria: $('#docCategory').val(),
+            numero: $('#docNumber').val(),
+            titulo: $('#docTitle').val(),
+            autor: $('#docAuthor').val(),
+            status: $('#docStatus').val(),
+            ementa: $('#docEmenta').val() || 'Sem ementa informada.',
+            pdfData: pdfBase64,
+            nomeArquivo: file.name,
+            dataCriacao: new Date().toISOString(),
+            dataFormatada: new Date().toLocaleDateString('pt-BR')
+          };
+
+          await saveDocument(newDoc);
+
+          $('#uploadModal').addClass('hidden');
+          $('#btnSaveDoc').prop('disabled', false).html('<i class="fa-solid fa-cloud-arrow-up"></i><span>Anexar e Sincronizar</span>');
+        };
+
+        reader.readAsDataURL(file);
+      });
+
+      // Abrir Visualizador de PDF
+      $(document).on('click', '.btn-view-pdf', function() {
+        const docId = $(this).data('id');
+        const doc = proposicoesCache.find(d => d.id === docId);
+
+        if (doc) {
+          $('#viewerTitle').text(`${doc.categoria} ${doc.numero} - ${doc.titulo}`);
+          $('#viewerSubtitle').text(`Autor: ${doc.autor} | Data: ${doc.dataFormatada} | Status: ${doc.status}`);
+          
+          $('#pdfFrame').attr('src', doc.pdfData);
+          $('#downloadPdfBtn').attr('href', doc.pdfData).attr('download', `${doc.categoria}_${doc.numero.replace('/', '-')}.pdf`);
+
+          $('#pdfViewerModal').removeClass('hidden');
+        }
+      });
+
+      // Fechar Visualizador
+      $('.closeViewerModal').on('click', function() {
+        $('#pdfViewerModal').addClass('hidden');
+        $('#pdfFrame').attr('src', '');
+      });
+
+      // Excluir Documento
+      $(document).on('click', '.btn-delete-doc', async function(e) {
+        e.stopPropagation();
+        const docId = $(this).data('id');
+        const cloudKey = $(this).data('cloudkey');
+
+        if (confirm("Deseja realmente remover este arquivo do Plenário? Ele sairá da tela de todos os parlamentares.")) {
+          await deleteDocument(docId, cloudKey);
+        }
+      });
+
+      // Gerar PDF da Pauta
+      $('#btnExportPdfReport').on('click', function() {
+        generatePautaPdf();
+      });
+
+      // Modal de Configuração Firebase
+      $('#btnOpenConfigModal').on('click', function() {
+        const savedConfig = localStorage.getItem(FIREBASE_CFG_KEY);
+        if (savedConfig) {
+          try {
+            const obj = JSON.parse(savedConfig);
+            $('#cfgDbUrl').val(obj.databaseURL || '');
+            $('#cfgApiKey').val(obj.apiKey || '');
+            $('#cfgProjectId').val(obj.projectId || '');
+          } catch(e) {}
+        }
+        $('#configModal').removeClass('hidden');
+      });
+
+      $('.closeConfigModal').on('click', function() {
+        $('#configModal').addClass('hidden');
+      });
+
+      $('#btnSaveConfig').on('click', function() {
+        const dbUrl = $('#cfgDbUrl').val().trim();
+        const apiKey = $('#cfgApiKey').val().trim();
+        const projectId = $('#cfgProjectId').val().trim();
+
+        if (!dbUrl || !apiKey) {
+          alert("Por favor, informe ao menos a URL do Database e a API Key do Firebase.");
+          return;
+        }
+
+        const configObj = {
+          apiKey: apiKey,
+          databaseURL: dbUrl,
+          projectId: projectId || 'plenario-db'
+        };
+
+        localStorage.setItem(FIREBASE_CFG_KEY, JSON.stringify(configObj));
+        alert("Configuração salva com sucesso! A página será recarregada para ativar a conexão em tempo real.");
+        location.reload();
+      });
+
+      $('#btnResetConfig').on('click', function() {
+        if (confirm("Deseja remover as credenciais salvas do Firebase e voltar ao modo padrão?")) {
+          localStorage.removeItem(FIREBASE_CFG_KEY);
+          location.reload();
+        }
+      });
+    });
+
+    // GERAR RELATÓRIO DA PAUTA
+    function generatePautaPdf() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFillColor(15, 34, 87);
+      doc.rect(0, 0, 210, 30, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("CÂMARA DE VEREADORES", 105, 12, { align: "center" });
+
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text("Plenário Jonas Plínio - Pauta Oficial de Proposições e Matérias", 105, 20, { align: "center" });
+
+      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(9);
+      doc.text("Presidência: Presidente Rogério | Vice-Presidente Lucas", 14, 38);
+      doc.text("1º Secretário: Dilson", 14, 43);
+      doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 196, 38, { align: "right" });
+
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, 47, 196, 47);
+
+      const tableData = proposicoesCache.map(p => [
+        p.categoria,
+        p.numero,
+        p.titulo,
+        p.autor,
+        p.status
+      ]);
+
+      doc.autoTable({
+        startY: 52,
+        head: [['Categoria', 'Número', 'Título / Assunto', 'Autor', 'Status']],
+        body: tableData,
+        headStyles: {
+          fillColor: [29, 78, 216],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        styles: {
+          fontSize: 8,
+          cellPadding: 3
+        },
+        columnStyles: {
+          0: { cellWidth: 28 },
+          1: { cellWidth: 22 },
+          2: { cellWidth: 70 },
+          3: { cellWidth: 40 },
+          4: { cellWidth: 22 }
+        }
+      });
+
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        doc.text("Todos os direitos para André Almeida", 14, 287);
+        doc.text(`Página ${i} de ${pageCount}`, 196, 287, { align: "right" });
+      }
+
+      doc.save(`Pauta_Plenario_Jonas_Plinio_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`);
+    }
+
+    // Dados Exemplo
+    function seedDefaultData() {
+      const dummyPdf = 'data:application/pdf;base64,JVBERi0xLjQKJSDi483NCiAxIDAgb2JqCiA8PAogIC9UeXBlIC9DYXRhbG9nCiAgL1BhZ2VzIDIgMCBSCiA+PgplbmRvYmoKIDIgMCBvYmoKIDw8CiAgL1R5cGUgL1BhZ2VzCiAgL0tpZHMgWzMgMCBSXQogIC9Db3VudCAxCiA+PgplbmRvYmoKIDMgMCBvYmoKIDw8CiAgL1R5cGUgL1BhZ2UKICAvUGFyZW50IDIgMCBSCiAgL01lZGlhQm94IFswIDAgNjEyIDc5Ml0KICAvQ29udGVudHMgNCAwIFIKID4+CmVuZG9iagogNCAwIG9iagogPDwKICAvTGVuZ3RoIDU2CiA+PnN0cmVhbQpCVAovRjEgMTIgVGYKNzAgNzIwIFRECihDYW1hcmEgTXVuaWNpcGFsIGRlIFZlcmVhZG9yZXMgLSBQbGVuYXJpbyBKb25hcyBQbGluaW8pIFRqCkVUCmVuZHN0cmVhbQplbmRvYmoKdHJhaWxlcgogPDwKICAvUm9vdCAxIDAgUgogPj4KJSVFT0Y=';
+
+      proposicoesCache = [
+        {
+          id: 'doc_1',
+          categoria: 'Projeto',
+          numero: '001/2026',
+          titulo: 'Projeto de Lei para Modernização Digital dos Tablets do Plenário',
+          autor: 'Ver. Rogério',
+          status: 'Em Votação',
+          ementa: 'Dispõe sobre a implantação de tablets com sincronia em tempo real no Plenário Jonas Plínio.',
+          pdfData: dummyPdf,
+          nomeArquivo: 'projeto_001_2026.pdf',
+          dataCriacao: new Date().toISOString(),
+          dataFormatada: new Date().toLocaleDateString('pt-BR')
+        },
+        {
+          id: 'doc_2',
+          categoria: 'Indicação',
+          numero: '015/2026',
+          titulo: 'Solicitação de Pavimentação e Iluminação de LED',
+          autor: 'Ver. Lucas',
+          status: 'Em Pauta',
+          ementa: 'Indica ao Poder Executivo a expansão da iluminação pública para os bairros perimétricos.',
+          pdfData: dummyPdf,
+          nomeArquivo: 'indicacao_015_2026.pdf',
+          dataCriacao: new Date(Date.now() - 3600000).toISOString(),
+          dataFormatada: new Date().toLocaleDateString('pt-BR')
+        },
+        {
+          id: 'doc_3',
+          categoria: 'Requerimento',
+          numero: '008/2026',
+          titulo: 'Pedido de Informações sobre Investimentos na Saúde',
+          autor: 'Ver. Dilson',
+          status: 'Aprovado',
+          ementa: 'Requer o envio de balancetes dos recursos destinados à unidade de saúde central.',
+          pdfData: dummyPdf,
+          nomeArquivo: 'requerimento_008_2026.pdf',
+          dataCriacao: new Date(Date.now() - 7200000).toISOString(),
+          dataFormatada: new Date().toLocaleDateString('pt-BR')
+        },
+        {
+          id: 'doc_4',
+          categoria: 'Atas',
+          numero: 'Ata 12/2026',
+          titulo: 'Ata da Décima Segunda Sessão Ordinária',
+          autor: 'Mesa Diretora',
+          status: 'Aprovado em Ata',
+          ementa: 'Registro oficial contendo as deliberações das matérias apreciadas na sessão anterior.',
+          pdfData: dummyPdf,
+          nomeArquivo: 'ata_12_2026.pdf',
+          dataCriacao: new Date(Date.now() - 10800000).toISOString(),
+          dataFormatada: new Date().toLocaleDateString('pt-BR')
+        },
+        {
+          id: 'doc_5',
+          categoria: 'Ordem do Dia',
+          numero: 'Ordem 05/2026',
+          titulo: 'Pauta e Ordem do Dia para Votação de Projetos',
+          autor: 'Mesa Diretora',
+          status: 'Ordem do Dia',
+          ementa: 'Relação detalhada de proposições para discussão e votação nominal durante a presente sessão.',
+          pdfData: dummyPdf,
+          nomeArquivo: 'ordem_do_dia_05.pdf',
+          dataCriacao: new Date(Date.now() - 14400000).toISOString(),
+          dataFormatada: new Date().toLocaleDateString('pt-BR')
+        }
+      ];
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(proposicoesCache));
+    }
+  </script>
+</body>
+</html>
