@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Transmissão em Tempo Real | PDF & Chat</title>
+  
+  <!-- Tailwind CSS para Design Responsivo e Sofisticado -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome para Ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  
+  <!-- Supabase JS Client v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+  <!-- Header / Barra Superior -->
+  <header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-50 shadow-lg">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md">
+          <i class="fa-solid me-0 fa-paper-plane text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">Transmissão em Tempo Real</h1>
+          <p class="text-xs text-slate-400">Notebook ↔ Celulares & Tablets</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-700">
+        <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+        <span id="status-text" class="text-xs font-medium text-slate-300">Conectando...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Formulário de Transmissão (Upload & Mensagem) -->
+    <section class="lg:col-span-5 bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 md:p-6 shadow-xl flex flex-col justify-between">
+      <div>
+        <h2 class="text-base font-semibold text-slate-200 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-cloud-arrow-up text-indigo-400"></i>
+          Novo Envio / Transmissão
+        </h2>
+
+        <form id="sendForm" class="space-y-4">
+          <!-- Nome / Dispositivo Emissor -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Identificação do Dispositivo</label>
+            <input type="text" id="senderName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors" placeholder="Ex: Notebook do Trabalho, Celular..." required>
+          </div>
+
+          <!-- Mensagem de Texto -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Mensagem ou Recado</label>
+            <textarea id="messageText" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors resize-none" placeholder="Escreva um recado ou instruções para os dispositivos..."></textarea>
+          </div>
+
+          <!-- Upload de Arquivo PDF -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Anexar Documento PDF</label>
+            <div class="relative border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-4 text-center cursor-pointer transition-colors bg-slate-900/50" id="dropArea">
+              <input type="file" id="pdfFileInput" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+              <i class="fa-solid fa-file-pdf text-3xl text-rose-500 mb-2"></i>
+              <p id="fileLabel" class="text-xs text-slate-400">Clique ou arraste um arquivo **PDF** aqui</p>
+              <p id="fileName" class="text-xs text-indigo-400 font-semibold mt-1 hidden"></p>
+            </div>
+          </div>
+
+          <!-- Barra de Progresso de Upload -->
+          <div id="progressContainer" class="hidden space-y-1">
+            <div class="flex justify-between text-xs text-slate-400">
+              <span>Enviando arquivo...</span>
+              <span id="progressPercent">0%</span>
+            </div>
+            <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
+              <div id="progressBar" class="bg-indigo-500 h-full w-0 transition-all duration-200"></div>
+            </div>
+          </div>
+
+          <!-- Botão de Envio -->
+          <button type="submit" id="btnSubmit" class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Transmitir em Tempo Real</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-700/60 text-xs text-slate-400 flex items-center justify-between">
+        <span><i class="fa-solid fa-shield-halved text-emerald-400 mr-1"></i> Conexão Direta</span>
+        <span>Supabase Realtime v2</span>
+      </div>
+    </section>
+
+    <!-- Feed / Recebimento de Transmissões e Respostas -->
+    <section class="lg:col-span-7 bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 md:p-6 shadow-xl flex flex-col">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-slate-200 flex items-center gap-2">
+          <i class="fa-solid fa-rss text-emerald-400"></i>
+          Feed de Arquivos & Respostas
+        </h2>
+        <span id="feedCounter" class="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full">0 itens</span>
+      </div>
+
+      <!-- Lista de Transmissões Recebidas -->
+      <div id="feedList" class="flex-1 overflow-y-auto space-y-4 max-h-[600px] pr-1">
+        <!-- Card de exemplo enquanto carrega ou está vazio -->
+        <div id="emptyState" class="text-center py-16 border-2 border-dashed border-slate-700/60 rounded-xl">
+          <i class="fa-solid fa-satellite-dish text-4xl text-slate-600 mb-3"></i>
+          <p class="text-slate-400 text-sm">Nenhuma transmissão recebida ainda.</p>
+          <p class="text-slate-500 text-xs mt-1">Envie um PDF ou mensagem do notebook para visualizar aqui em tempo real.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Script da Aplicação -->
+  <script>
+    // =========================================================================
+    // 1. CONFIGURAÇÃO DO SUPABASE
+    // Substitua abaixo pelos dados do seu projeto em Supabase -> Project Settings -> API
+    // =========================================================================
+    const SUPABASE_URL = "SUA_SUPABASE_URL_AQUI"; 
+    const SUPABASE_ANON_KEY = "SUA_SUPABASE_ANON_KEY_AQUI";
+
+    // Inicialização do Cliente Supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Variável para armazenar o arquivo selecionado
+    let selectedFile = null;
+
+    $(document).ready(function () {
+
+      // Sugerir identificador automático do dispositivo
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const defaultName = isMobile ? "Celular / Tablet" : "Notebook Admin";
+      $("#senderName").val(defaultName);
+
+      // Evento de seleção de arquivo PDF
+      $("#pdfFileInput").on("change", function (e) {
+        const file = e.target.files[0];
+        if (file) {
+          if (file.type !== "application/pdf") {
+            alert("Por favor, selecione apenas arquivos com extensão PDF.");
+            this.value = "";
+            return;
+          }
+          selectedFile = file;
+          $("#fileLabel").addClass("hidden");
+          $("#fileName").text("📄 " + file.name + " (" + (file.size / 1024 / 1024).toFixed(2) + " MB)").removeClass("hidden");
+        }
+      });
+
+      // Envio do Formulário (Upload + Envio de Mensagem)
+      $("#sendForm").on("submit", async function (e) {
+        e.preventDefault();
+
+        const sender = $("#senderName").val().trim();
+        const message = $("#messageText").val().trim();
+
+        if (!message && !selectedFile) {
+          alert("Escreva uma mensagem ou anexe um arquivo PDF para enviar.");
+          return;
+        }
+
+        $("#btnSubmit").prop("disabled", true).addClass("opacity-50");
+        $("#progressContainer").removeClass("hidden");
+        $("#progressBar").css("width", "30%");
+        $("#progressPercent").text("30%");
+
+        try {
+          let pdfUrl = null;
+          let pdfName = null;
+
+          // Upload do Arquivo PDF para o Bucket 'arquivos' no Supabase
+          if (selectedFile) {
+            const fileExt = selectedFile.name.split('.').pop();
+            const filePath = `pdf_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('arquivos')
+              .upload(filePath, selectedFile, {
+                cacheControl: '3600',
+                upsert: false
+              });
+
+            if (uploadError) throw uploadError;
+
+            // Obter URL pública do PDF
+            const { data: publicUrlData } = supabase.storage
+              .from('arquivos')
+              .getPublicUrl(filePath);
+
+            pdfUrl = publicUrlData.publicUrl;
+            pdfName = selectedFile.name;
+          }
+
+          $("#progressBar").css("width", "70%");
+          $("#progressPercent").text("70%");
+
+          // Inserir Registro na Tabela 'mensagens'
+          const { error: dbError } = await supabase
+            .from('mensagens')
+            .insert([
+              { 
+                emissor: sender, 
+                texto: message, 
+                pdf_url: pdfUrl, 
+                pdf_nome: pdfName 
+              }
+            ]);
+
+          if (dbError) throw dbError;
+
+          // Limpar Formulário
+          $("#messageText").val("");
+          $("#pdfFileInput").val("");
+          selectedFile = null;
+          $("#fileLabel").removeClass("hidden");
+          $("#fileName").addClass("hidden");
+          $("#progressBar").css("width", "100%");
+          $("#progressPercent").text("100%");
+
+          setTimeout(() => {
+            $("#progressContainer").addClass("hidden");
+            $("#progressBar").css("width", "0%");
+          }, 1000);
+
+        } catch (error) {
+          console.error("Erro no envio:", error);
+          alert("Ocorreu um erro ao enviar: " + error.message);
+        } finally {
+          $("#btnSubmit").prop("disabled", false).removeClass("opacity-50");
+        }
+      });
+
+      // Carregar Mensagens Iniciais
+      fetchInitialMessages();
+
+      // Ativar Inscrição em Tempo Real (Supabase Realtime)
+      subscribeToRealtime();
+    });
+
+    // Função para Buscar Histórico de Mensagens
+    async function fetchInitialMessages() {
+      try {
+        const { data, error } = await supabase
+          .from('mensagens')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          $("#emptyState").remove();
+          $("#feedList").empty();
+          data.forEach(item => renderCard(item));
+          updateFeedCounter(data.length);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar mensagens:", err);
+      }
+    }
+
+    // Função para Renderizar o Card no Feed
+    function renderCard(item) {
+      $("#emptyState").remove();
+
+      const timeFormatted = new Date(item.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      
+      let pdfBlock = '';
+      if (item.pdf_url) {
+        pdfBlock = `
+          <div class="mt-3 p-3 bg-slate-900/80 border border-slate-700/70 rounded-xl flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 overflow-hidden">
+              <i class="fa-solid fa-file-pdf text-2xl text-rose-500 shrink-0"></i>
+              <span class="text-xs font-medium text-slate-200 truncate">${item.pdf_nome || 'Documento.pdf'}</span>
+            </div>
+            <a href="${item.pdf_url}" target="_blank" download class="shrink-0 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/40 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
+              <i class="fa-solid fa-download"></i> Abrir / Baixar
+            </a>
+          </div>
+        `;
+      }
+
+      const cardHtml = `
+        <div class="bg-slate-900/60 border border-slate-700/80 rounded-xl p-4 shadow-md transition-all hover:border-slate-600" id="msg-${item.id}">
+          <div class="flex justify-between items-start mb-2">
+            <div class="flex items-center gap-2">
+              <span class="bg-indigo-500/20 text-indigo-400 text-xs px-2.5 py-0.5 rounded-full font-semibold border border-indigo-500/30">
+                ${item.emissor}
+              </span>
+              <span class="text-[11px] text-slate-500">${timeFormatted}</span>
+            </div>
+          </div>
+          ${item.texto ? `<p class="text-sm text-slate-200 leading-relaxed">${item.texto}</p>` : ''}
+          ${pdfBlock}
+        </div>
+      `;
+
+      $("#feedList").prepend(cardHtml);
+      updateFeedCounter($("#feedList > div").length);
+    }
+
+    // Incrementar Contador do Feed
+    function updateFeedCounter(count) {
+      $("#feedCounter").text(`${count} ${count === 1 ? 'item' : 'itens'}`);
+    }
+
+    // Configurar Escuta em Tempo Real do Supabase
+    function subscribeToRealtime() {
+      const channel = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'mensagens' },
+          (payload) => {
+            renderCard(payload.new);
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            $("#status-dot").removeClass("bg-amber-500 bg-rose-500").addClass("bg-emerald-500 animate-pulse");
+            $("#status-text").text("Conectado (Tempo Real)").removeClass("text-slate-300").addClass("text-emerald-400");
+          } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+            $("#status-dot").removeClass("bg-emerald-500 bg-amber-500").addClass("bg-rose-500");
+            $("#status-text").text("Desconectado").removeClass("text-emerald-400").addClass("text-rose-400");
+          }
+        });
+    }
+  </script>
+</body>
+</html>
