@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATAS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .drag-active {
+      border-color: #3b82f6 !important;
+      background-color: #eff6ff !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="bg-red-500 text-white p-2 rounded-lg shadow-sm">
+          <i class="fa-solid fa-file-pdf text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg text-slate-800 leading-tight">ATAS 2026</h1>
+          <p class="text-xs text-slate-500">Gerenciador & Visualizador Local</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-4">
+        <span id="storageInfo" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium">
+          <i class="fa-solid fa-hard-drive text-slate-400"></i>
+          <span id="pdfCount">0 PDFs</span>
+        </span>
+        <button id="clearAllBtn" onclick="confirmClearAll()" class="hidden px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition border border-red-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-trash-can"></i>
+          <span>Limpar Tudo</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col lg:flex-row gap-6">
+    
+    <!-- Painel Esquerdo: Drag & Drop e Filtro -->
+    <aside class="w-full lg:w-80 flex-shrink-0 space-y-6">
+      
+      <!-- Zona de Upload Drag and Drop -->
+      <div id="dropZone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-white rounded-2xl p-6 text-center transition-all cursor-pointer shadow-sm group">
+        <input type="file" id="fileInput" accept="application/pdf" multiple class="hidden">
+        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+          <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-slate-700 text-sm mb-1">Arraste seus PDFs aqui</h3>
+        <p class="text-xs text-slate-400 mb-4">ou clique para selecionar do computador</p>
+        <button onclick="document.getElementById('fileInput').click()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-plus"></i>
+          <span>Selecionar Arquivos</span>
+        </button>
+      </div>
+
+      <!-- Barra de Pesquisa -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+        <label for="searchInput" class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">Buscar Arquivo</label>
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input type="text" id="searchInput" placeholder="Digite o nome do PDF..." class="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50">
+        </div>
+      </div>
+
+      <!-- Card Dica de Armazenamento -->
+      <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 text-xs text-blue-800 flex items-start gap-3">
+        <i class="fa-solid fa-shield-halved text-blue-500 text-base mt-0.5"></i>
+        <div>
+          <span class="font-semibold block mb-0.5">Armazenamento Persistente</span>
+          Os arquivos são salvos de forma segura no banco de dados do seu navegador (IndexedDB) e não serão apagaods ao fechar a aba. Desenvolvedor André Almeida.
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Painel Direito: Grid / Lista de PDFs -->
+    <section class="flex-1 min-w-0">
+      
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-slate-700 flex items-center gap-2">
+          <span>Seus Documentos</span>
+          <span id="filteredCount" class="text-xs font-normal text-slate-400"></span>
+        </h2>
+      </div>
+
+      <!-- Lista Vazia (Empty State) -->
+      <div id="emptyState" class="hidden bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
+        <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fa-solid fa-folder-open text-2xl"></i>
+        </div>
+        <h3 class="font-semibold text-slate-700 mb-1">Nenhum PDF encontrado</h3>
+        <p class="text-xs text-slate-400 max-w-xs mx-auto mb-4">Faça o upload do seu primeiro arquivo PDF arrastando-o para a área indicada.</p>
+      </div>
+
+      <!-- Grid de Documentos -->
+      <div id="pdfGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <!-- Renderizado via JavaScript -->
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modal de Visualização de PDF em Tela Cheia -->
+  <div id="pdfModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex-col transition-opacity">
+    
+    <!-- Barra Superior do Modal -->
+    <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between border-b border-slate-800 flex-shrink-0">
+      <div class="flex items-center gap-3 overflow-hidden mr-4">
+        <i class="fa-solid fa-file-pdf text-red-500 text-lg"></i>
+        <span id="modalPdfTitle" class="font-medium text-sm truncate max-w-md sm:max-w-xl">Documento.pdf</span>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <a id="downloadBtn" download="#" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Baixar Arquivo">
+          <i class="fa-solid fa-download"></i>
+        </a>
+        <button onclick="closeViewer()" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Fechar (Esc)">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Área do Iframe do PDF -->
+    <div class="flex-1 bg-slate-800 relative">
+      <iframe id="pdfFrame" class="w-full h-full border-0"></iframe>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação -->
+  <div id="confirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4">
+      <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div class="text-center">
+        <h3 id="confirmTitle" class="font-bold text-slate-800">Confirmar exclusão</h3>
+        <p id="confirmMessage" class="text-xs text-slate-500 mt-1">Tem certeza que deseja apagar este arquivo?</p>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button onclick="closeConfirmModal()" class="flex-1 py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-xl transition">Cancelar</button>
+        <button id="confirmActionBtn" class="flex-1 py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-medium text-xs rounded-xl transition">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+  <script>
+    /* ==========================================================================
+       1. GERENCIAMENTO DE BANCO DE DADOS INDEXEDDB
+       ========================================================================== */
+    const DB_NAME = 'PDFVaultDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'pdf_files';
+    let db = null;
+    let allFiles = [];
+    let currentObjectUrl = null;
+
+    // Inicializa conexão com o IndexedDB
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onupgradeneeded = (e) => {
+          const dbInstance = e.target.result;
+          if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
+            dbInstance.createObjectStore(STORE_NAME, { keyPath: 'id' });
+          }
+        };
+
+        request.onsuccess = (e) => {
+          db = e.target.result;
+          resolve(db);
+        };
+
+        request.onerror = (e) => {
+          console.error('Erro ao abrir IndexedDB:', e.target.error);
+          showToast('Erro ao acessar o banco de dados local.', 'error');
+          reject(e.target.error);
+        };
+      });
+    }
+
+    // Salva arquivo PDF no IndexedDB
+    function saveFileToDB(fileRecord) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.put(fileRecord);
+
+        request.onsuccess = () => resolve();
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    // Carrega todos os PDFs do IndexedDB
+    function getAllFilesFromDB() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.getAll();
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    // Remove um PDF do IndexedDB
+    function deleteFileFromDB(id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.delete(id);
+
+        request.onsuccess = () => resolve();
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    // Limpa todos os PDFs do IndexedDB
+    function clearAllFromDB() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.clear();
+
+        request.onsuccess = () => resolve();
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    /* ==========================================================================
+       2. MANIPULAÇÃO DE ARQUIVOS E DRAG & DROP
+       ========================================================================== */
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-active');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-active');
+      }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer.files;
+      handleFiles(files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+      fileInput.value = ''; // Reset input
+    });
+
+    async function handleFiles(files) {
+      const pdfFiles = Array.from(files).filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+
+      if (pdfFiles.length === 0) {
+        showToast('Por favor, selecione apenas arquivos em formato PDF.', 'error');
+        return;
+      }
+
+      let addedCount = 0;
+      for (const file of pdfFiles) {
+        const fileRecord = {
+          id: 'pdf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          size: file.size,
+          uploadDate: new Date().toISOString(),
+          blob: file
+        };
+
+        try {
+          await saveFileToDB(fileRecord);
+          addedCount++;
+        } catch (err) {
+          console.error('Erro ao salvar arquivo:', err);
+          showToast(`Erro ao salvar ${file.name}`, 'error');
+        }
+      }
+
+      if (addedCount > 0) {
+        showToast(`${addedCount} PDF(s) salvos com sucesso!`, 'success');
+        await loadAndRenderFiles();
+      }
+    }
+
+    /* ==========================================================================
+       3. RENDERIZAÇÃO DA INTERFACE DA LISTA
+       ========================================================================== */
+    async function loadAndRenderFiles() {
+      try {
+        allFiles = await getAllFilesFromDB();
+        // Ordena por data de upload mais recente
+        allFiles.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate));
+        renderGrid();
+      } catch (err) {
+        console.error('Erro ao buscar arquivos:', err);
+      }
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('pdfGrid');
+      const emptyState = document.getElementById('emptyState');
+      const searchInput = document.getElementById('searchInput');
+      const searchTerm = searchInput.value.trim().toLowerCase();
+
+      // Filtragem por nome
+      const filtered = allFiles.filter(f => f.name.toLowerCase().includes(searchTerm));
+
+      // Atualiza contadores
+      document.getElementById('pdfCount').textContent = `${allFiles.length} PDF${allFiles.length !== 1 ? 's' : ''}`;
+      document.getElementById('clearAllBtn').classList.toggle('hidden', allFiles.length === 0);
+      document.getElementById('storageInfo').classList.toggle('hidden', allFiles.length === 0);
+
+      if (searchTerm) {
+        document.getElementById('filteredCount').textContent = `(${filtered.length} exibidos)`;
+      } else {
+        document.getElementById('filteredCount').textContent = '';
+      }
+
+      grid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      filtered.forEach(file => {
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl p-4 border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all group flex flex-col justify-between';
+        
+        const formattedDate = new Date(file.uploadDate).toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const formattedSize = formatFileSize(file.size);
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="p-3 bg-red-50 text-red-500 rounded-xl group-hover:scale-105 transition-transform">
+                <i class="fa-solid fa-file-pdf text-2xl"></i>
+              </div>
+              <button onclick="confirmDeleteFile('${file.id}', '${escapeHtml(file.name)}')" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition" title="Excluir">
+                <i class="fa-solid fa-trash-can text-sm"></i>
+              </button>
+            </div>
+            <h3 class="font-medium text-slate-800 text-sm truncate mb-1" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</h3>
+            <div class="flex items-center gap-2 text-xs text-slate-400 mb-4">
+              <span>${formattedSize}</span>
+              <span>•</span>
+              <span>${formattedDate}</span>
+            </div>
+          </div>
+          <button onclick="openViewer('${file.id}')" class="w-full py-2 px-3 bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 font-medium text-xs rounded-xl border border-slate-200 hover:border-blue-200 transition flex items-center justify-center gap-2">
+            <i class="fa-regular fa-eye"></i>
+            <span>Visualizar</span>
+          </button>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    // Busca ao digitar
+    document.getElementById('searchInput').addEventListener('input', renderGrid);
+
+    /* ==========================================================================
+       4. VISUALIZADOR DE PDF (PDF VIEWER)
+       ========================================================================== */
+    function openViewer(id) {
+      const file = allFiles.find(f => f.id === id);
+      if (!file) return;
+
+      // Limpa URL anterior para otimizar memória
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+      }
+
+      currentObjectUrl = URL.createObjectURL(file.blob);
+
+      document.getElementById('modalPdfTitle').textContent = file.name;
+      const downloadBtn = document.getElementById('downloadBtn');
+      downloadBtn.href = currentObjectUrl;
+      downloadBtn.download = file.name;
+
+      const pdfFrame = document.getElementById('pdfFrame');
+      pdfFrame.src = currentObjectUrl;
+
+      const modal = document.getElementById('pdfModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeViewer() {
+      const modal = document.getElementById('pdfModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+
+      const pdfFrame = document.getElementById('pdfFrame');
+      pdfFrame.src = '';
+
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = null;
+      }
+    }
+
+    // Fechar visualizador com tecla Esc
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeViewer();
+        closeConfirmModal();
+      }
+    });
+
+    /* ==========================================================================
+       5. AÇÕES DE EXCLUSÃO E DIÁLOGOS
+       ========================================================================== */
+    let actionToConfirm = null;
+
+    function confirmDeleteFile(id, name) {
+      document.getElementById('confirmTitle').textContent = 'Excluir Arquivo';
+      document.getElementById('confirmMessage').textContent = `Deseja apagar "${name}" permanentemente?`;
+      
+      actionToConfirm = async () => {
+        await deleteFileFromDB(id);
+        showToast('Arquivo excluído com sucesso.', 'info');
+        await loadAndRenderFiles();
+      };
+
+      openConfirmModal();
+    }
+
+    function confirmClearAll() {
+      document.getElementById('confirmTitle').textContent = 'Limpar Todos os PDFs';
+      document.getElementById('confirmMessage').textContent = 'Deseja apagar TODOS os arquivos do sistema? Esta ação não pode ser desfeita.';
+      
+      actionToConfirm = async () => {
+        await clearAllFromDB();
+        showToast('Todos os arquivos foram removidos.', 'info');
+        await loadAndRenderFiles();
+      };
+
+      openConfirmModal();
+    }
+
+    function openConfirmModal() {
+      document.getElementById('confirmModal').classList.remove('hidden');
+      document.getElementById('confirmModal').classList.add('flex');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').classList.add('hidden');
+      document.getElementById('confirmModal').classList.remove('flex');
+      actionToConfirm = null;
+    }
+
+    document.getElementById('confirmActionBtn').addEventListener('click', async () => {
+      if (actionToConfirm) {
+        await actionToConfirm();
+      }
+      closeConfirmModal();
+    });
+
+    /* ==========================================================================
+       6. UTILITÁRIOS (Toast e Formatadores)
+       ========================================================================== */
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const bgColors = {
+        success: 'bg-emerald-600',
+        error: 'bg-red-600',
+        info: 'bg-slate-800'
+      };
+
+      toast.className = `${bgColors[type] || bgColors.info} text-white text-xs font-medium px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0`;
+      
+      const icons = {
+        success: '<i class="fa-solid fa-circle-check"></i>',
+        error: '<i class="fa-solid fa-circle-exclamation"></i>',
+        info: '<i class="fa-solid fa-circle-info"></i>'
+      };
+
+      toast.innerHTML = `${icons[type] || ''} <span>${message}</span>`;
+      container.appendChild(toast);
+
+      // Anima entrada
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      // Remove após 3s
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    /* ==========================================================================
+       7. INICIALIZAÇÃO DA APLICAÇÃO
+       ========================================================================== */
+    window.onload = async () => {
+      await initDB();
+      await loadAndRenderFiles();
+    };
+  </script>
+</body>
+</html>
