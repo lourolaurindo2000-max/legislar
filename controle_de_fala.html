@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tempo de Fala</title>
+    <!-- Tailwind CSS para estilização moderna e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonte Inter Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    colors: {
+                        governo: {
+                            blue: '#0B2545',
+                            darkBlue: '#134074',
+                            gold: '#D4AF37',
+                            accent: '#0066CC',
+                            dark: '#0A0F1D'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0A0F1D;
+            color: #F8FAFC;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        .timer-display {
+            font-family: 'Roboto Mono', monospace;
+            letter-spacing: -2px;
+            text-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Animações e Estados do Cronômetro */
+        .status-normal {
+            color: #22C55E;
+            text-shadow: 0 0 25px rgba(34, 197, 94, 0.4);
+        }
+
+        .status-alerta {
+            color: #EAB308;
+            text-shadow: 0 0 30px rgba(234, 179, 8, 0.6);
+            animation: pulse-yellow 2s infinite;
+        }
+
+        .status-critico {
+            color: #EF4444;
+            text-shadow: 0 0 35px rgba(239, 68, 68, 0.8);
+            animation: pulse-red 1s infinite;
+        }
+
+        .status-esgotado {
+            color: #DC2626;
+            animation: blink-fast 0.6s infinite;
+        }
+
+        @keyframes pulse-yellow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.9; }
+        }
+
+        @keyframes blink-fast {
+            0%, 100% { opacity: 1; background-color: rgba(220, 38, 38, 0.2); }
+            50% { opacity: 0.3; background-color: transparent; }
+        }
+
+        /* Efeitos de brilho e bordas */
+        .gold-border {
+            border-color: #D4AF37;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .card-active {
+            border-color: #0066CC !important;
+            background-color: rgba(19, 64, 116, 0.7) !important;
+            box-shadow: 0 0 20px rgba(0, 102, 204, 0.5);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B2545;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #134074;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37;
+        }
+
+        /* Estilização para TV e Monitores 4K */
+        @media (min-width: 1920px) {
+            .tv-text-huge {
+                font-size: 11rem !important;
+                line-height: 1;
+            }
+            .tv-avatar {
+                width: 320px !important;
+                height: 320px !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between font-sans antialiased bg-governo-dark">
+
+    <!-- CABEÇALHO OFICIAL DA SESSÃO -->
+    <header class="bg-governo-blue border-b-2 border-governo-gold px-4 py-3 md:px-8 flex justify-between items-center shadow-lg">
+        <div class="flex items-center space-x-4">
+            <div class="bg-governo-gold/20 p-2 md:p-3 rounded-full border border-governo-gold">
+                <i class="fa-solid fa-landmark text-governo-gold text-2xl md:text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg md:text-2xl font-black uppercase tracking-wider text-white">Câmara Municipal de Almadina</h1>
+                <p class="text-xs md:text-sm text-governo-gold font-medium flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
+                    SESSÃO PLENÁRIA ORDINÁRIA DE HOJE
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3 md:space-x-6">
+            <!-- Relógio do Horário Atual -->
+            <div class="text-right hidden sm:block">
+                <span class="text-xs text-gray-400 uppercase tracking-widest block">Hora Local</span>
+                <span id="current-clock" class="text-xl md:text-2xl font-mono font-bold text-gray-200">00:00:00</span>
+            </div>
+
+            <!-- Botão de Tela Cheia para Smart TV / Apresentação -->
+            <button id="btn-fullscreen" title="Modo Tela Cheia (Smart TV)" class="bg-governo-darkBlue hover:bg-governo-accent text-white p-3 rounded-xl border border-gray-600 transition flex items-center justify-center">
+                <i class="fa-solid fa-expand text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- CORPO PRINCIPAL DO SISTEMA -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-3 md:p-6 max-w-[1920px] mx-auto w-full">
+        
+        <!-- PAINEL CENTRAL (DISPLAY DE TV / TELA DE FALA) - 8 Colunas em Telas Grandes -->
+        <section class="lg:col-span-8 bg-gradient-to-b from-governo-blue/60 to-governo-dark/90 rounded-2xl border border-gray-800 p-4 md:p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden backdrop-blur-md">
+            
+            <!-- Marca d'água de fundo -->
+            <div class="absolute -right-20 -bottom-20 opacity-5 pointer-events-none">
+                <i class="fa-solid fa-landmark text-[400px] text-white"></i>
+            </div>
+
+            <!-- Topo do Display: Modo de Sessão Atual -->
+            <div class="flex flex-wrap justify-between items-center border-b border-gray-700/60 pb-4 gap-2">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs md:text-sm font-semibold uppercase text-gray-400">Modo Atual:</span>
+                    <span id="current-mode-badge" class="bg-governo-gold/20 text-governo-gold border border-governo-gold/40 text-xs md:text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        Pequeno Expediente (5m)
+                    </span>
+                </div>
+                <div class="text-xs md:text-sm text-gray-400 font-mono flex items-center gap-2">
+                    <i class="fa-solid fa-microphone text-red-500 animate-pulse"></i>
+                    <span id="speaker-status-label" class="font-bold text-gray-200 uppercase">Aguardando Início</span>
+                </div>
+            </div>
+
+            <!-- ÁREA DO PARLAMENTAR E CRONÔMETRO -->
+            <div class="my-auto py-6 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
+                
+                <!-- Foto do Vereador -->
+                <div class="relative group">
+                    <div class="w-44 h-44 md:w-64 md:h-64 tv-avatar rounded-2xl overflow-hidden border-4 border-governo-gold shadow-2xl bg-gray-900 transition-all duration-300">
+                        <img id="display-photo" src="" alt="Foto do Vereador" class="w-full h-full object-cover">
+                    </div>
+                    <span id="display-cargo-badge" class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-governo-gold text-governo-dark text-xs md:text-sm font-black px-4 py-1 rounded-full uppercase shadow-lg whitespace-nowrap">
+                        Vereador
+                    </span>
+                </div>
+
+                <!-- Detalhes e Cronômetro Gigante -->
+                <div class="text-center md:text-left flex-1 flex flex-col justify-center">
+                    <div>
+                        <h2 id="display-name" class="text-2xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+                            Selecione um Vereador
+                        </h2>
+                        <div class="flex items-center justify-center md:justify-start space-x-3 mt-1">
+                            <span id="display-partido" class="text-sm md:text-xl font-bold text-governo-gold bg-governo-darkBlue/80 px-3 py-0.5 rounded-lg">---</span>
+                            <span id="display-partido-nome" class="text-xs md:text-base text-gray-300">Nenhum vereador selecionado</span>
+                        </div>
+                    </div>
+
+                    <!-- CRONÔMETRO REGRESSIVO GIGANTE -->
+                    <div class="mt-4 md:mt-6 bg-black/40 rounded-2xl p-4 md:p-6 border border-gray-800 text-center shadow-inner">
+                        <div id="display-timer" class="timer-display text-6xl md:text-8xl lg:text-[9rem] tv-text-huge font-black status-normal leading-none tracking-tighter">
+                            05:00
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROLES RÁPIDOS DE SESSÃO E TEMPO -->
+            <div class="border-t border-gray-700/60 pt-4 flex flex-col gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button id="btn-mode-pequeno" class="bg-governo-darkBlue hover:bg-blue-800 text-white font-bold py-2 px-3 rounded-lg border border-blue-500/30 text-xs md:text-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-clock"></i> Pequeno Exp. (5m)
+                    </button>
+                    <button id="btn-mode-grande" class="bg-governo-darkBlue hover:bg-blue-800 text-white font-bold py-2 px-3 rounded-lg border border-blue-500/30 text-xs md:text-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-hourglass-half"></i> Grande Exp. (20m)
+                    </button>
+                    <button id="btn-add-1m" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded-lg border border-gray-600 text-xs md:text-sm transition">
+                        +1 Minuto
+                    </button>
+                    <button id="btn-add-3m" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded-lg border border-gray-600 text-xs md:text-sm transition">
+                        +3 Minutos
+                    </button>
+                </div>
+
+                <!-- Botões Principais de Ação do Cronômetro -->
+                <div class="grid grid-cols-3 gap-3">
+                    <button id="btn-start-pause" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 px-4 rounded-xl shadow-lg transition text-base md:text-xl flex items-center justify-center gap-2 uppercase tracking-wider">
+                        <i class="fa-solid fa-play"></i> <span>Iniciar</span>
+                    </button>
+                    <button id="btn-reset" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition text-base md:text-lg flex items-center justify-center gap-2 uppercase">
+                        <i class="fa-solid fa-rotate-left"></i> Reiniciar
+                    </button>
+                    <button id="btn-stop" class="bg-rose-700 hover:bg-rose-600 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition text-base md:text-lg flex items-center justify-center gap-2 uppercase">
+                        <i class="fa-solid fa-square"></i> Zerar
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- PAINEL LATERAL: LISTA DOS VEREADORES (4 Colunas em Telas Grandes) -->
+        <aside class="lg:col-span-4 bg-governo-blue/40 border border-gray-800 rounded-2xl p-4 flex flex-col shadow-xl">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-700">
+                <h3 class="text-base md:text-lg font-bold uppercase text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-users text-governo-gold"></i>
+                    Bancada de Parlamentares
+                </h3>
+                <span class="text-xs bg-governo-gold/20 text-governo-gold px-2 py-0.5 rounded font-mono font-bold">9 VEREADORES</span>
+            </div>
+
+            <!-- Lista de Cards dos Vereadores com Rolagem -->
+            <div id="vereadores-list" class="space-y-2.5 overflow-y-auto max-h-[500px] lg:max-h-[calc(100vh-220px)] pr-1">
+                <!-- Inserido dinamicamente via JS -->
+            </div>
+
+            <!-- Ajuste Manual Rápido e Modal de Configuração -->
+            <div class="mt-4 pt-3 border-t border-gray-700 flex justify-between items-center">
+                <span class="text-xs text-gray-400">Ajuste manual de tempo:</span>
+                <div class="flex gap-1">
+                    <input type="number" id="custom-minutes" placeholder="Min" min="1" max="60" class="w-16 bg-gray-900 border border-gray-700 text-white text-xs rounded px-2 py-1 text-center focus:outline-none focus:border-governo-gold">
+                    <button id="btn-set-custom" class="bg-governo-gold hover:bg-yellow-500 text-governo-dark font-bold text-xs px-2 py-1 rounded transition">
+                        Definir
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- RODAPÉ DE AJUDA E ATALHOS PARA O OPERADOR -->
+    <footer class="bg-governo-dark text-gray-400 text-xs py-2 px-4 md:px-8 border-t border-gray-800 flex flex-wrap justify-between items-center gap-2">
+        <div class="flex items-center space-x-4">
+            <span class="font-bold text-gray-300">Atalhos do Teclado:</span>
+            <span><kbd class="bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded text-white font-mono">Espaço</kbd> Iniciar/Pausar</span>
+            <span><kbd class="bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded text-white font-mono">R</kbd> Reiniciar</span>
+            <span><kbd class="bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded text-white font-mono">F11</kbd> Tela Cheia</span>
+        </div>
+        <div class="text-gray-500">
+            Sistema do Plenário v2.5 &bull; Câmara Municipal
+        </div>
+    </footer>
+
+    <script>
+        $(document.body).ready(function() {
+            
+            // --- BASE DE DADOS DOS 9 VEREADORES FICTÍCIOS ---
+            const vereadores = [
+                {
+                    id: 1,
+                    nome: "Ver. Rogério Gotado",
+                    partido: "PT",
+                    cargo: "Presidente",
+                    foto: "https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=400"
+                },
+                {
+                    id: 2,
+                    nome: "Ver. Lucas Cavalcante",
+                    partido: "PODEMOS",
+                    cargo: "Vice-Presidente",
+                    foto: "https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=400"
+                },
+                {
+                    id: 3,
+                    nome: "Ver. Dilson Junior",
+                    partido: "PV",
+                    cargo: "1º Secretário",
+                    foto: "https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=400"
+                },
+                {
+                    id: 4,
+                    nome: "Ver. Wilson Freitas",
+                    partido: "PC do B",
+                    cargo: "2º Secretário",
+                    foto: "https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=400"
+                },
+                {
+                    id: 5,
+                    nome: "ver. José Lindomar (Bimba)",
+                    partido: "PODEMOS",
+                    cargo: "Vereador",
+                    foto: "https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=400"
+                },
+                {
+                    id: 6,
+                    nome: "Prof. Sylas Souza",
+                    partido: "PODEMOS",
+                    cargo: "Vereador",
+                    foto: "https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=400"
+                },
+                {
+                    id: 7,
+                    nome: "Vera. Maria Nilza",
+                    partido: "PODEMOS",
+                    cargo: "Vereadora",
+                    foto: "https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=400"
+                },
+                {
+                    id: 8,
+                    nome: "Vera. Marilene Costa",
+                    partido: "PP",
+                    cargo: "Vereadora",
+                    foto: "https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=400"
+                },
+                {
+                    id: 9,
+                    nome: "Ver. Jackson Costa",
+                    partido: "AVANTE",
+                    cargo: "Vereador",
+                    foto: "https://2.gravatar.com/userimage/277172047/8039d08ed8a294328b8f8b70bbbeb765?size=400"
+                }
+            ];
+
+            // --- ESTADO DO CRONÔMETRO ---
+            let selectedVereador = vereadores[0];
+            let timerSeconds = 5 * 60; // Padrão: 5 Minutos (Pequeno Expediente)
+            let initialSeconds = 5 * 60;
+            let timerInterval = null;
+            let isRunning = false;
+            let soundBeep1MinPlayed = false;
+            let soundBeep30SecPlayed = false;
+
+            // SINTETIZADOR DE ÁUDIO PARA BIPS E ALERTAS (Web Audio API)
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            function playBeep(frequency = 800, type = 'sine', duration = 0.2) {
+                try {
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {
+                    console.error("Erro ao tocar áudio", e);
+                }
+            }
+
+            // Bip contínuo e bem audível de 5 segundos para o fim da fala
+            function playEndBleep5Sec() {
+                try {
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                    const duration = 5.0; // 5 segundos exatos
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sawtooth'; // Onda mais encorpada para alarme de plenário
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Nota Lá (880Hz)
+
+                    // Volume constante e suave desligamento no final dos 5 segundos
+                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime + duration - 0.2);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {
+                    console.error("Erro ao tocar alarme de 5s", e);
+                }
+            }
+
+            // FUNÇÃO PARA ATUALIZAR O RELÓGIO GERAL DA SESSÃO
+            function updateClock() {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                $('#current-clock').text(`${hours}:${minutes}:${seconds}`);
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // POPULAR LISTA LATERAL DE VEREADORES
+            function renderVereadoresList() {
+                const $container = $('#vereadores-list');
+                $container.empty();
+
+                vereadores.forEach(v => {
+                    const isActive = v.id === selectedVereador.id;
+                    const card = `
+                        <div data-id="${v.id}" class="vereador-card bg-governo-darkBlue/40 hover:bg-governo-darkBlue/90 border border-gray-700/80 p-2.5 rounded-xl flex items-center gap-3 cursor-pointer transition ${isActive ? 'card-active' : ''}">
+                            <img src="${v.foto}" alt="${v.nome}" class="w-12 h-12 rounded-lg object-cover border border-governo-gold">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-xs md:text-sm font-bold text-white truncate">${v.nome}</h4>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-[10px] font-bold text-governo-gold bg-black/40 px-1.5 py-0.2 rounded">${v.partido}</span>
+                                    <span class="text-[11px] text-gray-400 truncate">${v.cargo}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    $container.append(card);
+                });
+            }
+
+            // ATUALIZAR INTERFACE COM O VEREADOR SELECIONADO
+            function selectVereador(id) {
+                const found = vereadores.find(v => v.id === id);
+                if (found) {
+                    selectedVereador = found;
+                    $('#display-photo').attr('src', selectedVereador.foto);
+                    $('#display-name').text(selectedVereador.nome);
+                    $('#display-partido').text(selectedVereador.partido);
+                    $('#display-partido-nome').text(selectedVereador.cargo);
+                    $('#display-cargo-badge').text(selectedVereador.cargo);
+                    
+                    renderVereadoresList();
+                }
+            }
+
+            // FORMATAR SEGUNDOS PARA SSS (00:00)
+            function formatTime(seconds) {
+                const absSec = Math.abs(seconds);
+                const m = Math.floor(absSec / 60);
+                const s = absSec % 60;
+                const formatted = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                return seconds < 0 ? `-${formatted}` : formatted;
+            }
+
+            // ATUALIZAR MOSTRADOR DO CRONÔMETRO E CORES DE STATUS
+            function updateTimerDisplay() {
+                const $timer = $('#display-timer');
+                $timer.text(formatTime(timerSeconds));
+
+                // Mudança de cores conforme o tempo restante
+                $timer.removeClass('status-normal status-alerta status-critico status-esgotado');
+
+                if (timerSeconds > 60) {
+                    $timer.addClass('status-normal');
+                } else if (timerSeconds > 30) {
+                    $timer.addClass('status-alerta');
+                    if (!soundBeep1MinPlayed && isRunning) {
+                        playBeep(600, 'sine', 0.3);
+                        soundBeep1MinPlayed = true;
+                    }
+                } else if (timerSeconds > 0) {
+                    $timer.addClass('status-critico');
+                    if (!soundBeep30SecPlayed && isRunning) {
+                        playBeep(900, 'square', 0.4);
+                        soundBeep30SecPlayed = true;
+                    }
+                } else {
+                    $timer.addClass('status-esgotado');
+                }
+            }
+
+            // LÓGICA DO TICK DO CRONÔMETRO
+            function startTimer() {
+                if (isRunning) return;
+                
+                isRunning = true;
+                $('#btn-start-pause')
+                    .removeClass('bg-emerald-600 hover:bg-emerald-500')
+                    .addClass('bg-amber-600 hover:bg-amber-500')
+                    .html('<i class="fa-solid fa-pause"></i> <span>Pausar</span>');
+                
+                $('#speaker-status-label').text('Em Discurso').addClass('text-emerald-400');
+
+                timerInterval = setInterval(() => {
+                    timerSeconds--;
+                    updateTimerDisplay();
+
+                    if (timerSeconds <= 0) {
+                        timerSeconds = 0;
+                        pauseTimer();
+                        updateTimerDisplay();
+                        playEndBleep5Sec();
+                        $('#speaker-status-label').text('Tempo Esgotado!').removeClass('text-emerald-400').addClass('text-red-500');
+                    }
+                }, 1000);
+            }
+
+            function pauseTimer() {
+                if (!isRunning) return;
+                
+                isRunning = false;
+                clearInterval(timerInterval);
+                $('#btn-start-pause')
+                    .removeClass('bg-amber-600 hover:bg-amber-500')
+                    .addClass('bg-emerald-600 hover:bg-emerald-500')
+                    .html('<i class="fa-solid fa-play"></i> <span>Continuar</span>');
+                
+                if (timerSeconds > 0) {
+                    $('#speaker-status-label').text('Discurso Pausado').removeClass('text-emerald-400').addClass('text-amber-400');
+                }
+            }
+
+            function resetTimer(newSeconds = initialSeconds) {
+                pauseTimer();
+                timerSeconds = newSeconds;
+                initialSeconds = newSeconds;
+                soundBeep1MinPlayed = false;
+                soundBeep30SecPlayed = false;
+                
+                $('#btn-start-pause').html('<i class="fa-solid fa-play"></i> <span>Iniciar</span>');
+                $('#speaker-status-label').text('Aguardando Início').removeClass('text-emerald-400 text-amber-400 text-red-500');
+                
+                updateTimerDisplay();
+            }
+
+            // SELEÇÃO DE MODOS
+            function setMode(minutes, label) {
+                resetTimer(minutes * 60);
+                $('#current-mode-badge').text(label);
+            }
+
+            // EVENTOS DOS BOTÕES DE CONTROLE
+            $('#btn-start-pause').on('click', function() {
+                if (isRunning) {
+                    pauseTimer();
+                } else {
+                    startTimer();
+                }
+            });
+
+            $('#btn-reset').on('click', function() {
+                resetTimer();
+            });
+
+            // Botão "Zerar" encerra imediatamente a fala, zera o cronômetro e dispara o bip de 5 segundos
+            $('#btn-stop').on('click', function() {
+                pauseTimer();
+                timerSeconds = 0;
+                updateTimerDisplay();
+                playEndBleep5Sec();
+                $('#speaker-status-label').text('Fala Concluída!').removeClass('text-emerald-400 text-amber-400').addClass('text-red-500');
+            });
+
+            // MODOS PRÉ-DEFINIDOS
+            $('#btn-mode-pequeno').on('click', function() {
+                setMode(5, 'Pequeno Expediente (5m)');
+            });
+
+            $('#btn-mode-grande').on('click', function() {
+                setMode(20, 'Grande Expediente (20m)');
+            });
+
+            // TEMPO EXTRA
+            $('#btn-add-1m').on('click', function() {
+                timerSeconds += 60;
+                updateTimerDisplay();
+            });
+
+            $('#btn-add-3m').on('click', function() {
+                timerSeconds += 180;
+                updateTimerDisplay();
+            });
+
+            // TEMPO PERSONALIZADO
+            $('#btn-set-custom').on('click', function() {
+                const val = parseInt($('#custom-minutes').val());
+                if (val && val > 0) {
+                    setMode(val, `Tempo Especial (${val}m)`);
+                    $('#custom-minutes').val('');
+                }
+            });
+
+            // SELEÇÃO DE VEREADOR POR CLIQUE NO CARD
+            $(document).on('click', '.vereador-card', function() {
+                const id = $(this).data('id');
+                selectVereador(id);
+                // Reseta o tempo ao mudar de vereador
+                resetTimer();
+            });
+
+            // MODO TELA CHEIA (SMART TV)
+            $('#btn-fullscreen').on('click', function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Erro ao ativar Tela Cheia: ${err.message}`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+
+            // ATALHOS DE TECLADO
+            $(document).on('keydown', function(e) {
+                // Previne ação padrão se não estiver num input
+                if ($(e.target).is('input')) return;
+
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    $('#btn-start-pause').click();
+                } else if (e.code === 'KeyR') {
+                    $('#btn-reset').click();
+                } else if (e.code === 'Digit5') {
+                    $('#btn-mode-pequeno').click();
+                } else if (e.code === 'Digit2') {
+                    $('#btn-mode-grande').click();
+                }
+            });
+
+            // INICIALIZAÇÃO DO SISTEMA
+            selectVereador(1);
+            resetTimer(5 * 60);
+        });
+    </script>
+</body>
+</html>
