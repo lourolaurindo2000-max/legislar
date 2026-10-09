@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Presença</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b1329;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+        
+        .custom-card {
+            background: linear-gradient(135deg, rgba(20, 30, 60, 0.9) 0%, rgba(13, 20, 40, 0.95) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.4);
+            transition: all 0.25s ease;
+        }
+        
+        .custom-card:hover {
+            border-color: rgba(59, 130, 246, 0.45);
+            box-shadow: 0 12px 24px -5px rgba(59, 130, 246, 0.15);
+        }
+
+        .president-card {
+            background: linear-gradient(135deg, rgba(25, 35, 70, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+            border: 1.5px solid rgba(245, 158, 11, 0.5);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.12);
+        }
+
+        /* TV Mode refinements - Keeps header title balanced & scaled properly */
+        body.tv-mode {
+            zoom: 1.05;
+        }
+        
+        body.tv-mode header h1 {
+            font-size: 0.9rem !important;
+            line-height: 1.1 !important;
+        }
+
+        body.tv-mode header p {
+            font-size: 8px !important;
+        }
+
+        body.tv-mode .container-fluid {
+            max-width: 98% !important;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1329;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <header class="bg-[#0f172a] border-b border-blue-900/40 sticky top-0 z-40 px-3.5 py-2 shadow-md">
+        <div class="container-fluid flex flex-col md:flex-row justify-between items-center gap-2.5">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-2.5">
+                <img src="https://2.gravatar.com/userimage/277172047/93c936208432d2b0fd2099145b440deb?size=100">
+                <div>
+                    <h1 class="text-xs md:text-sm font-extrabold tracking-wide text-slate-100 flex items-center gap-1 leading-tight">
+                    <h3>CÂMARA MUNICIPAL</h3><span class="text-blue-400 font-semibold"><h4>DE ALMADINA</h4></span>
+                    </h1>
+                    <p class="text-[9px] uppercase tracking-widest text-slate-400 font-semibold leading-none">ESTADO DA BAHIA</p>
+                </div>
+            </div>
+
+            <!-- Session Info badge -->
+            <div class="flex items-center gap-2 bg-[#1e293b]/90 border border-blue-500/30 px-3 py-1 rounded-lg shadow-inner">
+                <i class="fa-solid fa-gavel text-amber-400 text-xs animate-bounce"></i>
+                <span id="session-badge-text" class="text-[11px] md:text-xs font-bold text-white tracking-wide">SESSÃO ORDINÁRIA</span>
+            </div>
+
+            <!-- Clock & Action Controls -->
+            <div class="flex items-center gap-2.5">
+                <div class="text-right hidden sm:block">
+                    <div id="live-clock" class="text-base font-bold text-cyan-400 tracking-wider leading-tight">17:08:34</div>
+                    <div id="live-date" class="text-[10px] text-slate-400 font-medium">09/10/2026</div>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                    <!-- Control Panel Button -->
+                    <button id="btn-open-control" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1.5 rounded-lg font-semibold text-[11px] flex items-center gap-1.5 transition cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-sliders text-xs"></i> <span class="hidden lg:inline">Painel Mesa</span>
+                    </button>
+
+                    <!-- Smart TV Mode Toggle Button -->
+                    <button id="btn-tv-mode" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white px-2.5 py-1.5 rounded-lg font-semibold text-[11px] flex items-center gap-1.5 transition cursor-pointer" title="Ativar/Desativar Escala para TV">
+                        <i class="fa-solid fa-tv text-emerald-400 text-xs"></i> <span class="hidden lg:inline">Modo TV</span>
+                    </button>
+
+                    <!-- Fullscreen Toggle Button for Smart TV -->
+                    <button id="btn-fullscreen" class="bg-emerald-700/80 hover:bg-emerald-600 border border-emerald-500/50 text-white px-2.5 py-1.5 rounded-lg font-semibold text-[11px] flex items-center gap-1.5 transition cursor-pointer shadow-sm" title="Ativar/Desativar Tela Cheia na Smart TV">
+                        <i id="fullscreen-icon" class="fa-solid fa-expand text-xs"></i> <span id="fullscreen-text" class="hidden xl:inline">Tela Cheia</span>
+                    </button>
+
+                    <!-- Exit System Button -->
+                    <button id="btn-exit" class="bg-red-600/80 hover:bg-red-600 text-white px-2 py-1.5 rounded-lg font-semibold text-[11px] flex items-center justify-center transition cursor-pointer" title="Encerrar Sistema">
+                        <i class="fa-solid fa-power-off text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow container-fluid px-3.5 py-4 max-w-7xl mx-auto w-full">
+        <!-- Stat Cards Section -->
+        <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+            
+            <!-- Presentes Card -->
+            <div class="custom-card rounded-xl p-3 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Presentes</p>
+                    <h3 id="stat-presentes" class="text-xl md:text-2xl font-black text-emerald-400 mt-0.5 leading-none">7</h3>
+                    <span class="text-[9px] text-emerald-300/80 font-medium">Em plenário</span>
+                </div>
+                <div class="relative w-10 h-10 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" class="text-slate-800 fill-none"></circle>
+                        <circle id="circle-presentes" cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" class="text-emerald-500 fill-none transition-all duration-500" stroke-dasharray="100" stroke-dashoffset="28"></circle>
+                    </svg>
+                    <i class="fa-solid fa-user-check absolute text-emerald-400 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Ausentes Card -->
+            <div class="custom-card rounded-xl p-3 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ausentes</p>
+                    <h3 id="stat-ausentes" class="text-xl md:text-2xl font-black text-rose-400 mt-0.5 leading-none">1</h3>
+                    <span class="text-[9px] text-rose-300/80 font-medium">Sem registro</span>
+                </div>
+                <div class="relative w-10 h-10 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" class="text-slate-800 fill-none"></circle>
+                        <circle id="circle-ausentes" cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" class="text-rose-500 fill-none transition-all duration-500" stroke-dasharray="100" stroke-dashoffset="88"></circle>
+                    </svg>
+                    <i class="fa-solid fa-user-xmark absolute text-rose-400 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Justificados Card -->
+            <div class="custom-card rounded-xl p-3 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Justificados</p>
+                    <h3 id="stat-justificados" class="text-xl md:text-2xl font-black text-amber-400 mt-0.5 leading-none">1</h3>
+                    <span class="text-[9px] text-amber-300/80 font-medium">Com licença</span>
+                </div>
+                <div class="relative w-10 h-10 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" class="text-slate-800 fill-none"></circle>
+                        <circle id="circle-justificados" cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" class="text-amber-500 fill-none transition-all duration-500" stroke-dasharray="100" stroke-dashoffset="88"></circle>
+                    </svg>
+                    <i class="fa-solid fa-file-shield absolute text-amber-400 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Quórum (%) Card -->
+            <div class="custom-card rounded-xl p-3 flex items-center justify-between col-span-2 sm:col-span-3 lg:col-span-2">
+                <div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Quórum Atual</p>
+                    <h3 id="stat-quorum-percent" class="text-xl md:text-2xl font-black text-cyan-400 mt-0.5 leading-none">78%</h3>
+                    <span class="text-[9px] text-cyan-300/80 font-medium">Presença Relativa</span>
+                </div>
+                <div class="relative w-10 h-10 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" class="text-slate-800 fill-none"></circle>
+                        <circle id="circle-quorum" cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3" class="text-cyan-400 fill-none transition-all duration-500" stroke-dasharray="100" stroke-dashoffset="22"></circle>
+                    </svg>
+                    <i class="fa-solid fa-chart-pie absolute text-cyan-400 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Quórum Necessário Card -->
+            <div class="custom-card rounded-xl p-3 flex flex-col justify-center col-span-2 sm:col-span-3 lg:col-span-1 border-l-2 border-l-emerald-500">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Quórum Mínimo</p>
+                <div class="flex items-baseline gap-1.5 mt-0.5">
+                    <span class="text-lg font-black text-white leading-none">53%</span>
+                    <span class="text-[10px] text-emerald-400 font-bold">(5 de 9)</span>
+                </div>
+                <span class="text-[9px] text-slate-400 mt-0.5 leading-none">Maioria absoluta</span>
+            </div>
+
+        </section>
+
+        <!-- President Section -->
+        <section class="mb-5">
+            <div id="card-parlamentar-0" class="president-card rounded-xl p-3.5 md:p-4 flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300">
+                <div class="flex items-center gap-3.5 w-full md:w-auto">
+                    <div class="relative flex-shrink-0">
+                        <img id="img-0" src="https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=80" alt="Rogério de Jesus Gotado" class="w-14 h-14 md:w-16 md:h-16 rounded-xl object-cover border border-amber-400/80 shadow-md">
+                        <span class="absolute -bottom-1.5 -right-1.5 bg-amber-500 text-slate-950 text-[8px] font-black px-1.5 py-0.5 rounded-md shadow flex items-center gap-0.5">
+                            <i class="fa-solid fa-crown text-[8px]"></i> PRESIDENTE
+                        </span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h2 id="name-0" class="text-sm md:text-base font-bold text-white tracking-wide leading-tight">ROGÉRIO DE JESUS GOTADO</h2>
+                            <span id="party-0" class="bg-blue-600/30 border border-blue-400/40 text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded">[PT]</span>
+                        </div>
+                        <p class="text-[11px] text-amber-300/90 font-medium mt-0.5 flex items-center gap-1 leading-none">
+                            <i class="fa-solid fa-award text-[10px]"></i> Mesa Diretora • Biênio Atual
+                        </p>
+                        <p id="justification-0" class="text-[10px] text-slate-400 mt-1 italic hidden"></p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <div id="status-badge-0" class="px-3.5 py-1.5 rounded-lg font-bold text-xs tracking-wider uppercase flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 shadow">
+                        <i class="fa-solid fa-circle text-[9px] animate-pulse"></i> <span class="status-text">PRESENTE</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Plenary Grid (8 Parliamentarians) -->
+        <section class="mb-6">
+            <h3 class="text-[11px] font-bold tracking-widest text-slate-400 uppercase mb-3 flex items-center gap-1.5">
+                <i class="fa-solid fa-users text-blue-400 text-xs"></i> Plenário da Câmara (Demais Vereadores)
+            </h3>
+            
+            <div id="parliamentarians-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
+                <!-- Dynamically populated via jQuery -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-[#090e1f] border-t border-blue-900/30 py-2.5 px-4 mt-auto text-center text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-1.5">
+        <div class="flex items-center gap-1.5">
+           <img src="img/brasaoatualizado.PNG" alt="Brasão" class="w-5 h-5 object-contain">
+            <span class="font-semibold text-slate-300">Câmara Municipal de Almadina - BA</span>
+        </div>
+        <p class="font-medium tracking-wide text-[11px]">Todos os direitos reservados a <span class="text-blue-400 font-bold">André Almeida</span></p>
+        <div class="text-[10px] text-slate-500">Sistema Legislativo Integrado v2.7 (Smart TV Fullscreen)</div>
+    </footer>
+
+    <!-- Control Panel Modal -->
+    <div id="control-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3.5 hidden">
+        <div class="bg-[#0f172a] border border-blue-500/30 rounded-2xl w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+            
+            <!-- Modal Header -->
+            <div class="bg-[#1e293b] px-4 py-3 border-b border-blue-900/30 flex justify-between items-center">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                        <i class="fa-solid fa-sliders text-xs"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Painel de Controle da Mesa Diretora</h3>
+                        <p class="text-[10px] text-slate-400">Gestão de Sessão Legislativa e Presenças dos 9 Parlamentares</p>
+                    </div>
+                </div>
+                <button id="btn-close-control" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Session Type Selector Bar -->
+            <div class="bg-[#111a2e] px-4 py-2.5 border-b border-blue-900/30 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <label class="text-[11px] font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-gavel"></i> Tipo de Sessão:
+                    </label>
+                    <select id="select-session-type" class="bg-[#1e293b] border border-blue-500/40 text-white text-xs font-bold rounded-lg px-2.5 py-1 focus:outline-none focus:border-amber-400 transition cursor-pointer">
+                        <option value="EXTRAORDINÁRIA">EXTRAORDINÁRIA</option>
+                        <option value="ORDINÁRIA">ORDINÁRIA</option>
+                        <option value="SOLENE">SOLENE</option>
+                        <option value="ESPECIAL">ESPECIAL</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <label class="text-[11px] font-semibold text-slate-300 whitespace-nowrap">Número:</label>
+                    <input type="text" id="input-session-number" value="12ª" class="w-16 bg-[#1e293b] border border-slate-700 text-white text-xs font-bold text-center rounded-lg py-1 focus:outline-none focus:border-blue-400">
+                    <button id="btn-quick-toggle-session" class="bg-amber-600/30 hover:bg-amber-500 border border-amber-500/50 text-amber-300 hover:text-white px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer">
+                        <i class="fa-solid fa-rotate"></i> Alternar Ord/Extra
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Batch Control Bar -->
+            <div class="bg-[#141e33] px-4 py-2 border-b border-blue-900/20 flex items-center justify-between gap-2">
+                <span class="text-[11px] font-semibold text-slate-300">Ações Rápidas:</span>
+                <div class="flex items-center gap-2">
+                    <button id="btn-all-present" class="bg-emerald-600/30 hover:bg-emerald-600 border border-emerald-500/50 text-emerald-300 hover:text-white px-2.5 py-1 rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1">
+                        <i class="fa-solid fa-user-check"></i> Marcar Todos Presentes
+                    </button>
+                    <button id="btn-all-absent" class="bg-rose-600/30 hover:bg-rose-600 border border-rose-500/50 text-rose-300 hover:text-white px-2.5 py-1 rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1">
+                        <i class="fa-solid fa-user-xmark"></i> Limpar Presenças (Ausentes)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-4 overflow-y-auto space-y-2.5 flex-grow">
+                <div id="control-list" class="space-y-2">
+                    <!-- Populated via jQuery -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-[#162035] px-4 py-3 border-t border-blue-900/30 flex justify-end gap-2">
+                <button id="btn-save-control" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-bold text-xs transition cursor-pointer shadow">
+                    <i class="fa-solid fa-check mr-1.5"></i> Salvar e Aplicar no Plenário
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Justification Modal -->
+    <div id="justification-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3.5 hidden">
+        <div class="bg-[#0f172a] border border-amber-500/30 rounded-2xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden">
+            <div class="bg-[#1e293b] px-4 py-3 border-b border-amber-900/30 flex justify-between items-center">
+                <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-shield text-amber-400"></i> Justificar Ausência / Licença
+                </h3>
+                <button id="btn-close-justification" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="p-4 space-y-3">
+                <input type="hidden" id="justification-index" value="">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-300 uppercase mb-1">Parlamentar</label>
+                    <p id="justification-parlamentar-name" class="text-xs font-semibold text-amber-400"></p>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-300 uppercase mb-1">Motivo da Licença / Justificativa</label>
+                    <textarea id="justification-text-input" rows="3" class="w-full bg-[#1e293b] border border-slate-700 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-amber-500 transition" placeholder="Ex: Licença médica apresentada via ofício nº 45/2026..."></textarea>
+                </div>
+            </div>
+            <div class="bg-[#162035] px-4 py-2.5 border-t border-slate-800 flex justify-end gap-2">
+                <button id="btn-cancel-justification" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer">Cancelar</button>
+                <button id="btn-save-justification" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shadow">Salvar Justificativa</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exit Confirmation Modal -->
+    <div id="exit-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3.5 hidden">
+        <div class="bg-[#0f172a] border border-red-500/30 rounded-2xl w-full max-w-sm p-5 text-center shadow-2xl">
+            <div class="w-12 h-12 bg-red-600/20 border border-red-500/30 rounded-xl flex items-center justify-center text-red-500 text-xl mx-auto mb-3">
+                <i class="fa-solid fa-power-off"></i>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1.5">Encerrar Sistema?</h3>
+            <p class="text-xs text-slate-400 mb-5">Deseja realmente sair do sistema da Câmara Municipal?</p>
+            <div class="flex justify-center gap-2">
+                <button id="btn-cancel-exit" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl font-semibold text-xs transition cursor-pointer">Cancelar</button>
+                <button id="btn-confirm-exit" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-xl font-bold text-xs transition cursor-pointer shadow">Encerrar Sistema</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery & Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let sessaoNum = "12ª";
+        let sessaoTipo = "ORDINÁRIA";
+
+        let parlamentares = [
+            {
+                id: 0,
+                nome: "ROGÉRIO GOTADO",
+                partido: "[PT]",
+                cargo: "Presidente • Mesa Diretora",
+                status: "presente",
+                justificativa: "",
+                foto: "https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=80"
+            },
+            {
+                id: 1,
+                nome: "JOSÉ LINDOMAR",
+                partido: "[PODEMOS]",
+                cargo: "Vereador",
+                status: "presente",
+                justificativa: "",
+                foto: "https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=80"
+            },
+            {
+                id: 2,
+                nome: "SYLAS SOUZA",
+                partido: "[PODEMOS]",
+                cargo: "Vereador",
+                status: "presente",
+                justificativa: "",
+                foto: "https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=256"
+            },
+            {
+                id: 3,
+                nome: "LUCAS CAVALCANTE",
+                partido: "[PODEMOS]",
+                cargo: "Vereador",
+                status: "presente",
+                justificativa: "",
+                foto: "https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=256"
+            },
+            {
+                id: 4,
+                nome: "DILSON JUNIOR",
+                partido: "[PV]",
+                cargo: "Vereador",
+                status: "presente",
+                justificativa: "",
+                foto: "https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=80"
+            },
+            {
+                id: 5,
+                nome: "WILSON FREITAS",
+                partido: "[PVC do B]",
+                cargo: "Vereador",
+                status: "ausente",
+                justificativa: "Ausência sem registro prévio.",
+                foto: "https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=80"
+            },
+            {
+                id: 6,
+                nome: "NILZA DAMASCENO",
+                partido: "[PODEMOS]",
+                cargo: "Vereadora",
+                status: "presente",
+                justificativa: "",
+                foto: "https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=80"
+            },
+            {
+                id: 7,
+                nome: "MARILENE SANTOS",
+                partido: "[PSD]",
+                cargo: "Vereadora",
+                status: "justificado",
+                justificativa: "Licença médica (Atestado nº 112/2026).",
+                foto: "https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=80"
+            },
+            {
+                id: 8,
+                nome: "JACKSON COSTA",
+                partido: "[MDB]",
+                cargo: "Vereador",
+                status: "presente",
+                justificativa: "",
+                foto: "https://2.gravatar.com/userimage/277172047/8039d08ed8a294328b8f8b70bbbeb765?size=80"
+            }
+        ];
+
+        $(document).ready(function() {
+            // Live Clock & Date
+            setInterval(function() {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+
+                $('#live-clock').text(`${hours}:${minutes}:${seconds}`);
+                $('#live-date').text(`${day}/${month}/${year}`);
+            }, 1000);
+
+            // Initial Render
+            renderApp();
+
+            // Smart TV Mode Handler
+            $('#btn-tv-mode').on('click', function() {
+                $('body').toggleClass('tv-mode');
+                $(this).toggleClass('bg-emerald-600 text-white border-emerald-500');
+                const isTv = $('body').hasClass('tv-mode');
+                showToast(isTv ? "Modo Smart TV ativado (Escala ampliada)" : "Modo Smart TV desativado", "info");
+            });
+
+            // Fullscreen Handler for Smart TV & Browsers
+            $('#btn-fullscreen').on('click', function() {
+                toggleFullscreen();
+            });
+
+            // Listen for native fullscreen changes to update button state
+            document.addEventListener('fullscreenchange', updateFullscreenUI);
+            document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+            document.addEventListener('mozfullscreenchange', updateFullscreenUI);
+            document.addEventListener('MSFullscreenChange', updateFullscreenUI);
+
+            function toggleFullscreen() {
+                const docElem = document.documentElement;
+                const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+
+                if (!isFs) {
+                    // Activate Fullscreen
+                    if (docElem.requestFullscreen) {
+                        docElem.requestFullscreen().catch(err => {
+                            showToast("Sem permissão ou erro ao ativar tela cheia", "info");
+                        });
+                    } else if (docElem.webkitRequestFullscreen) { /* Safari / WebOS / Tizen */
+                        docElem.webkitRequestFullscreen();
+                    } else if (docElem.mozRequestFullScreen) { /* Firefox */
+                        docElem.mozRequestFullScreen();
+                    } else if (docElem.msRequestFullscreen) { /* IE/Edge */
+                        docElem.msRequestFullscreen();
+                    }
+                    
+                    // Also enable TV mode scale if not already enabled
+                    if (!$('body').hasClass('tv-mode')) {
+                        $('body').addClass('tv-mode');
+                        $('#btn-tv-mode').addClass('bg-emerald-600 text-white border-emerald-500');
+                    }
+                    showToast("Tela Cheia ativada para Smart TV", "success");
+                } else {
+                    // Exit Fullscreen
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                    showToast("Modo Tela Cheia encerrado", "info");
+                }
+            }
+
+            function updateFullscreenUI() {
+                const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+                if (isFs) {
+                    $('#fullscreen-icon').removeClass('fa-expand').addClass('fa-compress');
+                    $('#fullscreen-text').text('Sair Tela Cheia');
+                    $('#btn-fullscreen').addClass('bg-emerald-600 border-emerald-400');
+                } else {
+                    $('#fullscreen-icon').removeClass('fa-compress').addClass('fa-expand');
+                    $('#fullscreen-text').text('Tela Cheia');
+                    $('#btn-fullscreen').removeClass('bg-emerald-600 border-emerald-400');
+                }
+            }
+
+            // Open Control Panel Modal
+            $('#btn-open-control').on('click', function() {
+                $('#select-session-type').val(sessaoTipo);
+                $('#input-session-number').val(sessaoNum);
+                renderControlList();
+                $('#control-modal').removeClass('hidden').hide().fadeIn(150);
+            });
+
+            // Quick Toggle Session Type (Ordinária / Extraordinária)
+            $('#btn-quick-toggle-session').on('click', function() {
+                const current = $('#select-session-type').val();
+                const next = current === 'EXTRAORDINÁRIA' ? 'ORDINÁRIA' : 'EXTRAORDINÁRIA';
+                $('#select-session-type').val(next);
+                sessaoTipo = next;
+                updateSessionBadge();
+                showToast(`Sessão alterada para ${sessaoTipo}`, "info");
+            });
+
+            // Session Select & Number Handlers
+            $('#select-session-type').on('change', function() {
+                sessaoTipo = $(this).val();
+                updateSessionBadge();
+            });
+
+            $('#input-session-number').on('input', function() {
+                sessaoNum = $(this).val().trim() || "12ª";
+                updateSessionBadge();
+            });
+
+            // Batch actions in control panel
+            $('#btn-all-present').on('click', function() {
+                parlamentares.forEach(p => {
+                    p.status = 'presente';
+                    p.justificativa = '';
+                });
+                renderControlList();
+                renderApp();
+                showToast("Todos os parlamentares marcados como PRESENTES", "success");
+            });
+
+            $('#btn-all-absent').on('click', function() {
+                parlamentares.forEach(p => {
+                    p.status = 'ausente';
+                    p.justificativa = '';
+                });
+                renderControlList();
+                renderApp();
+                showToast("Todas as presenças foram limpas (AUSENTES)", "info");
+            });
+
+            // Close Control Panel Modal
+            $('#btn-close-control, #btn-save-control').on('click', function() {
+                sessaoTipo = $('#select-session-type').val();
+                sessaoNum = $('#input-session-number').val().trim() || "12ª";
+                updateSessionBadge();
+
+                $('#control-modal').fadeOut(150, function() {
+                    $(this).addClass('hidden');
+                });
+                renderApp();
+                showToast("Painel de presença e sessão atualizados!", "success");
+            });
+
+            // Exit Modal Handlers
+            $('#btn-exit').on('click', function() {
+                $('#exit-modal').removeClass('hidden').hide().fadeIn(150);
+            });
+
+            $('#btn-cancel-exit').on('click', function() {
+                $('#exit-modal').fadeOut(150, function() {
+                    $(this).addClass('hidden');
+                });
+            });
+
+            $('#btn-confirm-exit').on('click', function() {
+                // Exit fullscreen if active
+                if (document.fullscreenElement || document.webkitFullscreenElement) {
+                    if (document.exitFullscreen) document.exitFullscreen();
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                }
+
+                $('body').html(`
+                    <div class="flex flex-col items-center justify-center min-h-screen bg-[#070b19] text-white p-6 text-center">
+                        <div class="w-16 h-16 bg-emerald-600/20 border border-emerald-500/40 rounded-2xl flex items-center justify-center text-emerald-400 text-2xl mb-4 shadow-xl">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <h1 class="text-xl font-bold mb-1.5">Sessão Encerrada com Sucesso</h1>
+                        <p class="text-xs text-slate-400 max-w-sm mb-6">Todos os registros da ${sessaoNum} SESSÃO ${sessaoTipo} foram arquivados.</p>
+                        <p class="text-[11px] text-slate-500 mb-6">Todos os direitos reservados a <span class="text-blue-400 font-bold">André Almeida</span></p>
+                        <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition cursor-pointer shadow">
+                            <i class="fa-solid fa-rotate-right mr-1.5"></i> Reiniciar Sistema
+                        </button>
+                    </div>
+                `);
+            });
+
+            // Close Justification Modal
+            $('#btn-close-justification, #btn-cancel-justification').on('click', function() {
+                $('#justification-modal').fadeOut(150, function() {
+                    $(this).addClass('hidden');
+                });
+            });
+
+            // Save Justification
+            $('#btn-save-justification').on('click', function() {
+                const idx = parseInt($('#justification-index').val());
+                const text = $('#justification-text-input').val().trim();
+                if(!isNaN(idx) && parlamentares[idx]) {
+                    parlamentares[idx].status = 'justificado';
+                    parlamentares[idx].justificativa = text || "Ausência justificada conforme requerimento.";
+                }
+                $('#justification-modal').fadeOut(150, function() {
+                    $(this).addClass('hidden');
+                });
+                renderControlList();
+                renderApp();
+                showToast("Justificativa registrada!", "success");
+            });
+        });
+
+        function updateSessionBadge() {
+            $('#session-badge-text').text(`${sessaoNum} SESSÃO ${sessaoTipo}`);
+        }
+
+        function renderApp() {
+            updateSessionBadge();
+
+            // President (Index 0)
+            const pres = parlamentares[0];
+            $('#name-0').text(pres.nome);
+            $('#party-0').text(pres.partido);
+            $('#img-0').attr('src', pres.foto);
+            
+            const badgePres = $('#status-badge-0');
+            badgePres.removeClass('bg-emerald-950/80 border-emerald-500/50 text-emerald-400 bg-rose-950/80 border-rose-500/50 text-rose-400 bg-amber-950/80 border-amber-500/50 text-amber-400');
+            
+            if(pres.status === 'presente') {
+                badgePres.addClass('bg-emerald-950/80 border-emerald-500/50 text-emerald-400').html('<i class="fa-solid fa-circle text-[9px] animate-pulse"></i> PRESENTE');
+                $('#justification-0').addClass('hidden');
+            } else if(pres.status === 'ausente') {
+                badgePres.addClass('bg-rose-950/80 border-rose-500/50 text-rose-400').html('<i class="fa-solid fa-circle text-[9px]"></i> AUSENTE');
+                $('#justification-0').addClass('hidden');
+            } else {
+                badgePres.addClass('bg-amber-950/80 border-amber-500/50 text-amber-400').html('<i class="fa-solid fa-file-shield text-[9px]"></i> JUSTIFICADO');
+                $('#justification-0').text('Motivo: ' + pres.justificativa).removeClass('hidden');
+            }
+
+            // Plenary Parliamentarians (1 to 8)
+            let gridHtml = '';
+            for(let i = 1; i < parlamentares.length; i++) {
+                const p = parlamentares[i];
+                let statusBadge = '';
+                if(p.status === 'presente') {
+                    statusBadge = `<div class="px-3 py-1.5 rounded-lg font-bold text-[10px] tracking-wider uppercase flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 shadow-sm"><i class="fa-solid fa-circle text-[8px]"></i> PRESENTE</div>`;
+                } else if(p.status === 'ausente') {
+                    statusBadge = `<div class="px-3 py-1.5 rounded-lg font-bold text-[10px] tracking-wider uppercase flex items-center gap-1.5 bg-rose-950/80 border border-rose-500/40 text-rose-400 shadow-sm"><i class="fa-solid fa-circle text-[8px]"></i> AUSENTE</div>`;
+                } else {
+                    statusBadge = `<div class="px-3 py-1.5 rounded-lg font-bold text-[10px] tracking-wider uppercase flex items-center gap-1.5 bg-amber-950/80 border border-amber-500/40 text-amber-400 shadow-sm" title="${p.justificativa}"><i class="fa-solid fa-file-shield text-[8px]"></i> JUSTIFICADO</div>`;
+                }
+
+                gridHtml += `
+                    <div class="custom-card rounded-xl p-3 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <img src="${p.foto}" alt="${p.nome}" class="w-10 h-10 md:w-11 md:h-11 rounded-lg object-cover border border-slate-700 shadow-sm" onerror="this.src='https://placehold.co/80x80/1e293b/fff?text=Vereador'">
+                            <div>
+                                <h4 class="text-xs md:text-sm font-semibold text-white tracking-wide leading-tight">${p.nome}</h4>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                    <span class="bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-bold px-1.5 py-0.2 rounded">${p.partido}</span>
+                                    <span class="text-[10px] text-slate-400">${p.cargo}</span>
+                                </div>
+                                ${p.status === 'justificado' ? `<p class="text-[10px] text-amber-400 mt-0.5 italic"><i class="fa-solid fa-info-circle mr-0.5"></i>${p.justificativa}</p>` : ''}
+                            </div>
+                        </div>
+                        <div>
+                            ${statusBadge}
+                        </div>
+                    </div>
+                `;
+            }
+            $('#parliamentarians-grid').html(gridHtml);
+
+            // Compute Quorum Stats
+            let presentes = 0;
+            let ausentes = 0;
+            let justificados = 0;
+
+            parlamentares.forEach(p => {
+                if(p.status === 'presente') presentes++;
+                else if(p.status === 'ausente') ausentes++;
+                else if(p.status === 'justificado') justificados++;
+            });
+
+            $('#stat-presentes').text(presentes);
+            $('#stat-ausentes').text(ausentes);
+            $('#stat-justificados').text(justificados);
+
+            const quorumPercent = Math.round((presentes / 9) * 100);
+            $('#stat-quorum-percent').text(quorumPercent + '%');
+
+            const offsetPresentes = 100 - (100 * (presentes / 9));
+            const offsetAusentes = 100 - (100 * (ausentes / 9));
+            const offsetJustificados = 100 - (100 * (justificados / 9));
+            const offsetQuorum = 100 - (100 * quorumPercent / 100);
+
+            $('#circle-presentes').css('stroke-dashoffset', offsetPresentes);
+            $('#circle-ausentes').css('stroke-dashoffset', offsetAusentes);
+            $('#circle-justificados').css('stroke-dashoffset', offsetJustificados);
+            $('#circle-quorum').css('stroke-dashoffset', offsetQuorum);
+        }
+
+        function renderControlList() {
+            let html = '';
+            parlamentares.forEach((p, index) => {
+                const isPres = index === 0;
+                html += `
+                    <div class="bg-[#162035] border border-slate-800 rounded-xl p-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+                        <div class="flex items-center gap-2.5">
+                            <img src="${p.foto}" alt="${p.nome}" class="w-9 h-9 rounded-lg object-cover border border-slate-700">
+                            <div>
+                                <h5 class="text-xs font-bold text-white flex items-center gap-1.5">
+                                    ${p.nome} ${isPres ? '<span class="bg-amber-500 text-slate-950 text-[8px] font-black px-1 py-0.2 rounded">PRESIDENTE</span>' : ''}
+                                </h5>
+                                <p class="text-[10px] text-slate-400">${p.partido} • ${p.cargo}</p>
+                            </div>
+                        </div>
+
+                        <!-- Direct Presence Toggle Buttons -->
+                        <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto justify-end">
+                            <button onclick="setStatus(${index}, 'presente')" class="px-3 py-1 rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1 ${p.status === 'presente' ? 'bg-emerald-600 text-white shadow ring-2 ring-emerald-400' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">
+                                <i class="fa-solid fa-check"></i> Presente
+                            </button>
+                            <button onclick="setStatus(${index}, 'ausente')" class="px-3 py-1 rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1 ${p.status === 'ausente' ? 'bg-rose-600 text-white shadow ring-2 ring-rose-400' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">
+                                <i class="fa-solid fa-xmark"></i> Ausente
+                            </button>
+                            <button onclick="openJustificationModal(${index})" class="px-3 py-1 rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center gap-1 ${p.status === 'justificado' ? 'bg-amber-600 text-white shadow ring-2 ring-amber-400' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">
+                                <i class="fa-solid fa-file-shield"></i> Justificar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            $('#control-list').html(html);
+        }
+
+        // Global functions for control panel actions
+        window.setStatus = function(index, status) {
+            parlamentares[index].status = status;
+            if(status !== 'justificado') {
+                parlamentares[index].justificativa = "";
+            }
+            renderControlList();
+            renderApp();
+        };
+
+        window.openJustificationModal = function(index) {
+            $('#justification-index').val(index);
+            $('#justification-parlamentar-name').text(parlamentares[index].nome);
+            $('#justification-text-input').val(parlamentares[index].justificativa || "");
+            $('#justification-modal').removeClass('hidden').hide().fadeIn(150);
+        };
+
+        // Notification Toast
+        function showToast(message, type = 'success') {
+            const toast = $(`
+                <div class="fixed bottom-4 right-4 z-50 bg-[#1e293b] border ${type === 'success' ? 'border-emerald-500 text-emerald-400' : 'border-blue-500 text-blue-400'} px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2.5 transform translate-y-8 opacity-0 transition-all duration-200">
+                    <i class="fa-solid ${type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-info-circle text-blue-400'} text-sm"></i>
+                    <span class="text-xs font-semibold text-white">${message}</span>
+                </div>
+            `);
+            $('body').append(toast);
+            setTimeout(() => {
+                toast.removeClass('translate-y-8 opacity-0');
+            }, 30);
+            setTimeout(() => {
+                toast.addClass('translate-y-8 opacity-0');
+                setTimeout(() => toast.remove(), 200);
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
