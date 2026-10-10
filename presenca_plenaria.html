@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Presença</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        legislative: {
+                            900: '#090d16',
+                            800: '#111827',
+                            700: '#1f293d',
+                            600: '#2d3b55',
+                            gold: '#f59e0b',
+                            goldDark: '#d97706',
+                            emerald: '#059669',
+                            emeraldDark: '#047857',
+                            rose: '#e11d48',
+                            amber: '#d97706'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #090d16;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        body.tv-mode {
+            font-size: 1.35rem;
+        }
+        body.tv-mode .tv-scale-card {
+            padding: 2rem !important;
+        }
+        body.tv-mode .tv-scale-text {
+            font-size: 1.5rem !important;
+        }
+        body.tv-mode .tv-title {
+            font-size: 2.25rem !important;
+        }
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .president-border {
+            border: 2px solid rgba(245, 158, 11, 0.5);
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.18);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-legislative-900 text-gray-100 selection:bg-amber-500 selection:text-white">
+
+    <!-- CABEÇALHO DO SISTEMA -->
+    <header class="glass-panel border-b border-gray-800 sticky top-0 z-40 px-4 lg:px-8 py-4 shadow-2xl">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <!-- Logo e Título -->
+            <div class="flex items-center space-x-4">
+                <div class="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 p-1 flex items-center justify-center shadow-lg border border-amber-500/30 overflow-hidden shrink-0">
+                    <img src="brasaoatualizado.jpg" alt="Brasão Almadina-BA" class="w-full h-full object-contain filter drop-shadow-md" onerror="this.onerror=null; this.src='https://2.gravatar.com/userimage/277172047/93c936208432d2b0fd2099145b440deb?size=400';">
+                </div>
+                <div>
+                    <h1 class="tv-title text-xl lg:text-2xl font-extrabold tracking-wider bg-gradient-to-r from-white via-gray-200 to-amber-400 bg-clip-text text-transparent">
+                        <h2>PLENÁRIO JONAS PLÍNIO</h2>
+                    </h1>
+                    <p class="text-xs lg:text-sm text-amber-500 font-semibold tracking-widest uppercase flex items-center gap-1.5 mt-0.5">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Estado da Bahia • Sistema Legislativo Oficial
+                    </p>
+                </div>
+            </div>
+
+            <!-- Informações centrais (Sessão & Relógio) -->
+            <div class="flex items-center gap-3 flex-wrap justify-center">
+                <div id="session-badge" class="px-4 py-2 rounded-xl bg-legislative-700/80 border border-amber-500/30 text-amber-400 font-bold text-sm lg:text-base flex items-center gap-2 shadow-inner">
+                    <i class="fa-solid fa-gavel text-amber-500"></i>
+                    <span id="session-type-text">12ª SESSÃO ORDINÁRIA</span>
+                </div>
+                <div class="px-4 py-2 rounded-xl bg-legislative-700/80 border border-gray-700 text-cyan-400 font-mono font-bold text-sm lg:text-base flex items-center gap-2 shadow-inner">
+                    <i class="fa-regular fa-clock text-cyan-400"></i>
+                    <span id="realtime-clock">--:--:--</span>
+                    <span class="text-xs text-gray-400 font-sans ml-1" id="realtime-date">--/--/----</span>
+                </div>
+            </div>
+
+            <!-- Botões de Ação Superior -->
+            <div class="flex items-center gap-2.5 flex-wrap justify-end">
+                <button id="btn-open-mesa" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition shadow-lg flex items-center gap-2 border border-blue-400/30">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Painel Mesa</span>
+                </button>
+                <button id="btn-toggle-tv" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-semibold text-sm transition shadow-lg flex items-center gap-2 border border-emerald-500/30" title="Alternar Modo Smart TV 85 Polegadas">
+                    <i class="fa-solid fa-tv"></i>
+                    <span>Modo TV"</span>
+                </button>
+                <button id="btn-fullscreen" class="px-4 py-2.5 rounded-xl bg-legislative-700 hover:bg-legislative-600 text-gray-200 font-semibold text-sm transition shadow-lg flex items-center gap-2 border border-gray-600" title="Tela Cheia">
+                    <i class="fa-solid fa-expand"></i>
+                    <span>Tela Cheia</span>
+                </button>
+                <button id="btn-exit" class="px-4 py-2.5 rounded-xl bg-rose-900/80 hover:bg-rose-800 text-rose-200 font-semibold text-sm transition shadow-lg flex items-center gap-2 border border-rose-700/50" title="Finalizar e Sair">
+                    <i class="fa-solid fa-power-off"></i>
+                    <span>Finalizar</span>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 flex flex-col gap-6">
+
+        <!-- CARDS DE ESTATÍSTICAS -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            
+            <!-- Presentes -->
+            <div class="glass-panel tv-scale-card p-5 rounded-2xl border-l-4 border-emerald-500 shadow-xl flex flex-col justify-between relative overflow-hidden group hover:border-emerald-400 transition">
+                <div class="absolute -right-3 -bottom-3 text-emerald-500/10 text-6xl pointer-events-none group-hover:scale-110 transition">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+                <div>
+                    <p class="text-xs uppercase tracking-wider text-gray-400 font-bold">Presentes</p>
+                    <h3 id="stat-presentes" class="text-3xl lg:text-4xl font-black text-emerald-400 mt-1">9</h3>
+                </div>
+                <div class="mt-4 flex items-center gap-1.5 text-xs text-emerald-300 font-medium bg-emerald-950/50 px-2.5 py-1 rounded-lg w-fit border border-emerald-800/50">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Em plenário</span>
+                </div>
+            </div>
+
+            <!-- Ausentes -->
+            <div class="glass-panel tv-scale-card p-5 rounded-2xl border-l-4 border-rose-500 shadow-xl flex flex-col justify-between relative overflow-hidden group hover:border-rose-400 transition">
+                <div class="absolute -right-3 -bottom-3 text-rose-500/10 text-6xl pointer-events-none group-hover:scale-110 transition">
+                    <i class="fa-solid fa-user-xmark"></i>
+                </div>
+                <div>
+                    <p class="text-xs uppercase tracking-wider text-gray-400 font-bold">Ausentes</p>
+                    <h3 id="stat-ausentes" class="text-3xl lg:text-4xl font-black text-rose-400 mt-1">0</h3>
+                </div>
+                <div class="mt-4 flex items-center gap-1.5 text-xs text-rose-300 font-medium bg-rose-950/50 px-2.5 py-1 rounded-lg w-fit border border-rose-800/50">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Sem registro</span>
+                </div>
+            </div>
+
+            <!-- Justificados -->
+            <div class="glass-panel tv-scale-card p-5 rounded-2xl border-l-4 border-amber-500 shadow-xl flex flex-col justify-between relative overflow-hidden group hover:border-amber-400 transition">
+                <div class="absolute -right-3 -bottom-3 text-amber-500/10 text-6xl pointer-events-none group-hover:scale-110 transition">
+                    <i class="fa-solid fa-user-clock"></i>
+                </div>
+                <div>
+                    <p class="text-xs uppercase tracking-wider text-gray-400 font-bold">Justificados</p>
+                    <h3 id="stat-justificados" class="text-3xl lg:text-4xl font-black text-amber-400 mt-1">0</h3>
+                </div>
+                <div class="mt-4 flex items-center gap-1.5 text-xs text-amber-300 font-medium bg-amber-950/50 px-2.5 py-1 rounded-lg w-fit border border-amber-800/50">
+                    <i class="fa-solid fa-file-shield"></i>
+                    <span>Com licença</span>
+                </div>
+            </div>
+
+            <!-- Quórum Atual -->
+            <div class="glass-panel tv-scale-card p-5 rounded-2xl border-l-4 border-blue-500 shadow-xl flex flex-col justify-between relative overflow-hidden group hover:border-blue-400 transition">
+                <div class="absolute -right-3 -bottom-3 text-blue-500/10 text-6xl pointer-events-none group-hover:scale-110 transition">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <div>
+                    <p class="text-xs uppercase tracking-wider text-gray-400 font-bold">Quórum Atual</p>
+                    <h3 id="stat-quorum-percent" class="text-3xl lg:text-4xl font-black text-blue-400 mt-1">100%</h3>
+                </div>
+                <div class="mt-4 flex items-center gap-1.5 text-xs text-blue-300 font-medium bg-blue-950/50 px-2.5 py-1 rounded-lg w-fit border border-blue-800/50">
+                    <i class="fa-solid fa-users"></i>
+                    <span id="stat-quorum-ratio">Presença Relativa</span>
+                </div>
+            </div>
+
+            <!-- Quórum Mínimo -->
+            <div class="glass-panel tv-scale-card p-5 rounded-2xl border-l-4 border-purple-500 shadow-xl flex flex-col justify-between relative overflow-hidden col-span-2 sm:col-span-1 group hover:border-purple-400 transition">
+                <div class="absolute -right-3 -bottom-3 text-purple-500/10 text-6xl pointer-events-none group-hover:scale-110 transition">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+                <div>
+                    <p class="text-xs uppercase tracking-wider text-gray-400 font-bold">Quórum Mínimo</p>
+                    <h3 class="text-3xl lg:text-4xl font-black text-purple-400 mt-1">53%</h3>
+                </div>
+                <div class="mt-4 flex items-center gap-1.5 text-xs text-purple-300 font-medium bg-purple-950/50 px-2.5 py-1 rounded-lg w-fit border border-purple-800/50">
+                    <i class="fa-solid fa-gavel"></i>
+                    <span>Maioria Absoluta (5 de 9)</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- MESA DIRETORA - PRESIDÊNCIA -->
+        <section class="flex flex-col gap-3">
+            <div class="flex items-center gap-2 text-amber-400 font-bold uppercase tracking-wider text-xs lg:text-sm px-1">
+                <i class="fa-solid fa-crown text-amber-500"></i>
+                <span>Mesa Diretora - Presidência</span>
+            </div>
+
+            <div id="parliamentarian-container-president">
+                <!-- Injetado dinamicamente via JS -->
+            </div>
+        </section>
+
+        <!-- PLENÁRIO DA CÂMARA (DEMAIS VEREADORES) -->
+        <section class="flex flex-col gap-3 mt-2">
+            <div class="flex items-center gap-2 text-gray-300 font-bold uppercase tracking-wider text-xs lg:text-sm px-1">
+                <i class="fa-solid fa-users-rectangle text-blue-400"></i>
+                <span>Plenário da Câmara (Demais Vereadores)</span>
+            </div>
+
+            <div id="parliamentarian-container-plenary" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Injetado dinamicamente via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- RODAPÉ -->
+    <footer class="glass-panel border-t border-gray-800 py-4 px-6 text-center mt-8">
+        <p class="text-xs lg:text-sm text-gray-400 font-medium tracking-wide">
+            <marquee>© Todos os direitos reservados a André Almeida.</marquee>
+        </p>
+    </footer>
+
+    <!-- MODAL DO PAINEL DE CONTROLE DE MESA -->
+    <div id="modal-mesa" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-4xl rounded-3xl border border-amber-500/30 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-legislative-800 to-legislative-700 px-6 py-4 border-b border-gray-700 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-sliders text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Painel de Controle de Mesa</h2>
+                        <p class="text-xs text-gray-400">Gerenciamento da Mesa Diretora e Sessão Legislativa</p>
+                    </div>
+                </div>
+                <button id="close-modal-mesa" class="w-9 h-9 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6">
+                
+                <!-- Seletor de Tipo de Sessão -->
+                <div class="bg-legislative-800/60 p-5 rounded-2xl border border-gray-700 flex flex-col gap-3">
+                    <label class="text-sm font-bold text-amber-400 uppercase tracking-wide flex items-center gap-2">
+                        <i class="fa-solid fa-gavel"></i>
+                        <span>Tipo de Sessão Legislativa Ativa</span>
+                    </label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <button type="button" class="session-type-btn px-4 py-3 rounded-xl font-bold text-sm transition border border-gray-700 bg-legislative-700 text-gray-200 hover:border-amber-500" data-type="12ª SESSÃO ORDINÁRIA">
+                            Ordinária
+                        </button>
+                        <button type="button" class="session-type-btn px-4 py-3 rounded-xl font-bold text-sm transition border border-gray-700 bg-legislative-700 text-gray-200 hover:border-amber-500" data-type="03ª SESSÃO EXTRAORDINÁRIA">
+                            Extraordinária
+                        </button>
+                        <button type="button" class="session-type-btn px-4 py-3 rounded-xl font-bold text-sm transition border border-gray-700 bg-legislative-700 text-gray-200 hover:border-amber-500" data-type="01ª SESSÃO SOLENE">
+                            Solene
+                        </button>
+                        <button type="button" class="session-type-btn px-4 py-3 rounded-xl font-bold text-sm transition border border-gray-700 bg-legislative-700 text-gray-200 hover:border-amber-500" data-type="02ª SESSÃO ESPECIAL">
+                            Especial
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de Controle Rápido dos 09 Parlamentares -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-gray-200 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-users-gear text-blue-400"></i>
+                            <span>Gerenciamento Rápido de Presença (09 Parlamentares)</span>
+                        </h3>
+                        <div class="flex gap-2">
+                            <button id="btn-all-present" class="px-3 py-1.5 rounded-lg bg-emerald-800/60 hover:bg-emerald-700 text-emerald-200 text-xs font-semibold transition border border-emerald-700">
+                                Marcar Todos Presentes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="operator-parliamentarians-list" class="flex flex-col gap-3">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-legislative-800/80 px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
+                <button id="save-modal-mesa" class="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm transition shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-check"></i>
+                    <span>Aplicar e Fechar</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SCRIPT DE INTERATIVIDADE JQUERY -->
+    <script>
+        // Array dos 09 parlamentares da Câmara de Almadina com URLs de fotos de pessoas reais (Unsplash High-Res Portraits)
+        let parlamentares = [
+            {
+                id: 1,
+                name: "ROGÉRIO DE JESUS GOTADO",
+                party: "PT",
+                role: "Presidente",
+                subrole: "Mesa Diretora • Biênio 2027/2028",
+                photo: "https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=300",
+                isPresident: true,
+                status: "presente",
+                justificativa: ""
+            },
+            {
+                id: 2,
+                name: "Ver. LUCAS CAVALCANTE",
+                party: "PODEMOS",
+                role: "Vice-Presidente",
+                subrole: "Parlamentar",
+                photo: "https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=300",
+                isPresident: false,
+                status: "presente",
+                justificativa: ""
+            },
+            {
+                id: 3,
+                name: "Ver. Dilson Alves",
+                party: "PV",
+                role: "1º Secretário",
+                subrole: "Parlamentar",
+                photo: "https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=300",
+                isPresident: false,
+                status: "presente",
+                justificativa: ""
+            },
+            {
+                id: 4,
+                name: "JOSÉ LINDOMAR",
+                party: "PODEMOS",
+                role: "Vereador",
+                subrole: "Parlamentar",
+                photo: "https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=300",
+                isPresident: false,
+                status: "presente",
+                justificativa: ""
+            },
+            {
+                id: 5,
+                name: "Ver. WILSON FREITAS",
+                party: "PC do B",
+                role: "2º Secretário",
+                subrole: "Parlamentar",
+                photo: "https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=300",
+                isPresident: false,
+                status: "presente",
+                justificativa: ""
+            },
+            {
+                id: 6,
+                name: "SYLAS SOUZA",
+                party: "PODEMOS",
+                role: "Vereador",
+                subrole: "Parlamentar",
+                photo: "https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=300",
+                isPresident: false,
+                status: "presente",
+                justificativa: ""
+            },
+            {
+                id: 7,
+                name: "MARILENE SANTOS",
+                party: "PP",
+                role: "Vereadora",
+                subrole: "Parlamentar",
+                photo: "https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=300",
+                isPresident: false,
+                status: "presente",
+                justificativa: ""
+            },
+            {
+                id: 8,
+                name: "MARIA NILZA",
+                party: "PODEMOS",
+                role: "Vereadora",
+                subrole: "Parlamentar",
+                photo: "https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=300",
+                isPresident: false,
+                status: "presente",
+                justificativa: ""
+            },
+            {
+                id: 9,
+                name: "JACKSON COSTA",
+                party: "AVANTE",
+                role: "Vereador",
+                subrole: "Parlamentar",
+                photo: "https://2.gravatar.com/userimage/277172047/8039d08ed8a294328b8f8b70bbbeb765?size=300",
+                isPresident: false,
+                status: "presente",
+                justificativa: ""
+            }
+        ];
+
+        let currentSessionType = "12ª SESSÃO ORDINÁRIA";
+
+        // Relógio e Data em Tempo Real
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            $('#realtime-clock').text(`${hours}:${minutes}:${seconds}`);
+            
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            $('#realtime-date').text(`${day}/${month}/${year}`);
+        }
+
+        function renderParliamentarians() {
+            let presidentHtml = '';
+            let plenaryHtml = '';
+
+            parlamentares.forEach(p => {
+                let statusBadge = '';
+                let statusCardClass = '';
+
+                if (p.status === 'presente') {
+                    statusBadge = `<span class="px-4 py-2 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 font-bold text-sm flex items-center gap-2 shadow-inner"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> PRESENTE</span>`;
+                    statusCardClass = 'border-l-4 border-emerald-500';
+                } else if (p.status === 'ausente') {
+                    statusBadge = `<span class="px-4 py-2 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-400 font-bold text-sm flex items-center gap-2 shadow-inner"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> AUSENTE</span>`;
+                    statusCardClass = 'border-l-4 border-rose-500';
+                } else {
+                    statusBadge = `<span class="px-4 py-2 rounded-xl bg-amber-950/80 border border-amber-500/40 text-amber-400 font-bold text-sm flex items-center gap-2 shadow-inner" title="${p.justificativa || 'Justificado'}"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> JUSTIFICADO</span>`;
+                    statusCardClass = 'border-l-4 border-amber-500';
+                }
+
+                if (p.isPresident) {
+                    presidentHtml = `
+                        <div class="glass-panel president-border p-5 lg:p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl relative overflow-hidden bg-gradient-to-r from-legislative-800/90 via-legislative-800/95 to-amber-950/30">
+                            <div class="flex items-center gap-4 w-full md:w-auto">
+                                <div class="relative">
+                                    <div class="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-white font-black shadow-xl border-2 border-amber-400/50 overflow-hidden shrink-0">
+                                        <img src="${p.photo}" alt="${p.name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://placehold.co/150x150/111827/f59e0b?text=Presidente';">
+                                    </div>
+                                    <span class="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-md bg-amber-500 text-legislative-900 font-black text-[10px] tracking-wider uppercase shadow-md flex items-center gap-1">
+                                        <i class="fa-solid fa-crown text-[9px]"></i> PRES.
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h2 class="text-xl lg:text-2xl font-black text-white tracking-wide">${p.name}</h2>
+                                        <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 font-bold text-xs border border-amber-500/30">[${p.party}]</span>
+                                    </div>
+                                    <p class="text-sm text-gray-300 font-medium mt-1 flex items-center gap-2">
+                                        <span class="text-amber-400 font-semibold"><i class="fa-solid fa-gavel"></i> Presidente da Mesa Diretora</span>
+                                        <span class="text-gray-500">•</span>
+                                        <span class="text-gray-400">${p.subrole}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                                ${statusBadge}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    plenaryHtml += `
+                        <div class="glass-panel ${statusCardClass} p-4 lg:p-5 rounded-2xl flex items-center justify-between gap-4 shadow-xl hover:border-gray-600 transition">
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-legislative-700 flex items-center justify-center text-white font-bold shadow-inner border border-gray-700 overflow-hidden shrink-0">
+                                    <img src="${p.photo}" alt="${p.name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://placehold.co/120x120/1f293d/9ca3af?text=Vereador';">
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h3 class="text-base lg:text-lg font-bold text-white tracking-wide">${p.name}</h3>
+                                        <span class="px-2 py-0.5 rounded-md bg-gray-700/80 text-gray-300 font-bold text-xs border border-gray-600">[${p.party}]</span>
+                                    </div>
+                                    <p class="text-xs lg:text-sm text-gray-400 font-medium mt-0.5">${p.role}</p>
+                                </div>
+                            </div>
+                            <div>
+                                ${statusBadge}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            $('#parliamentarian-container-president').html(presidentHtml);
+            $('#parliamentarian-container-plenary').html(plenaryHtml);
+            updateStatistics();
+        }
+
+        function renderOperatorList() {
+            let html = '';
+            parlamentares.forEach(p => {
+                html += `
+                    <div class="bg-legislative-700/40 p-4 rounded-xl border border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                            <div class="w-10 h-10 rounded-lg bg-legislative-600 overflow-hidden shrink-0 border border-gray-600">
+                                <img src="${p.photo}" alt="${p.name}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://placehold.co/80x80/1f293d/9ca3af?text=Foto';">
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm text-white">${p.name} <span class="text-xs text-amber-400 font-normal">[${p.party}]</span></h4>
+                                <p class="text-xs text-gray-400">${p.isPresident ? 'Presidente' : 'Vereador'}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+                            <div class="flex rounded-lg overflow-hidden border border-gray-600 p-0.5 bg-legislative-800">
+                                <button type="button" class="px-3 py-1.5 text-xs font-bold rounded-md transition status-toggle-btn ${p.status === 'presente' ? 'bg-emerald-600 text-white shadow' : 'text-gray-300 hover:text-white'}" data-id="${p.id}" data-status="presente">
+                                    Presente
+                                </button>
+                                <button type="button" class="px-3 py-1.5 text-xs font-bold rounded-md transition status-toggle-btn ${p.status === 'ausente' ? 'bg-rose-600 text-white shadow' : 'text-gray-300 hover:text-white'}" data-id="${p.id}" data-status="ausente">
+                                    Ausente
+                                </button>
+                                <button type="button" class="px-3 py-1.5 text-xs font-bold rounded-md transition status-toggle-btn ${p.status === 'justificado' ? 'bg-amber-600 text-white shadow' : 'text-gray-300 hover:text-white'}" data-id="${p.id}" data-status="justificado">
+                                    Justificado
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            $('#operator-parliamentarians-list').html(html);
+        }
+
+        // Atualização de Estatísticas e Quórum
+        function updateStatistics() {
+            const total = parlamentares.length;
+            const presentes = parlamentares.filter(p => p.status === 'presente').length;
+            const ausentes = parlamentares.filter(p => p.status === 'ausente').length;
+            const justificados = parlamentares.filter(p => p.status === 'justificado').length;
+
+            const percent = Math.round((presentes / total) * 100);
+
+            $('#stat-presentes').text(presentes);
+            $('#stat-ausentes').text(ausentes);
+            $('#stat-justificados').text(justificados);
+            $('#stat-quorum-percent').text(percent + '%');
+        }
+
+        $(document).ready(function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            renderParliamentarians();
+
+            // Abrir Painel Mesa
+            $('#btn-open-mesa').on('click', function() {
+                renderOperatorList();
+                $('.session-type-btn').each(function() {
+                    if ($(this).data('type') === currentSessionType) {
+                        $(this).addClass('bg-amber-600 text-white border-amber-500').removeClass('bg-legislative-700 text-gray-200');
+                    } else {
+                        $(this).removeClass('bg-amber-600 text-white border-amber-500').addClass('bg-legislative-700 text-gray-200');
+                    }
+                });
+                $('#modal-mesa').removeClass('hidden');
+            });
+
+            // Fechar Painel Mesa
+            $('#close-modal-mesa, #save-modal-mesa').on('click', function() {
+                $('#modal-mesa').addClass('hidden');
+                renderParliamentarians();
+            });
+
+            // Selecionar Tipo de Sessão no Modal
+            $(document).on('click', '.session-type-btn', function() {
+                $('.session-type-btn').removeClass('bg-amber-600 text-white border-amber-500').addClass('bg-legislative-700 text-gray-200');
+                $(this).addClass('bg-amber-600 text-white border-amber-500').removeClass('bg-legislative-700 text-gray-200');
+                currentSessionType = $(this).data('type');
+                $('#session-type-text').text(currentSessionType);
+            });
+
+            // Mudar status individual
+            $(document).on('click', '.status-toggle-btn', function() {
+                const id = $(this).data('id');
+                const status = $(this).data('status');
+                
+                const parlamentar = parlamentares.find(p => p.id === id);
+                if (parlamentar) {
+                    parlamentar.status = status;
+                    if (status === 'justificado' && !parlamentar.justificativa) {
+                        parlamentar.justificativa = "Licença oficial/médica";
+                    }
+                }
+                renderOperatorList();
+            });
+
+            // Marcar todos presentes
+            $('#btn-all-present').on('click', function() {
+                parlamentares.forEach(p => {
+                    p.status = 'presente';
+                });
+                renderOperatorList();
+            });
+
+            // Modo TV"
+            $('#btn-toggle-tv').on('click', function() {
+                $('body').toggleClass('tv-mode');
+                if ($('body').hasClass('tv-mode')) {
+                    $(this).removeClass('bg-emerald-700 hover:bg-emerald-600').addClass('bg-amber-600 hover:bg-amber-500');
+                    $(this).find('span').text('Sair Modo TV');
+                } else {
+                    $(this).removeClass('bg-amber-600 hover:bg-amber-500').addClass('bg-emerald-700 hover:bg-emerald-600');
+                    $(this).find('span').text('Modo TV 85"');
+                }
+            });
+
+            // Tela Cheia
+            $('#btn-fullscreen').on('click', function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error("Erro ao ativar tela cheia:", err);
+                    });
+                    $(this).find('i').removeClass('fa-expand').addClass('fa-compress');
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                    $(this).find('i').removeClass('fa-compress').addClass('fa-expand');
+                }
+            });
+
+            // Finalizar / Sair da página
+            $('#btn-exit').on('click', function(e) {
+                if (confirm('Deseja encerrar o sistema atual e retornar à página inicial?')) {
+                     window.location.href = "index.html";
+                }
+            });
+        });
+    </script>
+</body>
+</html>
