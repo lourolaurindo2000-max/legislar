@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Câmara de Almadina – Transmissão ao vivo</title>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f1ec;--card:#fff;--ink:#17262b;--mute:#5d6b70;--line:#dcd8cd;--main:#0e3b43;--main2:#165560;--gold:#b98a2c;--red:#b3261e;--ok:#1d7a4d;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1719;--card:#14242a;--ink:#e8eeee;--mute:#9fb1b4;--line:#264048;--main:#0a2a30;--main2:#1b6672;--gold:#d8a843;--red:#ff7b72;--ok:#4cc38a}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 'Public Sans',system-ui,sans-serif}
+header{background:linear-gradient(135deg,var(--main),var(--main2));color:#fff;text-align:center;padding:34px 16px 28px;border-bottom:4px solid var(--gold)}
+header h1{margin:0;font:700 clamp(28px,6vw,48px)/1.1 'Source Serif 4',Georgia,serif;letter-spacing:.5px}
+header p{margin:8px 0 0;font-size:clamp(12px,2.6vw,14px);color:#e6d6a8;letter-spacing:.4px}
+main{max-width:1180px;margin:0 auto;padding:22px 14px;display:grid;gap:20px;grid-template-columns:1fr}
+@media(min-width:960px){main{grid-template-columns:1.7fr 1fr}.wide{grid-column:1/-1}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+h2{margin:0 0 12px;font:700 20px 'Source Serif 4',Georgia,serif}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input,select{flex:1;min-width:140px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+button{padding:11px 16px;border:0;border-radius:8px;font:600 15px inherit;font-family:inherit;background:var(--main2);color:#fff;cursor:pointer}
+button.gold{background:var(--gold);color:#1b1405}button.red{background:var(--red);color:#fff}
+button.ghost{background:transparent;color:var(--main2);border:1px solid var(--line);padding:7px 11px;font-size:14px}
+@media (prefers-color-scheme:dark){button.ghost{color:var(--gold)}}
+button:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.player{position:relative;aspect-ratio:16/9;background:#0a1214;border-radius:10px;margin-top:14px;overflow:hidden;display:grid;place-items:center;color:#9fb1b4;text-align:center;padding:16px}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.list{list-style:none;margin:0;padding:0;max-height:430px;overflow:auto}
+.list li{padding:11px 4px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.list b{display:block;font-weight:600}.list small,.hint{color:var(--mute);font-size:13px}
+.meter{height:8px;background:var(--bg);border-radius:6px;overflow:hidden;margin:12px 0;border:1px solid var(--line)}
+.meter i{display:block;height:100%;width:0;background:var(--ok);transition:width .08s}
+.rec{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);margin-right:6px;animation:p 1s infinite}
+@keyframes p{50%{opacity:.25}}@media(prefers-reduced-motion:reduce){.rec{animation:none}}
+#live{min-height:110px;max-height:240px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;white-space:pre-wrap;font-size:15px}
+.tr{white-space:pre-wrap;font-size:14px;background:var(--bg);border-radius:8px;padding:10px;margin-top:8px;width:100%;max-height:160px;overflow:auto}
+footer{text-align:center;padding:22px 14px 30px;color:var(--mute);font-size:14px;border-top:1px solid var(--line);margin-top:10px}
+body.obs header,body.obs footer,body.obs main>section:not(#sp){display:none}
+body.obs main{display:block;padding:0;max-width:none}
+body.obs #sp{border:0;padding:0;background:#000;border-radius:0}
+body.obs #sp h2,body.obs #sp>.row,body.obs #sp>.hint{display:none}
+body.obs .player{margin:0;border-radius:0;height:100vh;aspect-ratio:auto}
+body.obs{background:#000;padding:0}
+.chip{display:inline-block;padding:3px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line);font-size:13px;margin-right:6px}
+#msg{margin-top:10px;font-size:14px;color:var(--mute)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Câmara de Almadina</h1>
+  <p>O Legislativo por Uma Cidadania Soberana</p>
+</header>
+
+<main>
+  <section class="card" id="sp">
+    <h2>Assistir à transmissão</h2>
+    <div class="row">
+      <input id="url" type="url" placeholder="Cole o link da live do YouTube" aria-label="Link do YouTube">
+      <input id="ttl" type="text" placeholder="Título da sessão (opcional)" aria-label="Título da sessão">
+      <button id="watch" class="gold">Assistir</button>
+      <video width="640" height="360" controls>
+  <source src="video.MOV" type="video/mp4">
+  Seu navegador não suporta a reprodução deste vídeo.
+</video>
+    </div>
+    <div class="player" id="player">A transmissão aparece aqui depois que você colar o link e tocar em Assistir.</div>
+    <p class="hint" style="margin:10px 0 0">Aceita live, vídeo já gravado, lista de reprodução e canal (link com /channel/). O último vídeo assistido abre sozinho quando você entra na página.</p>
+  </section>
+
+  <section class="card">
+    <h2>Vídeos assistidos</h2>
+    <p class="hint" style="margin-top:-6px">Cada vídeo assistido fica guardado aqui. Use Excluir para remover os que não quiser mais.</p>
+    <ul class="list" id="videos"></ul>
+  </section>
+
+  <section class="card wide" id="obscard">
+    <h2>OBS Studio</h2>
+    <p class="hint" style="margin-top:-6px">Controle o OBS por aqui e mostre este vídeo dentro do OBS. No OBS, abra Ferramentas, Configurações do Servidor WebSocket, e marque “Ativar servidor WebSocket”. O OBS precisa estar aberto no mesmo computador desta página.</p>
+    <div class="row">
+      <input id="oh" type="text" value="localhost" aria-label="Endereço do OBS">
+      <input id="op" type="number" value="4455" aria-label="Porta" style="max-width:110px">
+      <input id="ow" type="password" placeholder="Senha do OBS (se tiver)" aria-label="Senha do OBS">
+      <button id="obsconn">Conectar ao OBS</button>
+    </div>
+    <div style="margin:12px 0"><span class="chip" id="cs">Desconectado</span><span class="chip" id="cst">Transmissão: parada</span><span class="chip" id="crc">Gravação: parada</span></div>
+    <div class="row">
+      <button id="stS" disabled>Iniciar transmissão</button><button id="spS" class="red" disabled>Parar transmissão</button>
+      <button id="stR" disabled>Iniciar gravação no OBS</button><button id="spR" class="red" disabled>Parar gravação</button>
+    </div>
+    <div class="row" id="scenes" style="margin-top:12px"></div>
+    <div id="obsmsg" class="hint" style="margin-top:10px"></div>
+    <h2 style="margin-top:18px;font-size:17px">Mostrar este vídeo dentro do OBS</h2>
+    <p class="hint" style="margin-top:-6px">No OBS, adicione uma fonte “Navegador” e cole o endereço abaixo. Ele abre só o vídeo, em tela cheia, sem o resto do sistema.</p>
+    <div class="row"><input id="obsurl" type="text" readonly aria-label="Endereço para o OBS"><button id="cpurl" class="ghost">Copiar</button></div>
+  </section>
+
+  <section class="card wide">
+    <h2>Gravar falas e transcrever</h2>
+    <div class="row">
+      <input id="spk" type="text" placeholder="Nome do parlamentar que está falando" aria-label="Parlamentar">
+      <select id="dev" aria-label="Entrada de áudio"><option value="">Entrada de áudio padrão</option></select>
+      <select id="src" aria-label="Fonte do áudio">
+        <option value="mic">Microfone do plenário</option>
+        <option value="tab">Áudio de uma aba (Chrome no computador)</option>
+      </select>
+      <button id="start">Gravar</button>
+      <button id="stop" class="red" disabled>Parar e salvar</button>
+    </div>
+    <div class="meter" aria-hidden="true"><i id="lvl"></i></div>
+    <div id="status" class="hint">Pronto para gravar.</div>
+    <h2 style="margin-top:16px;font-size:17px">Transcrição ao vivo</h2>
+    <div id="live" aria-live="polite"></div>
+    <div id="msg"></div>
+  </section>
+
+  <section class="card wide">
+    <h2>Falas gravadas</h2>
+    <ul class="list" id="recs" style="max-height:none"></ul>
+  </section>
+</main>
+
+<footer>Todos os direitos a André Almeida, criador do sistema.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+<script>
+$(function(){
+  /* ===== CONFIGURAÇÃO: TROQUE AQUI =====
+     Este é o link de exemplo (fictício) que aparece na primeira vez que a página é aberta.
+     Para trocar: apague o endereço entre aspas e cole o link da sua live ou do seu vídeo do YouTube.
+     Depois de salvar o arquivo no GitHub, abra a página em uma aba anônima para ver a primeira abertura. */
+  var LINK_EXEMPLO='https://www.youtube.com/watch?v=6NvkZY-va0E&list=RD6NvkZY-va0E&start_radio=1';
+  var TITULO_EXEMPLO='Vídeo de exemplo (link fictício, exclua ou troque)';
+  var KEY='camara_videos', db=null;
+  function esc(s){return $('<div>').text(s).html()}
+  function fmt(d){return new Date(d).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}
+  function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}}
+  function save(a){try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}}
+  var primeiraVez=(localStorage.getItem(KEY)===null);
+  var mem=load();
+
+  /* ---------- Vídeos ---------- */
+  function vid(u){
+    u=$.trim(u);var m;
+    if((m=u.match(/(?:v=|youtu\.be\/|\/live\/|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/))||(m=u.match(/^([A-Za-z0-9_-]{11})$/)))
+      return {id:m[1],src:'https://www.youtube.com/embed/'+m[1]+'?rel=0',url:'https://www.youtube.com/watch?v='+m[1]};
+    if(m=u.match(/list=([A-Za-z0-9_-]+)/))
+      return {id:'list:'+m[1],src:'https://www.youtube.com/embed/videoseries?list='+m[1]+'&rel=0',url:'https://www.youtube.com/playlist?list='+m[1]};
+    if(m=u.match(/channel\/(UC[A-Za-z0-9_-]{22})/))
+      return {id:'canal:'+m[1],src:'https://www.youtube.com/embed/live_stream?channel='+m[1]+'&rel=0',url:'https://www.youtube.com/channel/'+m[1]+'/live'};
+    return null;
+  }
+  function norm(v){return v.src?v:{id:v.id,title:v.title,date:v.date,src:'https://www.youtube.com/embed/'+v.id+'?rel=0',url:'https://www.youtube.com/watch?v='+v.id}}
+  function play(v,auto){
+    $('#player').empty().append($('<iframe allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="Transmissão">').attr('src',v.src+(v.src.indexOf('?')>0?'&':'?')+'autoplay=1'+(auto?'&mute=1':'')));
+  }
+  function renderVideos(){
+    var $l=$('#videos').empty();
+    if(!mem.length){$l.append('<li><small>Nenhum vídeo assistido ainda. Cole um link ao lado para começar.</small></li>');return}
+    mem.slice().reverse().forEach(function(v){
+      $l.append($('<li>').append($('<div>').html('<b>'+esc(v.title)+'</b><small>'+fmt(v.date)+'</small>'),
+        $('<div class="row">').append(
+          $('<button class="ghost">Assistir</button>').on('click',function(){play(norm(v));window.scrollTo({top:0,behavior:'smooth'})}),
+          $('<button class="ghost" style="color:var(--red)">Excluir</button>').on('click',function(){
+            if(!confirm('Excluir “'+v.title+'” da lista? Essa ação não pode ser desfeita.'))return;
+            mem=mem.filter(function(x){return x.id!==v.id});save(mem);renderVideos();
+          }))));
+    });
+  }
+  $('#watch').on('click',function(){
+    var v=vid($('#url').val());
+    if(!v){alert('Link não reconhecido. Abra a live ou o vídeo no YouTube e copie o endereço completo da barra do navegador. Links de canal com @nome não funcionam: entre no vídeo ou na live e copie o link de lá.');return}
+    play(v);
+    var t=$.trim($('#ttl').val())||'Sessão de '+new Date().toLocaleDateString('pt-BR');
+    mem=mem.filter(function(x){return x.id!==v.id});
+    mem.push({id:v.id,src:v.src,url:v.url,title:t,date:Date.now()});save(mem);renderVideos();
+  });
+  $('#url').on('keydown',function(e){if(e.key==='Enter')$('#watch').click()});
+
+  /* ---------- Banco de gravações ---------- */
+  function openDB(cb){
+    try{var r=indexedDB.open('camara_gravacoes',1);
+      r.onupgradeneeded=function(){r.result.createObjectStore('g',{keyPath:'id',autoIncrement:true})};
+      r.onsuccess=function(){db=r.result;cb()};r.onerror=function(){cb()};
+    }catch(e){cb()}
+  }
+  function all(cb){if(!db)return cb([]);var q=db.transaction('g').objectStore('g').getAll();q.onsuccess=function(){cb(q.result)};q.onerror=function(){cb([])}}
+  function put(o,cb){if(!db)return cb(false);var t=db.transaction('g','readwrite');t.objectStore('g').add(o);t.oncomplete=function(){cb(true)};t.onerror=function(){cb(false)}}
+
+  function renderRecs(){
+    all(function(rs){
+      var $l=$('#recs').empty();
+      if(!rs.length){$l.append('<li><small>As falas gravadas aparecem aqui e ficam guardadas.</small></li>');return}
+      rs.reverse().forEach(function(r){
+        var $li=$('<li>').append($('<div>').html('<b>'+esc(r.speaker)+'</b><small>'+fmt(r.date)+' · '+Math.round(r.dur)+' s</small>'));
+        var $b=$('<div class="row">');
+        var $a=$('<audio controls preload="none" style="max-width:100%">');$a.attr('src',URL.createObjectURL(r.blob));
+        $b.append($a,
+          $('<button class="ghost">MP3</button>').on('click',function(){conv(r,'mp3',this)}),
+          $('<button class="ghost">WAV</button>').on('click',function(){conv(r,'wav',this)}),
+          $('<button class="ghost">Transcrição .txt</button>').on('click',function(){
+            dl(new Blob([r.speaker+' – '+fmt(r.date)+'\n\n'+(r.text||'(sem transcrição)')],{type:'text/plain'}),'fala-'+slug(r.speaker)+'.txt')}));
+        $li.append($b,$('<div class="tr">').text(r.text||'(sem transcrição)'));
+        $l.append($li);
+      });
+    });
+  }
+  function slug(s){return (s||'fala').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'fala'}
+  function dl(b,n){var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();a.remove()}
+
+  /* ---------- Conversão MP3 / WAV ---------- */
+  function conv(r,type,btn){
+    var $b=$(btn),old=$b.text();$b.prop('disabled',true).text('Convertendo…');
+    r.blob.arrayBuffer().then(function(buf){
+      var ctx=new (window.AudioContext||window.webkitAudioContext)();
+      return ctx.decodeAudioData(buf).then(function(ab){ctx.close();return ab});
+    }).then(function(ab){
+      var f=ab.getChannelData(0),pcm=new Int16Array(f.length);
+      for(var i=0;i<f.length;i++){var s=Math.max(-1,Math.min(1,f[i]));pcm[i]=s<0?s*32768:s*32767}
+      var out,sr=ab.sampleRate;
+      if(type==='mp3'){
+        if(!window.lamejs)throw new Error('mp3');
+        var enc=new lamejs.Mp3Encoder(1,sr,128),parts=[],k=1152;
+        for(var p=0;p<pcm.length;p+=k){var c=enc.encodeBuffer(pcm.subarray(p,p+k));if(c.length)parts.push(new Int8Array(c))}
+        var e=enc.flush();if(e.length)parts.push(new Int8Array(e));
+        out=new Blob(parts,{type:'audio/mpeg'});
+      }else{
+        var w=new DataView(new ArrayBuffer(44+pcm.length*2));
+        function S(o,s){for(var i=0;i<s.length;i++)w.setUint8(o+i,s.charCodeAt(i))}
+        S(0,'RIFF');w.setUint32(4,36+pcm.length*2,true);S(8,'WAVEfmt ');w.setUint32(16,16,true);w.setUint16(20,1,true);w.setUint16(22,1,true);
+        w.setUint32(24,sr,true);w.setUint32(28,sr*2,true);w.setUint16(32,2,true);w.setUint16(34,16,true);S(36,'data');w.setUint32(40,pcm.length*2,true);
+        for(var j=0;j<pcm.length;j++)w.setInt16(44+j*2,pcm[j],true);
+        out=new Blob([w],{type:'audio/wav'});
+      }
+      dl(out,'fala-'+slug(r.speaker)+'.'+type);
+    }).catch(function(){alert('Não foi possível converter para '+type.toUpperCase()+'. Tente o formato WAV.')})
+    .then(function(){$b.prop('disabled',false).text(old)});
+  }
+
+  /* ---------- Gravação + transcrição ---------- */
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec,mr,chunks,stream,recog,running=false,txt='',t0,raf,actx;
+  if(!SR)$('#msg').text('Este navegador não faz transcrição automática. Use o Google Chrome para ter a transcrição; a gravação de áudio funciona normalmente.');
+
+  $('#start').on('click',function(){
+    var spk=$.trim($('#spk').val());
+    if(!spk){alert('Informe o nome do parlamentar antes de gravar.');$('#spk').focus();return}
+    var get=$('#src').val()==='tab'?navigator.mediaDevices.getDisplayMedia({video:true,audio:true}):navigator.mediaDevices.getUserMedia({audio:$('#dev').val()?{deviceId:{exact:$('#dev').val()},echoCancellation:false,noiseSuppression:false,autoGainControl:false}:true});
+    get.then(function(s){devs();
+      if(!s.getAudioTracks().length){s.getTracks().forEach(function(t){t.stop()});alert('Nenhum áudio foi compartilhado. Marque a opção de compartilhar o áudio da aba.');return}
+      stream=new MediaStream(s.getAudioTracks());s.getVideoTracks().forEach(function(t){t.stop()});
+      chunks=[];txt='';t0=Date.now();running=true;
+      mr=new MediaRecorder(stream);mr.ondataavailable=function(e){if(e.data.size)chunks.push(e.data)};
+      mr.onstop=function(){
+        var blob=new Blob(chunks,{type:mr.mimeType||'audio/webm'});
+        put({speaker:spk,date:Date.now(),dur:(Date.now()-t0)/1000,blob:blob,text:$.trim(txt)},function(ok){
+          $('#status').text(ok?'Fala de '+spk+' salva.':'Não foi possível salvar neste navegador. Baixe agora o áudio.');
+          if(!ok)dl(blob,'fala-'+slug(spk)+'.webm');renderRecs();
+        });
+      };
+      mr.start(1000);
+      actx=new (window.AudioContext||window.webkitAudioContext)();var an=actx.createAnalyser();an.fftSize=256;
+      actx.createMediaStreamSource(stream).connect(an);var d=new Uint8Array(an.frequencyBinCount);
+      (function tick(){if(!running)return;an.getByteTimeDomainData(d);var m=0;for(var i=0;i<d.length;i++)m=Math.max(m,Math.abs(d[i]-128));$('#lvl').css('width',Math.min(100,m*1.6)+'%');raf=requestAnimationFrame(tick)})();
+      if(SR&&$('#src').val()==='mic'){
+        recog=new SR();recog.lang='pt-BR';recog.continuous=true;recog.interimResults=true;
+        var base='';
+        recog.onresult=function(e){var interim='';
+          for(var i=e.resultIndex;i<e.results.length;i++){
+            if(e.results[i].isFinal){txt+=e.results[i][0].transcript.trim()+' ';}else interim+=e.results[i][0].transcript;
+          }
+          $('#live').text($('#live').data('prev')+'['+spk+'] '+txt+interim).scrollTop(1e6);
+        };
+        recog.onend=function(){if(running)try{recog.start()}catch(e){}};
+        $('#live').data('prev',$('#live').text()?$('#live').text()+'\n\n':'');
+        try{recog.start()}catch(e){}
+      }else if($('#src').val()==='tab'){$('#msg').text('Para áudio de aba, a gravação é feita, mas a transcrição automática só funciona com o microfone.')}
+      $('#status').html('<span class="rec"></span>Gravando a fala de '+esc(spk)+'…');
+      $('#start').prop('disabled',true);$('#stop').prop('disabled',false);
+    }).catch(function(){alert('Não foi possível acessar o áudio. Permita o uso do microfone no navegador.')});
+  });
+  $('#stop').on('click',function(){
+    running=false;cancelAnimationFrame(raf);$('#lvl').css('width',0);
+    try{recog&&recog.stop()}catch(e){}
+    if(mr&&mr.state!=='inactive')mr.stop();
+    if(stream)stream.getTracks().forEach(function(t){t.stop()});
+    if(actx)actx.close();
+    $('#live').data('prev',$('#live').text()+'\n\n');
+    $('#start').prop('disabled',false);$('#stop').prop('disabled',true);
+  });
+
+  var obsMode=/[?&]obs=1/.test(location.search);if(obsMode)$('body').addClass('obs');
+  $('#obsurl').val(location.href.split('?')[0].split('#')[0]+'?obs=1');
+  $('#cpurl').on('click',function(){try{navigator.clipboard.writeText($('#obsurl').val())}catch(e){$('#obsurl').select()}$(this).text('Copiado')});
+  function devs(){if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices)return;
+    navigator.mediaDevices.enumerateDevices().then(function(l){var cur=$('#dev').val();$('#dev').html('<option value="">Entrada de áudio padrão</option>');
+      l.filter(function(d){return d.kind==='audioinput'&&d.deviceId&&d.deviceId!=='default'}).forEach(function(d,i){$('#dev').append($('<option>').val(d.deviceId).text(d.label||'Entrada de áudio '+(i+1)))});$('#dev').val(cur)})}
+  devs();
+
+  /* ---------- OBS Studio (obs-websocket 5) ---------- */
+  var ws=null,reqs={},poll=null;
+  function om(t){$('#obsmsg').text(t)}
+  function sha(x){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(x)).then(function(b){return btoa(String.fromCharCode.apply(null,new Uint8Array(b)))})}
+  function rq(t,d){return new Promise(function(ok){var id=String(Math.random());reqs[id]=ok;ws.send(JSON.stringify({op:6,d:{requestType:t,requestId:id,requestData:d||{}}}))})}
+  function ctl(on){$('#stS,#spS,#stR,#spR').prop('disabled',!on);$('#cs').text(on?'Conectado':'Desconectado')}
+  function status(){if(!ws||ws.readyState!==1)return;
+    rq('GetStreamStatus').then(function(r){$('#cst').text('Transmissão: '+(r.responseData&&r.responseData.outputActive?'AO VIVO':'parada'))});
+    rq('GetRecordStatus').then(function(r){$('#crc').text('Gravação: '+(r.responseData&&r.responseData.outputActive?'gravando':'parada'))})}
+  function scenes(){rq('GetSceneList').then(function(r){var d=r.responseData||{},cur=d.currentProgramSceneName,$s=$('#scenes').empty();
+    (d.scenes||[]).slice().reverse().forEach(function(c){$s.append($('<button class="ghost">').text(c.sceneName+(c.sceneName===cur?' (no ar)':'')).on('click',function(){rq('SetCurrentProgramScene',{sceneName:c.sceneName}).then(scenes)}))})})}
+  function act(b,t,msg,conf){$(b).on('click',function(){if(conf&&!confirm(conf))return;rq(t).then(function(r){om(r.requestStatus&&r.requestStatus.result?msg:'O OBS recusou o comando: '+((r.requestStatus&&r.requestStatus.comment)||'sem detalhes'));setTimeout(status,800)})})}
+  act('#stS','StartStream','Transmissão iniciada.');act('#spS','StopStream','Transmissão encerrada.','Encerrar a transmissão ao vivo agora?');
+  act('#stR','StartRecord','Gravação do OBS iniciada.');act('#spR','StopRecord','Gravação do OBS encerrada.');
+  $('#obsconn').on('click',function(){
+    if(ws)try{ws.close()}catch(e){}
+    om('Conectando…');
+    try{ws=new WebSocket('ws://'+$.trim($('#oh').val())+':'+$('#op').val())}catch(e){om('Endereço inválido.');return}
+    ws.onerror=function(){om('Não foi possível conectar. Confira se o OBS está aberto, se o servidor WebSocket está ativado e se a porta está correta. Se esta página abre por https, use o Chrome ou o Edge no mesmo computador do OBS.')};
+    ws.onclose=function(){ctl(false);clearInterval(poll)};
+    ws.onmessage=function(e){var m=JSON.parse(e.data),d=m.d;
+      if(m.op===0){
+        var id={rpcVersion:1};
+        if(d.authentication){sha($('#ow').val()+d.authentication.salt).then(function(sec){return sha(sec+d.authentication.challenge)}).then(function(a){id.authentication=a;ws.send(JSON.stringify({op:1,d:id}))})}
+        else ws.send(JSON.stringify({op:1,d:id}));
+      }else if(m.op===2){ctl(true);om('Conectado ao OBS.');scenes();status();clearInterval(poll);poll=setInterval(status,3000)}
+      else if(m.op===7&&reqs[d.requestId]){reqs[d.requestId](d);delete reqs[d.requestId]}
+    };
+  });
+
+  if(primeiraVez){var ex=vid(LINK_EXEMPLO);if(ex){mem.push({id:ex.id,src:ex.src,url:ex.url,title:TITULO_EXEMPLO,date:Date.now()});save(mem)}}
+  renderVideos();
+  if(mem.length)play(norm(mem[mem.length-1]),!obsMode);
+  openDB(renderRecs);
+});
+</script>
+</body>
+</html>
