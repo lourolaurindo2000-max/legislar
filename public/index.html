@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anotação do Vereador</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: cabeçalho institucional + grade de 9 cadeiras (3x3 no desktop, 1 coluna no celular). Tema escuro, igual às telas de login. */
+:root{
+  --bg:#0F1A17; --surface:#17251F; --surface-2:#1D2E27; --ink:#E8EFEB; --muted:#93A39B;
+  --line:#2B3D35; --brand:#2F7A66; --brand-hi:#3C9A80; --gold:#D1A64A; --ok:#7CC8A4; --warn:#E58A7E;
+  --display:"Spectral",Georgia,"Times New Roman",serif;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:2rem 2.5rem}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:1.75rem}
+
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:1rem;padding-bottom:1.25rem;border-bottom:1px solid var(--line)}
+.brasao{display:flex;align-items:center;gap:.9rem;min-width:0}
+.selo{width:auto;height:72px;max-width:100%;flex:none;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
+@media (max-width:540px){.selo{height:56px}}
+.eyebrow{margin:0;font-size:.75rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+h1{margin:.1rem 0 0;font:600 clamp(1.6rem,4vw,2.3rem)/1.15 var(--display);text-wrap:balance}
+.relogio{text-align:right;font-variant-numeric:tabular-nums}
+.relogio strong{display:block;font:600 1.7rem/1 var(--display)}
+.relogio span{color:var(--muted);font-size:.85rem}
+
+.barra{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;justify-content:space-between}
+.busca{flex:1 1 280px;position:relative}
+.busca input{width:100%;min-height:48px;padding:.6rem .9rem .6rem 2.6rem;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.busca svg{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--muted);fill:none}
+.resumo{display:flex;gap:.5rem;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .75rem;border-radius:999px;border:1px solid var(--line);font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.chip b{color:var(--ink)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.ok{background:var(--ok)} .dot.erro{background:var(--warn)}
+
+.grade{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;list-style:none;margin:0;padding:0}
+@media (max-width:860px){.grade{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){.grade{grid-template-columns:1fr}}
+
+.cadeira{display:flex;flex-direction:column;gap:1rem;padding:1.15rem;background:var(--surface);border:1px solid var(--line);border-radius:14px;transition:border-color .2s,transform .2s}
+.cadeira:hover{border-color:var(--brand-hi);transform:translateY(-2px)}
+.topo{display:flex;align-items:center;gap:.85rem;min-width:0}
+.iniciais{width:48px;height:48px;flex:none;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font:600 1.1rem var(--display);color:var(--gold)}
+.nome{min-width:0}
+.nome h2{margin:0;font:600 1.2rem/1.2 var(--display)}
+.nome p{margin:.15rem 0 0;color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
+.estado{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted)}
+.entrar{display:flex;align-items:center;justify-content:center;gap:.5rem;min-height:50px;border-radius:10px;background:var(--brand);color:#fff;font:600 1rem var(--body);text-decoration:none;border:0;cursor:pointer;transition:background .2s}
+.entrar:hover{background:var(--brand-hi)}
+.entrar svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+a:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.vazio{padding:2rem;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+
+footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padding-top:1rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brasao">
+      <img class="selo" src="brasao-almadina.png" alt="Brasão de Almadina-BA" width="300" height="255">
+      <div>
+        <p class="eyebrow">Câmara Municipal de Almadina-BA</p>
+        <h1>Anotação do Vereador</h1>
+      </div>
+    </div>
+    <div class="relogio" aria-live="off">
+      <strong id="hora">--:--</strong>
+      <span id="data">carregando data</span>
+    </div>
+  </header>
+
+  <div class="barra">
+    <label class="busca" for="filtro">
+      <svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="filtro" type="search" placeholder="Buscar vereador pelo nome" autocomplete="off" aria-label="Buscar vereador pelo nome">
+    </label>
+    <div class="resumo">
+      <span class="chip"><b id="qtd">9</b> cadeiras</span>
+      <span class="chip"><span class="dot" id="dotGeral"></span><span id="txtGeral">Verificando páginas</span></span>
+    </div>
+  </div>
+
+  <ul class="grade" id="grade" aria-label="Vereadores"></ul>
+  <div class="vazio" id="vazio" hidden>Nenhum vereador encontrado com esse nome.</div>
+
+  <footer>
+    <span>Plenário Jonas Plínio · 9 aparelhos</span>
+    <span>Acesso restrito: cada botão abre o login do aparelho do vereador</span>
+  </footer>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+$(function(){
+  var VEREADORES = [
+    {n:1, nome:"Jackson Costa",     arquivo:"login_01_jackson.html"},
+    {n:2, nome:"Dilson Junior",     arquivo:"login_02_dilson.html"},
+    {n:3, nome:"Lucas Cavalcante",  arquivo:"login_03_lucas.html"},
+    {n:4, nome:"Marilene Santos",   arquivo:"login_04_marilene.html"},
+    {n:5, nome:"Nilza",             arquivo:"login_05_nilza.html"},
+    {n:6, nome:"Rogério Gotado",    arquivo:"login_06_rogerio.html"},
+    {n:7, nome:"Sylas Souza",       arquivo:"login_07_sylas.html"},
+    {n:8, nome:"José Lindomar",     arquivo:"login_08_lindomar.html"},
+    {n:9, nome:"Wilson Freitas",    arquivo:"login_09_wilson.html"}
+  ];
+
+  function iniciais(nome){
+    var p = nome.split(" ");
+    return (p[0][0] + (p.length > 1 ? p[p.length-1][0] : "")).toUpperCase();
+  }
+  function semAcento(s){
+    try{ s = s.normalize("NFD"); }catch(e){}
+    return s.replace(/[̀-ͯ]/g,"").toLowerCase().trim();
+  }
+  function dois(n){ return (n < 10 ? "0" : "") + n; }
+
+  var $grade = $("#grade");
+  $.each(VEREADORES, function(_, v){
+    var $li = $("<li>", {"class":"cadeira", "data-busca": semAcento(v.nome)});
+    $li.append(
+      $("<div>", {"class":"topo"}).append(
+        $("<div>", {"class":"iniciais", "aria-hidden":"true", text: iniciais(v.nome)}),
+        $("<div>", {"class":"nome"}).append(
+          $("<h2>", {text: v.nome}),
+          $("<p>", {text: "Aparelho " + dois(v.n)})
+        )
+      ),
+      $("<div>", {"class":"estado"}).append(
+        $("<span>", {"class":"dot", id: "dot" + v.n}),
+        $("<span>", {id: "est" + v.n, text: "Verificando página"})
+      ),
+      $("<a>", {"class":"entrar", href: v.arquivo, "aria-label": "Entrar como " + v.nome})
+        .append($("<span>", {text: "Entrar"}))
+        .append('<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>')
+    );
+    $grade.append($li);
+  });
+
+  // Verifica se cada página de login existe
+  var ok = 0, feitos = 0;
+  $.each(VEREADORES, function(_, v){
+    $.ajax({url: v.arquivo, method: "GET", cache: false, dataType: "text"})
+      .done(function(){ ok++; $("#dot"+v.n).addClass("ok"); $("#est"+v.n).text("Página disponível"); })
+      .fail(function(){ $("#dot"+v.n).addClass("erro"); $("#est"+v.n).text("Página não encontrada"); })
+      .always(function(){
+        feitos++;
+        if (feitos === VEREADORES.length){
+          $("#dotGeral").addClass(ok === feitos ? "ok" : "erro");
+          $("#txtGeral").text(ok + " de " + feitos + " páginas no ar");
+        }
+      });
+  });
+
+  // Busca por nome
+  $("#filtro").on("input", function(){
+    var q = semAcento($(this).val());
+    var vis = 0;
+    $grade.children().each(function(){
+      var mostra = !q || $(this).data("busca").indexOf(q) > -1;
+      $(this).prop("hidden", !mostra);
+      if (mostra) vis++;
+    });
+    $("#qtd").text(vis);
+    $("#vazio").prop("hidden", vis > 0);
+  });
+
+  // Relógio
+  var DIAS = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
+  var MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  function relogio(){
+    var d = new Date();
+    $("#hora").text(dois(d.getHours()) + ":" + dois(d.getMinutes()));
+    $("#data").text(DIAS[d.getDay()] + ", " + d.getDate() + " de " + MESES[d.getMonth()] + " de " + d.getFullYear());
+  }
+  relogio(); setInterval(relogio, 15000);
+});
+</script>
+</body>
+</html>
