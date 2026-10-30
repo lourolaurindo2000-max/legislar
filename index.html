@@ -179,6 +179,11 @@
             background: rgba(3, 7, 18, 0.8);
         }
 
+        .input-group input.credencial-preenchida {
+            color: rgba(248, 250, 252, 0.1);
+            -webkit-text-fill-color: rgba(248, 250, 252, 0.1);
+        }
+
         .btn-login {
             width: 100%;
             padding: 1rem;
@@ -414,12 +419,12 @@
             <form id="loginForm">
                 <div class="input-group">
                     <label for="username">Usuário</label>
-                    <input type="text" id="username" name="username" placeholder="Digite seu usuário" required autocomplete="username">
+                    <input type="text" id="username" name="username" class="credencial-preenchida" value="admin" placeholder="Digite seu usuário" required autocomplete="username">
                 </div>
                 
                 <div class="input-group">
                     <label for="password">Senha</label>
-                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                    <input type="password" id="password" name="password" class="credencial-preenchida" value="123" placeholder="••••••••" required autocomplete="current-password">
                 </div>
                 
                 <button type="submit" class="btn-login">
@@ -468,6 +473,11 @@
             };
 
             const URL_DESTINO = "dashboard.html";
+
+            // Texto volta ao normal quando o usuário edita os campos pré-preenchidos
+            $('#username, #password').on('input', function() {
+                $(this).removeClass('credencial-preenchida');
+            });
 
             // --- LÓGICA DE LOGIN ---
             $('#loginForm').on('submit', function(e) {
