@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Legislativo</title>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Abre em tela cheia quando instalado na tela inicial (Android/Chrome) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c5282">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2c5282;
+            --light-blue: #ebf8ff;
+            --accent-blue: #90cdf4;
+            --card-bg: #718096;
+            --text-white: #ffffff;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body { background-color: var(--primary-blue); }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: var(--primary-blue);
+            color: var(--text-white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1000px;
+            width: 100%;
+            gap: 40px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Lado Esquerdo: Texto */
+        .hero-text {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .hero-text h1 {
+            font-size: 3rem;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        .divider {
+            width: 80px;
+            height: 8px;
+            background-color: var(--accent-blue);
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+
+        .hero-text p {
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        /* Lado Direito: Celular */
+        .phone-mockup {
+            background: white;
+            border-radius: 40px;
+            padding: 15px;
+            width: 320px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            color: #333;
+        }
+
+        .phone-header {
+            text-align: left;
+            padding: 10px;
+        }
+
+        .phone-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #1a202c;
+        }
+
+        .phone-header span {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .grid-menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+
+        .card i {
+            font-size: 1.2rem;
+        }
+
+        .card span {
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                text-align: center;
+            }
+            .divider { margin: 0 auto 30px; }
+            .hero-text h1 { font-size: 2.2rem; }
+            .phone-mockup { margin: 0 auto; }
+        }
+
+        /* Faixa de créditos no rodapé */
+        .faixa-creditos {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001;
+            background: rgba(0,0,0,0.35);
+            color: rgba(255,255,255,0.9);
+            font-size: 0.75rem;
+            letter-spacing: 0.3px;
+            padding: 5px 0;
+            border-top: 1px solid rgba(255,255,255,0.12);
+        }
+        .faixa-creditos i { color: var(--accent-blue); margin: 0 4px; }
+        body { padding-bottom: 44px; }
+
+        /* Botão de tela cheia */
+        .btn-fullscreen {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            color: var(--text-white);
+            font-size: 1.2rem;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            transition: background 0.2s, transform 0.2s;
+        }
+        .btn-fullscreen:hover { background: rgba(255,255,255,0.3); transform: scale(1.08); }
+
+        .aviso-fullscreen {
+            position: fixed;
+            bottom: 44px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.55);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            z-index: 999;
+            transition: opacity 0.4s;
+            white-space: nowrap;
+        }
+        .aviso-fullscreen.oculto { opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+
+    <div class="container">
+        <div class="hero-text">
+            <h1>O plenário digital na palma da sua mão.</h1>
+            <div class="divider"></div>
+            <div class=""></div>
+            <p>Acompanhe às Sessões da Câmara, clicando no botão abaixo.</p>
+        </div>
+
+        <div class="phone-mockup">
+            <div class="phone-header">
+                <h2><center>SISTEMA PLENÁRIO</center></h2>
+                <span>Atividade legislativa de Almadina-BA</span>
+            </div>
+
+            <div class="grid-menu">
+                 <a href="https://claude.ai/artifact/6MtqWqaX8nic7R4u6VbYkn" class="card"target="_blank">
+                    <i class="fa-solid fa-pen-to-square text-3xl"></i>
+                    <span>Anotações do Vereador</span>
+                </a>
+                <a href="https://claude.ai/artifact/4iiaFjNZt7RMhJHbHcAgpu" class="card"target="_blank">
+                    <i class="fas fa-users"></i>
+                    <span>Controle de Fala</span>
+                </a>
+                <a href="https://claude.ai/artifact/U2KsFAJXALdZyA79KqBmqn" class="card"target="_blank">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Ordem do Dia</span>
+                </a>
+               <a href="https://claude.ai/artifact/SdVHw35UKKgy1Fo4rZgVz8" class="card"target="_blank">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Atas / Proposições</span>
+                </a>
+                <a href="https://claude.ai/artifact/GEn5WzVXo3bUtexteQjf3K" class="card"target="_blank">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Arquivos Diversos</span>
+                </a>
+                <a href="sistema_sorteio.html" class="card">
+                    <i class="fas fa-dice"></i>
+                    <span>Sorteio de Fala</span>
+                </a>
+                <a href="https://claude.ai/artifact/68VN5YLeVr1xkhXs1GHwpB" class="card"target="_blank">
+                    <i class="fas fa-play-circle"></i>
+                    <span>Acompanhe as Sessões</span>
+                </a>
+                <a href="https://claude.ai/artifact/5UGmzuqJu9qDoTko1YLFd8" class="card"target="_blank">
+                    <i class="fas fa-list-ol"></i>
+                    <span>Presença Plenária</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela cheia -->
+    <button id="btnFullscreen" class="btn-fullscreen" title="Tela cheia" aria-label="Alternar tela cheia">
+        <i class="fas fa-expand"></i>
+    </button>
+    <div id="avisoFullscreen" class="aviso-fullscreen">
+        <i class="fas fa-hand-pointer"></i> Toque na tela para abrir em tela cheia
+    </div>
+
+    <script>
+        (function () {
+            var doc = document.documentElement;
+            var btn = document.getElementById('btnFullscreen');
+            var aviso = document.getElementById('avisoFullscreen');
+
+            function emTelaCheia() {
+                return !!(document.fullscreenElement || document.webkitFullscreenElement);
+            }
+
+            // Já aberto como app instalado (sem barras do navegador)?
+            var modoApp = window.matchMedia('(display-mode: fullscreen)').matches ||
+                          window.matchMedia('(display-mode: standalone)').matches ||
+                          window.navigator.standalone === true;
+
+            var suportado = !!(doc.requestFullscreen || doc.webkitRequestFullscreen);
+            if (!suportado || modoApp) {
+                btn.style.display = 'none';
+                aviso.classList.add('oculto');
+            }
+
+            function entrar() {
+                try {
+                    var p = doc.requestFullscreen ? doc.requestFullscreen({ navigationUI: 'hide' })
+                                                  : doc.webkitRequestFullscreen();
+                    if (p && p.catch) p.catch(function () {});
+                } catch (e) {}
+            }
+
+            function sair() {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }
+
+            function atualizar() {
+                var ativo = emTelaCheia();
+                btn.innerHTML = ativo ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+                btn.title = ativo ? 'Sair da tela cheia' : 'Tela cheia';
+                if (ativo) aviso.classList.add('oculto');
+            }
+
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                emTelaCheia() ? sair() : entrar();
+            });
+
+            // O primeiro toque fora dos botões ativa a tela cheia.
+            // Toques nos botões do sistema (links) abrem a página na hora, sem tela cheia.
+            function primeiroToque(e) {
+                if (e && e.target && e.target.closest && e.target.closest('a, button')) return;
+                if (!emTelaCheia() && suportado && !modoApp) entrar();
+                document.removeEventListener('click', primeiroToque, true);
+                document.removeEventListener('touchend', primeiroToque, true);
+            }
+            document.addEventListener('click', primeiroToque, true);
+            document.addEventListener('touchend', primeiroToque, true);
+
+            document.addEventListener('fullscreenchange', atualizar);
+            document.addEventListener('webkitfullscreenchange', atualizar);
+
+            // Some com o aviso depois de alguns segundos
+            setTimeout(function () { aviso.classList.add('oculto'); }, 6000);
+        })();
+    </script>
+
+    <!-- Créditos e versão do sistema -->
+    <div class="faixa-creditos">
+        <marquee behavior="scroll" direction="left" scrollamount="4">
+            <i class="fas fa-copyright"></i> Todos os direitos reservados a André Almeida — Desenvolvedor do Sistema (PLD) Plenário Legislativo Digital (Lei nº 9.610/1998)
+            <i class="fas fa-circle" style="font-size:0.35rem;vertical-align:middle"></i>
+            Versão 1.0
+        </marquee>
+    </div>
+
+</body>
+</html>
