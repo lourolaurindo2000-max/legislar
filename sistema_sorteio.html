@@ -103,7 +103,7 @@
         }
     </style>
 </head>
-<body class="py-4 px-4 selection:bg-amber-500 selection:text-black">
+<body class="smart-tv-mode py-4 px-4 selection:bg-amber-500 selection:text-black">
 
     <div class="main-wrapper w-full max-w-4xl flex flex-col items-center justify-between mx-auto flex-1">
         
@@ -152,14 +152,14 @@
             </div>
         </main>
 
-        <!-- Rodapé com Opções de Smart TV e Sair -->
+        <!-- Rodapé com Tela Cheia e Sair -->
         <footer class="w-full flex flex-col sm:flex-row justify-between items-center gap-3 mt-4 text-xs text-slate-400">
             <p id="total-info" class="text-center sm:text-left">09 Vereadores na urna</p>
-            
+
             <div class="flex items-center gap-2">
-                <!-- Modo Smart TV -->
+                <!-- Tela Cheia -->
                 <button id="btn-tv-mode" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg gold-border transition-all flex items-center gap-2 cursor-pointer shadow-md">
-                    <i class="fa-solid fa-tv text-amber-400"></i> <span id="tv-mode-text">Modo Smart TV</span>
+                    <i id="tv-mode-icon" class="fa-solid fa-expand text-amber-400"></i> <span id="tv-mode-text">Tela Cheia</span>
                 </button>
                 
                 <!-- Sair da Página -->
@@ -190,22 +190,48 @@
             let emSorteio = false;
             const logoInicial = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop&crop=faces";
 
-            // Função para ativar/desativar modo Smart TV sem oscilações
+            // A página já abre no layout de tela cheia; o botão liga/desliga a tela cheia do navegador
+            function emTelaCheia() {
+                return !!(document.fullscreenElement || document.webkitFullscreenElement);
+            }
+            function atualizarBotaoTelaCheia() {
+                if (emTelaCheia()) {
+                    $('#tv-mode-text').text('Sair da Tela Cheia');
+                    $('#tv-mode-icon').removeClass('fa-expand').addClass('fa-compress');
+                } else {
+                    $('#tv-mode-text').text('Tela Cheia');
+                    $('#tv-mode-icon').removeClass('fa-compress').addClass('fa-expand');
+                }
+            }
+            document.addEventListener('fullscreenchange', atualizarBotaoTelaCheia);
+            document.addEventListener('webkitfullscreenchange', atualizarBotaoTelaCheia);
+
             $('#btn-tv-mode').on('click', function(e) {
                 e.preventDefault();
-                $('body').toggleClass('smart-tv-mode');
-                if ($('body').hasClass('smart-tv-mode')) {
-                    $('#tv-mode-text').text('Sair Smart TV');
-                    if (document.documentElement.requestFullscreen) {
-                        document.documentElement.requestFullscreen().catch(() => {});
-                    }
+                var de = document.documentElement;
+                if (emTelaCheia()) {
+                    var x = document.exitFullscreen ? document.exitFullscreen() : (document.webkitExitFullscreen && document.webkitExitFullscreen());
+                    if (x && x.catch) x.catch(function () {});
                 } else {
-                    $('#tv-mode-text').text('Modo Smart TV');
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen().catch(() => {});
-                    }
+                    var p = de.requestFullscreen ? de.requestFullscreen() : (de.webkitRequestFullscreen && de.webkitRequestFullscreen());
+                    if (p && p.catch) p.catch(function () {});
                 }
             });
+
+            // Entra em tela cheia no primeiro gesto (o navegador não permite sem um toque ou tecla)
+            (function () {
+                var EV = ['click', 'keydown', 'change'], NAO = 'select,a,label,input[type=file],#btn-tv-mode,#btn-sair';
+                function off() { EV.forEach(function (t) { document.removeEventListener(t, auto, true); }); }
+                function auto(e) {
+                    var t = e.target, de = document.documentElement;
+                    if (document.fullscreenElement || document.webkitFullscreenElement || !(de.requestFullscreen || de.webkitRequestFullscreen)) { off(); return; }
+                    if (e.type === 'keydown' && e.key === 'Escape') return;
+                    if (e.type !== 'change' && t.closest && t.closest(NAO)) return;
+                    var p = de.requestFullscreen ? de.requestFullscreen() : de.webkitRequestFullscreen();
+                    if (p && p.then) p.then(off, function () {}); else off();
+                }
+                EV.forEach(function (t) { document.addEventListener(t, auto, true); });
+            })();
 
             // Função do Botão Sair da Página
             $('#btn-sair').on('click', function(e) {
