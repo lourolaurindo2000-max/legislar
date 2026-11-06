@@ -143,44 +143,44 @@
         html.modo-tv #btn-fullscreen { display: none !important; }
 
         html.modo-tv header { flex: 0 0 auto; padding: 1.2vh 2.2vw !important; }
-        html.modo-tv header img { height: min(7vh, 5vw) !important; width: auto !important; }
-        html.modo-tv header h1 { font-size: min(3.4vh, 2.2vw) !important; }
-        html.modo-tv header p { font-size: min(2vh, 1.3vw) !important; }
-        html.modo-tv #current-clock { font-size: min(3.6vh, 2.4vw) !important; }
-        html.modo-tv header .text-right span:first-child { font-size: min(1.4vh, 1vw) !important; }
+        html.modo-tv header img { height: 7vh !important; height: min(7vh, 5vw) !important; width: auto !important; }
+        html.modo-tv header h1 { font-size: 3.4vh !important; font-size: min(3.4vh, 2.2vw) !important; }
+        html.modo-tv header p { font-size: 2vh !important; font-size: min(2vh, 1.3vw) !important; }
+        html.modo-tv #current-clock { font-size: 3.6vh !important; font-size: min(3.6vh, 2.4vw) !important; }
+        html.modo-tv header .text-right span:first-child { font-size: 1.4vh !important; font-size: min(1.4vh, 1vw) !important; }
 
         html.modo-tv main {
             flex: 1 1 auto; min-height: 0; max-width: none !important; width: 100%;
             display: grid !important; grid-template-columns: minmax(0, 7fr) minmax(0, 3fr) !important;
-            gap: 1.6vh !important; padding: 1.6vh !important;
+            grid-gap: 1.6vh !important; gap: 1.6vh !important; padding: 1.6vh !important;
         }
         html.modo-tv main > section, html.modo-tv main > aside { grid-column: auto !important; min-height: 0; overflow: hidden; }
         html.modo-tv main > section { padding: 2.4vh 2vw !important; }
 
         html.modo-tv section > .border-b { padding-bottom: 1.4vh !important; }
         html.modo-tv #current-mode-badge, html.modo-tv #speaker-status-label,
-        html.modo-tv section > .border-b span { font-size: min(2.2vh, 1.4vw) !important; }
+        html.modo-tv section > .border-b span { font-size: 2.2vh !important; font-size: min(2.2vh, 1.4vw) !important; }
 
         html.modo-tv #area-orador {
             flex: 1 1 auto; min-height: 0; margin: 0 !important; padding: 2vh 0 0 !important;
-            flex-direction: row !important; align-items: center; justify-content: center; gap: 3vw !important;
+            flex-direction: row !important; align-items: center; justify-content: center; gap: 0 !important;
         }
-        html.modo-tv .tv-avatar { width: min(46vh, 24vw) !important; height: min(46vh, 24vw) !important; }
-        html.modo-tv #display-cargo-badge { font-size: min(2.2vh, 1.4vw) !important; padding: 0.5vh 1.4vw !important; bottom: -1.6vh !important; }
+        html.modo-tv .tv-avatar { width: 46vh !important; width: min(46vh, 24vw) !important; height: 46vh !important; height: min(46vh, 24vw) !important; }
+        html.modo-tv #display-cargo-badge { font-size: 2.2vh !important; font-size: min(2.2vh, 1.4vw) !important; padding: 0.5vh 1.4vw !important; bottom: -1.6vh !important; }
         html.modo-tv #area-orador > div:last-child { text-align: left !important; min-width: 0; }
         html.modo-tv #display-name {
-            font-size: min(6vh, 3.6vw) !important; line-height: 1.1 !important;
+            font-size: 6vh !important; font-size: min(6vh, 3.6vw) !important; line-height: 1.1 !important;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;
         }
         html.modo-tv #display-name + div { justify-content: flex-start !important; margin-top: 1vh !important; }
-        html.modo-tv #display-partido { font-size: min(3.2vh, 2vw) !important; padding: 0.3vh 1vw !important; }
-        html.modo-tv #display-partido-nome { font-size: min(2.6vh, 1.7vw) !important; }
+        html.modo-tv #display-partido { font-size: 3.2vh !important; font-size: min(3.2vh, 2vw) !important; padding: 0.3vh 1vw !important; }
+        html.modo-tv #display-partido-nome { font-size: 2.6vh !important; font-size: min(2.6vh, 1.7vw) !important; }
         html.modo-tv #display-timer-box { margin-top: 3vh !important; padding: 2.4vh 1.4vw !important; }
-        html.modo-tv #display-timer { font-size: min(22vh, 11vw) !important; line-height: 1 !important; white-space: nowrap; }
+        html.modo-tv #display-timer { font-size: 22vh !important; font-size: min(22vh, 11vw) !important; line-height: 1 !important; white-space: nowrap; }
 
         html.modo-tv main > aside { padding: 1.8vh 1.2vw !important; display: flex; flex-direction: column; }
         html.modo-tv main > aside > div:first-child { margin-bottom: 1.2vh !important; padding-bottom: 1vh !important; flex: 0 0 auto; }
-        html.modo-tv main > aside h3 { font-size: min(2.3vh, 1.4vw) !important; }
+        html.modo-tv main > aside h3 { font-size: 2.3vh !important; font-size: min(2.3vh, 1.4vw) !important; }
         html.modo-tv main > aside h3 { line-height: 1.2; }
         /* altura de linha proporcional ao texto (evita sobreposição em 4K)
            e cards com espaço igual entre nome e partido */
@@ -190,17 +190,17 @@
         html.modo-tv main > aside h3 + span, html.modo-tv .vereador-card h4, html.modo-tv .vereador-card span { line-height: 1.25 !important; }
         html.modo-tv .vereador-card h4 + div { margin-top: 0.3vh !important; }
         html.modo-tv header .text-right span:first-child { margin-bottom: 0.2vh; }
-        html.modo-tv main > aside h3 + span { font-size: min(1.6vh, 1vw) !important; white-space: nowrap; }
-        html.modo-tv main > section > .absolute .fa-landmark { font-size: min(40vh, 24vw) !important; }
+        html.modo-tv main > aside h3 + span { font-size: 1.6vh !important; font-size: min(1.6vh, 1vw) !important; white-space: nowrap; }
+        html.modo-tv main > section > .absolute .fa-landmark { font-size: 40vh !important; font-size: min(40vh, 24vw) !important; }
         html.modo-tv #vereadores-list {
             flex: 1 1 auto; min-height: 0; max-height: none !important; overflow: hidden !important;
-            display: flex; flex-direction: column; gap: 0.8vh; padding-right: 0 !important;
+            display: flex; flex-direction: column; padding-right: 0 !important;
         }
-        html.modo-tv #vereadores-list > * + * { margin-top: 0 !important; }
-        html.modo-tv .vereador-card { flex: 1 1 0; min-height: 0; padding: 0.5vh 0.8vw !important; gap: 0.8vw !important; }
-        html.modo-tv .vereador-card img { height: min(6.4vh, 4vw) !important; width: min(6.4vh, 4vw) !important; flex: 0 0 auto; }
-        html.modo-tv .vereador-card h4 { font-size: min(2vh, 1.25vw) !important; }
-        html.modo-tv .vereador-card span { font-size: min(1.5vh, 1vw) !important; }
+        html.modo-tv #vereadores-list > * + * { margin-top: 0.8vh !important; }
+        html.modo-tv .vereador-card { flex: 1 1 0; min-height: 0; padding: 0.5vh 0.8vw !important; gap: 0 !important; }
+        html.modo-tv .vereador-card img { height: 6.4vh !important; height: min(6.4vh, 4vw) !important; width: 6.4vh !important; width: min(6.4vh, 4vw) !important; flex: 0 0 auto; }
+        html.modo-tv .vereador-card h4 { font-size: 2vh !important; font-size: min(2vh, 1.25vw) !important; }
+        html.modo-tv .vereador-card span { font-size: 1.5vh !important; font-size: min(1.5vh, 1vw) !important; }
 
         /* Estilização para TV e Monitores 4K */
         @media (min-width: 1920px) {
@@ -213,6 +213,12 @@
                 height: 320px !important;
             }
         }
+        html.modo-tv #area-orador > * + * { margin-left: 3vw !important; }
+        html.modo-tv .vereador-card img { margin-right: 0.8vw; }
+        html.modo-tv #area-orador > div:first-child { flex: 0 0 auto; }
+        html.modo-tv #area-orador > div:last-child { flex: 1 1 auto; }
+        /* TVs antigas sem a propriedade "inset" */
+        .fixed.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between font-sans antialiased bg-governo-dark">
@@ -1117,6 +1123,34 @@
             mostrarVereador(1);
             updateTimerDisplay();
         });
+    </script>
+    <script>
+        // Smart TV: garante que o orador e o cronômetro sempre caibam na tela (qualquer TV / proporção)
+        (function () {
+            var raiz = document.documentElement;
+            if (!/(^|\s)modo-tv(\s|$)/.test(raiz.className)) return;
+            function ajustar() {
+                var a = document.getElementById('area-orador');
+                if (!a) return;
+                a.style.zoom = '';
+                var caixa = a.getBoundingClientRect(), cs = window.getComputedStyle(a);
+                var dispH = caixa.height - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0);
+                var dispW = caixa.width, precisaH = 0, precisaW = 0, filhos = a.children;
+                for (var i = 0; i < filhos.length; i++) {
+                    var r = filhos[i].getBoundingClientRect(), m = window.getComputedStyle(filhos[i]);
+                    precisaH = Math.max(precisaH, r.height + window.innerHeight * 0.02);
+                    precisaW += r.width + (parseFloat(m.marginLeft) || 0);
+                }
+                var t = document.getElementById('display-timer');
+                if (t && t.scrollWidth > t.clientWidth + 1) precisaW = Math.max(precisaW, dispW * t.scrollWidth / t.clientWidth);
+                var k = Math.min(1, dispH / (precisaH || 1), dispW / (precisaW || 1));
+                if (k < 0.995) a.style.zoom = Math.max(0.45, k * 0.97);
+            }
+            window.addEventListener('resize', function () { setTimeout(ajustar, 150); });
+            window.addEventListener('load', ajustar);
+            setInterval(ajustar, 2000);   // nome/foto do orador mudam a qualquer momento
+            setTimeout(ajustar, 300);
+        })();
     </script>
 </body>
 </html>
