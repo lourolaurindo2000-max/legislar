@@ -128,6 +128,24 @@
         .tv-espera-relogio { font-size: clamp(2.5rem, 8vh, 7rem); letter-spacing: -2px; }
         #tv-espera { transition: opacity .5s ease; }
         #tv-espera.saindo { opacity: 0; }
+        /* Tela de espera: faixa de créditos com rolagem (efeito marquee) */
+        #tv-espera { padding-top: 2vh; padding-bottom: 7vh; }
+        /* espaçamentos proporcionais à altura: cabe inteiro de 540p a 4K, sem cobrir a faixa */
+        #tv-espera .tv-espera-brasao { height: 24vh; height: clamp(80px, 24vh, 320px); margin-bottom: 2.4vh !important; }
+        #tv-espera > p.tv-espera-sub { margin-top: 1.6vh !important; }
+        #tv-espera > div.w-28 { margin-top: 3vh !important; margin-bottom: 3vh !important; }
+        #tv-espera .tv-espera-aviso { padding: 1.8vh 2.4vw !important; }
+        #tv-espera .tv-espera-relogio { margin-top: 3.5vh !important; line-height: 1.1; }
+        #tv-espera .tv-espera-relogio + p { margin-top: 0.6vh !important; font-size: 1.4vh; font-size: clamp(0.6rem, 1.4vh, 1rem); }
+        .tv-espera-creditos { position: absolute; left: 0; right: 0; bottom: 0; overflow: hidden; white-space: nowrap;
+            background: rgba(0, 0, 0, 0.4); border-top: 1px solid rgba(212, 175, 55, 0.4);
+            padding: 1.1vh 0; font-size: 2vh; font-size: clamp(0.8rem, 2vh, 2.6rem); color: #CBD5E1; line-height: 1.3; }
+        .tv-espera-creditos > span { display: inline-block; padding-left: 100%;
+            -webkit-animation: creditos-marquee 30s linear infinite; animation: creditos-marquee 30s linear infinite; }
+        .tv-espera-creditos i.fa-copyright { color: #D4AF37; margin-right: 0.4em; }
+        .tv-espera-creditos i.fa-circle { font-size: 0.4em; vertical-align: middle; margin: 0 0.8em; color: #D4AF37; }
+        @-webkit-keyframes creditos-marquee { from { -webkit-transform: translateX(0); } to { -webkit-transform: translateX(-100%); } }
+        @keyframes creditos-marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
         /* ================================================================
            SMART TV: tudo cabe em uma tela, sem barra de rolagem.
            Tamanhos em vh/vw acompanham qualquer resolução (720p, 1080p, 4K).
@@ -408,6 +426,10 @@
         <p class="mt-5 text-gray-400 tv-espera-sub">Tempo de fala: <span id="tv-espera-modo" class="text-governo-gold font-bold">Pequeno Expediente (5m)</span></p>
         <div id="tv-espera-relogio" class="mt-10 font-mono font-bold text-gray-200 tv-espera-relogio">00:00:00</div>
         <p class="text-xs uppercase tracking-[0.3em] text-gray-500 mt-2">Hora local</p>
+        <!-- Créditos e versão do sistema (rolagem contínua) -->
+        <div class="tv-espera-creditos" aria-label="Créditos do sistema">
+            <span><i class="fa-solid fa-copyright"></i>Todos os direitos reservados a André Almeida — Desenvolvedor do Sistema (PLD) Plenário Legislativo Digital (Lei nº 9.610/1998)<i class="fa-solid fa-circle"></i>Versão 1.0</span>
+        </div>
     </div>
 
     <!-- MODO ADMINISTRADOR (só no notebook / computador) -->
