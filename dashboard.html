@@ -702,7 +702,12 @@
             function mostrarPagina(p) {
                 var url = p && PAGINAS[p];
                 if (!url) { tela.hidden = true; document.documentElement.style.overflow = ''; document.body.style.overflow = ''; if (atual) quadro.src = 'about:blank'; atual = ''; return; }
-                if (atual !== p) { quadro.src = url; atual = p; }
+                if (atual !== p) {
+                    // sempre a versão mais nova do sistema (a TV não fica com página antiga guardada)
+                    var h = url.indexOf('#'), base = h < 0 ? url : url.slice(0, h), hash = h < 0 ? '' : url.slice(h);
+                    quadro.src = base + (base.indexOf('?') < 0 ? '?' : '&') + 'v=' + Date.now() + hash;
+                    atual = p;
+                }
                 tela.hidden = false;
                 document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden';   // sem barra de rolagem atrás do sistema
             }
