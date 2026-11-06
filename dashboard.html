@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Legislativo</title>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Abre em tela cheia quando instalado na tela inicial (Android/Chrome) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c5282">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2c5282;
+            --light-blue: #ebf8ff;
+            --accent-blue: #90cdf4;
+            --card-bg: #718096;
+            --text-white: #ffffff;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body { background-color: var(--primary-blue); }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: var(--primary-blue);
+            color: var(--text-white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1000px;
+            width: 100%;
+            gap: 40px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Lado Esquerdo: Texto */
+        .hero-text {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .hero-text h1 {
+            font-size: 3rem;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        .divider {
+            width: 80px;
+            height: 8px;
+            background-color: var(--accent-blue);
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+
+        .hero-text p {
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        /* Lado Direito: Celular */
+        .phone-mockup {
+            background: white;
+            border-radius: 40px;
+            padding: 15px;
+            width: 320px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            color: #333;
+        }
+
+        .phone-header {
+            text-align: left;
+            padding: 10px;
+        }
+
+        .phone-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #1a202c;
+        }
+
+        .phone-header span {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .grid-menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+
+        .card i {
+            font-size: 1.2rem;
+        }
+
+        .card span {
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                text-align: center;
+            }
+            .divider { margin: 0 auto 30px; }
+            .hero-text h1 { font-size: 2.2rem; }
+            .phone-mockup { margin: 0 auto; }
+        }
+
+        /* Faixa de créditos no rodapé */
+        .faixa-creditos {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001;
+            background: rgba(0,0,0,0.35);
+            color: rgba(255,255,255,0.9);
+            font-size: 0.75rem;
+            letter-spacing: 0.3px;
+            padding: 5px 0;
+            border-top: 1px solid rgba(255,255,255,0.12);
+        }
+        .faixa-creditos i { color: var(--accent-blue); margin: 0 4px; }
+        body { padding-bottom: 44px; }
+
+        /* Botão de tela cheia */
+        .btn-fullscreen {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            color: var(--text-white);
+            font-size: 1.2rem;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            transition: background 0.2s, transform 0.2s;
+        }
+        .btn-fullscreen:hover { background: rgba(255,255,255,0.3); transform: scale(1.08); }
+
+        .aviso-fullscreen {
+            position: fixed;
+            bottom: 44px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.55);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            z-index: 999;
+            transition: opacity 0.4s;
+            white-space: nowrap;
+        }
+        .aviso-fullscreen.oculto { opacity: 0; pointer-events: none; }
+
+        /* ===== Robô de suporte técnico (IA) ===== */
+        .suporte-ia { position: fixed; left: 18px; bottom: 54px; z-index: 1002; font-family: inherit; }
+
+        .robo-btn {
+            width: 64px; height: 64px; border: none; border-radius: 50%;
+            background: linear-gradient(145deg, #ffffff, #dbeafe);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 0 4px rgba(144,205,244,0.35);
+            cursor: pointer; padding: 6px; position: relative;
+            animation: robo-flutua 3s ease-in-out infinite;
+            transition: transform 0.2s;
+        }
+        .robo-btn:hover { transform: scale(1.08); }
+        .robo-btn svg { width: 100%; height: 100%; display: block; }
+        .robo-btn .robo-olho { animation: robo-pisca 4s infinite; transform-origin: center; transform-box: fill-box; }
+        .robo-btn .robo-antena { animation: robo-luz 1.6s ease-in-out infinite; }
+        .robo-badge {
+            position: absolute; top: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%;
+            background: #38a169; border: 2px solid #fff; color: #fff; font-size: 0.6rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .suporte-ia.aberto .robo-badge { display: none; }
+
+        .robo-balao {
+            position: absolute; left: 74px; bottom: 14px; white-space: nowrap;
+            background: #fff; color: #1a202c; font-size: 0.8rem; font-weight: 600;
+            padding: 8px 12px; border-radius: 14px 14px 14px 4px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25); transition: opacity 0.4s;
+        }
+        .robo-balao.oculto, .suporte-ia.aberto .robo-balao { opacity: 0; pointer-events: none; }
+
+        @keyframes robo-flutua { 0%,100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+        @keyframes robo-pisca { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+        @keyframes robo-luz { 0%,100% { fill: #90cdf4; } 50% { fill: #48bb78; } }
+
+        .chat-ia {
+            position: absolute; left: 0; bottom: 78px;
+            width: 340px; max-width: calc(100vw - 32px);
+            height: 470px; max-height: calc(100vh - 160px);
+            background: #fff; color: #1a202c; border-radius: 18px; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            display: flex; flex-direction: column;
+            opacity: 0; transform: translateY(12px) scale(0.97); pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .suporte-ia.aberto .chat-ia { opacity: 1; transform: none; pointer-events: auto; }
+
+        .chat-topo {
+            background: linear-gradient(135deg, #2c5282, #1e3a66); color: #fff;
+            padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+        }
+        .chat-topo .mini-robo { width: 38px; height: 38px; background: #fff; border-radius: 50%; padding: 4px; flex-shrink: 0; }
+        .chat-topo .mini-robo svg { width: 100%; height: 100%; display: block; }
+        .chat-topo strong { display: block; font-size: 0.95rem; }
+        .chat-topo small { font-size: 0.72rem; opacity: 0.85; }
+        .chat-topo small::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #48bb78; margin-right: 5px; }
+        .chat-fechar { margin-left: auto; background: rgba(255,255,255,0.15); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; }
+        .chat-fechar:hover { background: rgba(255,255,255,0.3); }
+
+        .chat-msgs { flex: 1; overflow-y: auto; padding: 14px; background: #f4f7fb; display: flex; flex-direction: column; gap: 8px; }
+        .msg { max-width: 85%; padding: 9px 12px; border-radius: 14px; font-size: 0.83rem; line-height: 1.4; text-align: left; }
+        .msg.bot { background: #fff; border: 1px solid #e2e8f0; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .msg.user { background: #2c5282; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .msg.digitando span { display: inline-block; width: 6px; height: 6px; margin: 0 1px; border-radius: 50%; background: #a0aec0; animation: digita 1s infinite; }
+        .msg.digitando span:nth-child(2) { animation-delay: 0.15s; }
+        .msg.digitando span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes digita { 0%,60%,100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+        .chat-sugestoes { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; background: #f4f7fb; border-top: 1px solid #e2e8f0; }
+        .chat-sugestoes button {
+            border: 1px solid #90cdf4; background: #ebf8ff; color: #2c5282; border-radius: 20px;
+            padding: 5px 10px; font-size: 0.72rem; cursor: pointer; font-family: inherit;
+        }
+        .chat-sugestoes button:hover { background: #2c5282; color: #fff; }
+
+        .btn-wpp {
+            display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+            background: #25d366; color: #fff; text-decoration: none; font-weight: 600;
+            padding: 7px 14px; border-radius: 20px; font-size: 0.8rem;
+        }
+        .btn-wpp:hover { background: #1ebe5b; }
+        .btn-wpp i { font-size: 1rem; }
+
+        .chat-form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid #e2e8f0; background: #fff; }
+        .chat-form input { flex: 1; border: 1px solid #cbd5e0; border-radius: 20px; padding: 9px 14px; font-size: 0.85rem; outline: none; font-family: inherit; min-width: 0; }
+        .chat-form input:focus { border-color: #2c5282; }
+        .chat-form button { width: 38px; height: 38px; border-radius: 50%; border: none; background: #2c5282; color: #fff; cursor: pointer; flex-shrink: 0; }
+
+        @media (max-width: 480px) {
+            .suporte-ia { left: 12px; }
+            .robo-balao { display: none; }
+        }
+        /* ===== Smart TV: sistema aberto no notebook aparece aqui ===== */
+        .tv-tela { position: fixed; inset: 0; z-index: 5000; background: #1a2f52; }
+        .tv-tela[hidden] { display: none; }
+        .tv-tela iframe { width: 100%; height: 100%; border: 0; display: block; background: #0b172a; }
+
+        /* ===== Mensagens e arquivos da Mesa ===== */
+        .av-ov { position: fixed; inset: 0; z-index: 6000; background: rgba(10,20,40,0.6); backdrop-filter: blur(3px);
+                 display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .av-ov[hidden] { display: none; }
+        .av-card { background: #fff; color: #1a202c; border-radius: 24px; width: 560px; max-width: 100%; max-height: 88vh;
+                   display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
+        .av-topo { background: linear-gradient(135deg, #2c5282, #1e3a66); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+        .av-topo > i { font-size: 1.4rem; color: #90cdf4; }
+        .av-topo strong { display: block; font-size: 1.05rem; }
+        .av-topo small { font-size: 0.75rem; opacity: 0.85; }
+        .av-lista { overflow-y: auto; padding: 14px; background: #f4f7fb; display: flex; flex-direction: column; gap: 10px; }
+        .av-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; text-align: left; }
+        .av-item p { margin: 0 0 10px; font-size: 1.05rem; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .av-item > small { color: #718096; font-size: 0.75rem; }
+        .av-arq { display: flex; align-items: center; gap: 10px; background: #ebf8ff; border: 1px solid #90cdf4; border-radius: 12px; padding: 10px; margin-bottom: 8px; }
+        .av-arq > i { color: #2c5282; font-size: 1.3rem; }
+        .av-arq span { flex: 1; min-width: 0; }
+        .av-arq b { display: block; font-size: 0.9rem; overflow-wrap: anywhere; }
+        .av-arq small { color: #718096; font-size: 0.75rem; }
+        .av-baixar { border: none; background: #2c5282; color: #fff; border-radius: 20px; padding: 8px 14px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+        .av-baixar:hover { background: #1e3a66; }
+        .av-acoes { padding: 12px 14px; background: #fff; border-top: 1px solid #e2e8f0; }
+        .av-fechar { width: 100%; border: none; background: #2c5282; color: #fff; border-radius: 20px; padding: 11px; font-weight: 700; font-size: 0.95rem; cursor: pointer; font-family: inherit; }
+        body.modo-tv .av-card { width: 900px; }
+        body.modo-tv .av-topo strong { font-size: 1.5rem; }
+        body.modo-tv .av-item p { font-size: 1.8rem; }
+    </style>
+</head>
+<body>
+
+
+    <div class="container">
+        <div class="hero-text">
+            <h1>O plenário digital na palma da sua mão.</h1>
+            <div class="divider"></div>
+            <div class=""></div>
+            <p>Plenária Inteligente. Gestão Eficiente.</p>
+        </div>
+
+        <div class="phone-mockup">
+            <div class="phone-header">
+                <h2><center>SISTEMA PLENÁRIO</center></h2>
+                <span>Atividade legislativa de Almadina-BA</span>
+            </div>
+
+            <div class="grid-menu">
+                 <a href="https://claude.ai/artifact/6MtqWqaX8nic7R4u6VbYkn" class="card"target="_blank">
+                    <i class="fa-solid fa-pen-to-square text-3xl"></i>
+                    <span>Anotações do Vereador</span>
+                </a>
+                <a href="controle_de_fala.html" class="card"target="_blank">
+                    <i class="fas fa-users"></i>
+                    <span>Controle de Fala</span>
+                </a>
+                <a href="https://claude.ai/artifact/U2KsFAJXALdZyA79KqBmqn" class="card"target="_blank">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Ordem do Dia</span>
+                </a>
+               <a href="https://claude.ai/artifact/SdVHw35UKKgy1Fo4rZgVz8" class="card"target="_blank">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Atas / Proposições</span>
+                </a>
+                <a href="https://claude.ai/artifact/GEn5WzVXo3bUtexteQjf3K" class="card"target="_blank">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Arquivos Diversos</span>
+                </a>
+                <a href="sistema_sorteio.html" class="card" target="_blank">
+                    <i class="fas fa-dice"></i>
+                    <span>Sorteio de Fala</span>
+                </a>
+                <a href="https://claude.ai/artifact/68VN5YLeVr1xkhXs1GHwpB" class="card"target="_blank">
+                    <i class="fas fa-play-circle"></i>
+                    <span>Acompanhe as Sessões</span>
+                </a>
+                <a href="presenca_plenaria.html" class="card"target="_blank">
+                    <i class="fas fa-list-ol"></i>
+                    <span>Presença Plenária</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela cheia -->
+    <button id="btnFullscreen" class="btn-fullscreen" title="Tela cheia" aria-label="Alternar tela cheia">
+        <i class="fas fa-expand"></i>
+    </button>
+    <div id="avisoFullscreen" class="aviso-fullscreen">
+        <i class="fas fa-hand-pointer"></i> Toque na tela para abrir em tela cheia
+    </div>
+
+    <script>
+        (function () {
+            var doc = document.documentElement;
+            var btn = document.getElementById('btnFullscreen');
+            var aviso = document.getElementById('avisoFullscreen');
+
+            function emTelaCheia() {
+                return !!(document.fullscreenElement || document.webkitFullscreenElement);
+            }
+
+            // Já aberto como app instalado (sem barras do navegador)?
+            var modoApp = window.matchMedia('(display-mode: fullscreen)').matches ||
+                          window.matchMedia('(display-mode: standalone)').matches ||
+                          window.navigator.standalone === true;
+
+            var suportado = !!(doc.requestFullscreen || doc.webkitRequestFullscreen);
+            if (!suportado || modoApp) {
+                btn.style.display = 'none';
+                aviso.classList.add('oculto');
+            }
+
+            function entrar() {
+                try {
+                    var p = doc.requestFullscreen ? doc.requestFullscreen({ navigationUI: 'hide' })
+                                                  : doc.webkitRequestFullscreen();
+                    if (p && p.catch) p.catch(function () {});
+                } catch (e) {}
+            }
+
+            function sair() {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }
+
+            function atualizar() {
+                var ativo = emTelaCheia();
+                btn.innerHTML = ativo ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+                btn.title = ativo ? 'Sair da tela cheia' : 'Tela cheia';
+                if (ativo) aviso.classList.add('oculto');
+            }
+
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                emTelaCheia() ? sair() : entrar();
+            });
+
+            // O primeiro toque fora dos botões ativa a tela cheia.
+            // Toques nos botões do sistema (links) abrem a página na hora, sem tela cheia.
+            function primeiroToque(e) {
+                if (e && e.target && e.target.closest && e.target.closest('a, button, .suporte-ia')) return;
+                if (!emTelaCheia() && suportado && !modoApp) entrar();
+                document.removeEventListener('click', primeiroToque, true);
+                document.removeEventListener('touchend', primeiroToque, true);
+            }
+            document.addEventListener('click', primeiroToque, true);
+            document.addEventListener('touchend', primeiroToque, true);
+
+            document.addEventListener('fullscreenchange', atualizar);
+            document.addEventListener('webkitfullscreenchange', atualizar);
+
+            // Some com o aviso depois de alguns segundos
+            setTimeout(function () { aviso.classList.add('oculto'); }, 6000);
+        })();
+    </script>
+
+    <!-- Robô de suporte técnico (IA) -->
+    <div class="suporte-ia" id="suporteIA">
+        <div class="chat-ia" id="chatIA" role="dialog" aria-label="Suporte técnico">
+            <div class="chat-topo">
+                <div class="mini-robo" data-robo></div>
+                <div>
+                    <strong>Assistente PLD</strong>
+                    <small>Suporte técnico online</small>
+                </div>
+                <button class="chat-fechar" id="chatFechar" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="chat-msgs" id="chatMsgs"></div>
+            <div class="chat-sugestoes" id="chatSugestoes"></div>
+            <form class="chat-form" id="chatForm" autocomplete="off">
+                <input id="chatInput" type="text" placeholder="Digite sua dúvida..." aria-label="Sua dúvida">
+                <button type="submit" aria-label="Enviar"><i class="fas fa-paper-plane"></i></button>
+            </form>
+        </div>
+        <div class="robo-balao" id="roboBalao">Precisa de ajuda? 👋</div>
+        <button class="robo-btn" id="roboBtn" aria-label="Abrir suporte técnico" title="Suporte técnico">
+            <span data-robo></span>
+            <span class="robo-badge">1</span>
+        </button>
+    </div>
+
+    <script>
+        (function () {
+            // Desenho do robô (usado no botão e no topo do chat)
+            var ROBO_SVG =
+                '<svg viewBox="0 0 64 64" aria-hidden="true">' +
+                  '<line x1="32" y1="6" x2="32" y2="14" stroke="#2c5282" stroke-width="3" stroke-linecap="round"/>' +
+                  '<circle class="robo-antena" cx="32" cy="6" r="4" fill="#90cdf4"/>' +
+                  '<rect x="6" y="26" width="6" height="14" rx="3" fill="#2c5282"/>' +
+                  '<rect x="52" y="26" width="6" height="14" rx="3" fill="#2c5282"/>' +
+                  '<rect x="11" y="14" width="42" height="36" rx="12" fill="#2c5282"/>' +
+                  '<rect x="16" y="20" width="32" height="20" rx="8" fill="#1a2f52"/>' +
+                  '<ellipse class="robo-olho" cx="25" cy="30" rx="4" ry="4.5" fill="#90cdf4"/>' +
+                  '<ellipse class="robo-olho" cx="39" cy="30" rx="4" ry="4.5" fill="#90cdf4"/>' +
+                  '<path d="M26 36 Q32 40 38 36" stroke="#90cdf4" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
+                  '<rect x="22" y="52" width="20" height="8" rx="4" fill="#2c5282"/>' +
+                  '<circle cx="32" cy="56" r="2" fill="#48bb78"/>' +
+                '</svg>';
+            document.querySelectorAll('[data-robo]').forEach(function (el) { el.innerHTML = ROBO_SVG; });
+
+            var caixa = document.getElementById('suporteIA');
+            var btn = document.getElementById('roboBtn');
+            var msgs = document.getElementById('chatMsgs');
+            var sugestoes = document.getElementById('chatSugestoes');
+            var form = document.getElementById('chatForm');
+            var input = document.getElementById('chatInput');
+            var balao = document.getElementById('roboBalao');
+            var iniciado = false;
+
+            // Contato do suporte humano (WhatsApp)
+            var WPP_NUMERO = '5546991062205';
+            var WPP_TEXTO = 'Olá! Preciso de suporte técnico no Sistema Plenário (PLD).';
+            var BOTAO_WPP = '<a class="btn-wpp" href="https://wa.me/' + WPP_NUMERO + '?text=' +
+                encodeURIComponent(WPP_TEXTO) + '" target="_blank" rel="noopener">' +
+                '<i class="fab fa-whatsapp"></i> Falar no WhatsApp</a>';
+
+            // Base de conhecimento do suporte
+            var BASE = [
+                { chaves: ['tela cheia', 'fullscreen', 'barra', 'expandir'],
+                  resp: 'Para usar em <b>tela cheia</b>, toque no botão <i class="fas fa-expand"></i> no canto superior direito ou toque em qualquer área vazia da tela. Para sair, toque no mesmo botão ou pressione <b>Esc</b>.' },
+                { chaves: ['nao abre', 'não abre', 'nao carrega', 'carregar', 'link', 'pagina', 'página', 'erro', 'em branco'],
+                  resp: 'Se um módulo não abrir:<br>1. Verifique sua conexão com a internet.<br>2. Os módulos abrem em <b>nova aba</b> — confira se o navegador não bloqueou pop-ups.<br>3. Atualize a página com <b>Ctrl+F5</b> (ou puxe a tela para baixo no celular).<br>4. Tente outro navegador (Chrome ou Edge).' },
+                { chaves: ['lento', 'travou', 'travando', 'trava', 'congelou', 'demora', 'atualizar'],
+                  resp: 'Se o sistema estiver lento ou travado, feche as abas que não estiver usando e atualize a página (<b>Ctrl+F5</b> no computador). No celular, feche o navegador e abra de novo. Se persistir, verifique a velocidade da internet.' },
+                { chaves: ['instalar', 'tela inicial', 'aplicativo', 'app', 'atalho', 'celular'],
+                  resp: 'Para instalar no celular: no <b>Chrome (Android)</b>, toque nos 3 pontinhos ⋮ e escolha <b>"Adicionar à tela inicial"</b>. No <b>iPhone (Safari)</b>, toque em Compartilhar e depois em <b>"Adicionar à Tela de Início"</b>.' },
+                { chaves: ['controle de fala', 'cronometro', 'cronômetro', 'tempo de fala', 'tribuna'],
+                  resp: 'O módulo <b>Controle de Fala</b> gerencia o tempo de uso da palavra pelos vereadores. Abra o cartão "Controle de Fala" no menu, selecione o orador e inicie o cronômetro.' },
+                { chaves: ['sorteio'],
+                  resp: 'O <b>Sorteio de Fala</b> define a ordem dos oradores de forma aleatória. Abra o cartão "Sorteio de Fala" no menu e siga as instruções da tela.' },
+                { chaves: ['ordem do dia', 'pauta'],
+                  resp: 'A <b>Ordem do Dia</b> mostra a pauta da sessão: matérias a serem lidas, discutidas e votadas. Acesse pelo cartão "Ordem do Dia".' },
+                { chaves: ['ata', 'atas', 'proposi', 'projeto', 'requerimento', 'indicacao', 'indicação'],
+                  resp: 'Em <b>Atas / Proposições</b> você consulta as atas das sessões e as proposições apresentadas (projetos, requerimentos, indicações e moções).' },
+                { chaves: ['arquivo', 'documento', 'pdf', 'download', 'baixar'],
+                  resp: 'Os documentos ficam em <b>Arquivos Diversos</b>. Se um PDF não abrir, tente baixá-lo e abrir com o leitor de PDF do seu aparelho.' },
+                { chaves: ['sessao', 'sessão', 'sessoes', 'sessões', 'ao vivo', 'video', 'vídeo', 'transmiss', 'assistir'],
+                  resp: 'Para assistir às sessões, use o cartão <b>Acompanhe as Sessões</b>. Se o vídeo não tocar, verifique a internet, aumente o volume e tente atualizar a página.' },
+                { chaves: ['presenca', 'presença', 'chamada', 'quorum', 'quórum', 'falta'],
+                  resp: 'A <b>Presença Plenária</b> registra a presença dos vereadores e o quórum da sessão. Acesse pelo cartão "Presença Plenária".' },
+                { chaves: ['anotac', 'anotaç', 'nota', 'anotar', 'vereador'],
+                  resp: 'Em <b>Anotações do Vereador</b> você pode escrever e consultar suas anotações durante as sessões.' },
+                { chaves: ['contato', 'desenvolvedor', 'humano', 'atendente', 'falar com', 'suporte humano', 'andre', 'andré'],
+                  resp: 'Para falar com uma pessoa, procure o desenvolvedor do sistema, <b>André Almeida</b> — <b>(73) 98244-4865</b>.' },
+                { chaves: ['obrigad', 'valeu', 'show', 'otimo', 'ótimo', 'resolveu'],
+                  resp: 'Por nada! 😊 Se precisar de algo mais, é só chamar.' },
+                { chaves: ['oi', 'ola', 'olá', 'bom dia', 'boa tarde', 'boa noite'],
+                  resp: 'Olá! 👋 Como posso ajudar você hoje?' }
+            ];
+
+            var SUGESTOES = ['Página não abre', 'Sistema lento', 'Tela cheia', 'Instalar no celular', 'Assistir sessões', 'Falar com o desenvolvedor'];
+
+            function normalizar(t) {
+                return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+            }
+
+            function responder(pergunta) {
+                var p = ' ' + normalizar(pergunta) + ' ';
+                var melhor = null, pontos = 0;
+                BASE.forEach(function (item) {
+                    var n = 0;
+                    item.chaves.forEach(function (c) {
+                        var cn = normalizar(c);
+                        // palavras curtas (oi, ola) só contam como palavra inteira
+                        if (cn.length <= 3 ? new RegExp('\\b' + cn + '\\b').test(p) : p.indexOf(cn) !== -1) n += cn.length;
+                    });
+                    if (n > pontos) { pontos = n; melhor = item; }
+                });
+                return melhor ? melhor.resp :
+                    'Não tenho certeza sobre isso. 🤔 Tente descrever de outra forma ou escolha um dos assuntos abaixo. Se preferir, procure o desenvolvedor do sistema, <b>André Almeida</b> — <b>(73) 98244-4865</b>.';
+            }
+
+            function addMsg(html, quem) {
+                var d = document.createElement('div');
+                d.className = 'msg ' + quem;
+                if (quem === 'user') d.textContent = html; else d.innerHTML = html;
+                msgs.appendChild(d);
+                msgs.scrollTop = msgs.scrollHeight;
+                return d;
+            }
+
+            function botFala(html) {
+                var dig = addMsg('<span></span><span></span><span></span>', 'bot digitando');
+                setTimeout(function () {
+                    dig.remove();
+                    addMsg(html, 'bot');
+                }, 600 + Math.min(html.length * 4, 900));
+            }
+
+            function enviar(texto) {
+                texto = texto.trim();
+                if (!texto) return;
+                addMsg(texto, 'user');
+                botFala(responder(texto));
+            }
+
+            SUGESTOES.forEach(function (s) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.textContent = s;
+                b.addEventListener('click', function () { enviar(s); });
+                sugestoes.appendChild(b);
+            });
+
+            function abrir() {
+                caixa.classList.add('aberto');
+                btn.setAttribute('aria-label', 'Fechar suporte técnico');
+                if (!iniciado) {
+                    iniciado = true;
+                    botFala('Olá! Eu sou o <b>Assistente PLD</b> 🤖, o suporte técnico do Sistema Plenário. Como posso ajudar? Escolha um assunto abaixo ou digite sua dúvida.');
+                }
+                setTimeout(function () { input.focus(); }, 250);
+            }
+            function fechar() {
+                caixa.classList.remove('aberto');
+                btn.setAttribute('aria-label', 'Abrir suporte técnico');
+            }
+
+            btn.addEventListener('click', function () { caixa.classList.contains('aberto') ? fechar() : abrir(); });
+            document.getElementById('chatFechar').addEventListener('click', fechar);
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechar(); });
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                enviar(input.value);
+                input.value = '';
+            });
+
+            // Esconde o balão "Precisa de ajuda?" depois de alguns segundos
+            setTimeout(function () { balao.classList.add('oculto'); }, 8000);
+        })();
+    </script>
+
+    <!-- Créditos e versão do sistema -->
+    <div class="faixa-creditos">
+        <marquee behavior="scroll" direction="left" scrollamount="4">
+            <i class="fas fa-copyright"></i> Todos os direitos reservados a André Almeida — Desenvolvedor do Sistema (PLD) Plenário Legislativo Digital (Lei nº 9.610/1998)
+            <i class="fas fa-circle" style="font-size:0.35rem;vertical-align:middle"></i>
+            Versão 1.0
+        </marquee>
+    </div>
+
+    <!-- Smart TV: mostra aqui o sistema aberto no notebook (Controle de Fala, Sorteio de Fala ou Presença Plenária) -->
+    <div class="tv-tela" id="tvTela" hidden>
+        <iframe id="tvFrame" title="Sistema aberto no notebook" allow="fullscreen; autoplay"></iframe>
+    </div>
+
+    <!-- Mensagens e arquivos da Mesa (aparecem em todos os computadores e na Smart TV) -->
+    <div class="av-ov" id="avOv" hidden role="dialog" aria-modal="true" aria-labelledby="avTit">
+        <div class="av-card">
+            <div class="av-topo">
+                <i class="fas fa-bullhorn"></i>
+                <div><strong id="avTit">Mensagem da Mesa</strong><small id="avSub">Enviada para todas as telas</small></div>
+                <button class="chat-fechar" id="avX" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="av-lista" id="avLista"></div>
+            <div class="av-acoes"><button class="av-fechar" id="avFechar" type="button">Fechar</button></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script>
+        (function () {
+            if (typeof firebase === 'undefined') return;
+
+            // Se esta página abriu dentro da TV (botão "Sair" de um sistema), a TV volta para o início
+            var emQuadro = false;
+            try { emQuadro = window.self !== window.top; } catch (e) { emQuadro = true; }
+            if (emQuadro) { try { if (window.top.__tvInicio) window.top.__tvInicio(); } catch (e) {} return; }
+
+            try {
+                if (!firebase.apps || !firebase.apps.length) firebase.initializeApp({
+                    apiKey: "AIzaSyAHawTmb2za8y2Eq70FWejq64-5J6Pbqfo",
+                    authDomain: "projeto-teste-f08c4.firebaseapp.com",
+                    databaseURL: "https://projeto-teste-f08c4-default-rtdb.firebaseio.com",
+                    projectId: "projeto-teste-f08c4",
+                    storageBucket: "projeto-teste-f08c4.firebasestorage.app",
+                    messagingSenderId: "788863562302",
+                    appId: "1:788863562302:web:2ddcfb6c2c892770de976f"
+                });
+            } catch (e) {}
+            var rt = firebase.database();
+            var TS = firebase.database.ServerValue.TIMESTAMP;
+            var refTela = rt.ref('legislar/painel/tela');
+            var refMsgs = rt.ref('legislar/presenca/mensagens');
+            var refArq = rt.ref('legislar/presenca/arquivos');
+            var offset = 0;
+            rt.ref('.info/serverTimeOffset').on('value', function (s) { offset = s.val() || 0; });
+            function agora() { return Date.now() + offset; }
+
+            // Os 3 sistemas que a Smart TV acompanha
+            var PAGINAS = {
+                'controle_de_fala.html': 'controle_de_fala.html',
+                'sistema_sorteio.html': 'sistema_sorteio.html',
+                'presenca_plenaria.html': 'presenca_plenaria.html#tv'
+            };
+            var VALIDADE = 4 * 3600 * 1000;   // depois de 4 horas a TV volta para o início
+
+            // ---------- Esta tela é a Smart TV? (abra uma vez com #tv no final do endereço) ----------
+            var marca = (location.hash || '') + ' ' + (location.search || '');
+            var tv = false;
+            try {
+                if (/[#?&]tv\b/i.test(marca)) localStorage.setItem('pld_tv', '1');
+                if (/[#?&]normal\b/i.test(marca)) localStorage.removeItem('pld_tv');
+                tv = localStorage.getItem('pld_tv') === '1';
+            } catch (e) { tv = /[#?&]tv\b/i.test(marca); }
+
+            var tela = document.getElementById('tvTela'), quadro = document.getElementById('tvFrame'), atual = '';
+            function mostrarPagina(p) {
+                var url = p && PAGINAS[p];
+                if (!url) { tela.hidden = true; if (atual) quadro.src = 'about:blank'; atual = ''; return; }
+                if (atual !== p) { quadro.src = url; atual = p; }
+                tela.hidden = false;
+            }
+            window.__tvInicio = function () { mostrarPagina(''); };
+
+            if (tv) {
+                document.body.classList.add('modo-tv');
+                var aviso = document.getElementById('avisoFullscreen');
+                if (aviso) aviso.innerHTML = '<i class="fas fa-tv"></i> Smart TV conectada · toque na tela para tela cheia';
+                refTela.on('value', function (s) {
+                    var v = s.val() || {};
+                    var valido = v.pagina && v.em && (agora() - v.em < VALIDADE);
+                    mostrarPagina(valido ? v.pagina : '');
+                });
+            } else {
+                // ---------- Notebook / computador: ao abrir um dos 3 sistemas, a TV abre junto ----------
+                var abriuDaqui = false, voltarT = null;
+                Array.prototype.forEach.call(document.querySelectorAll('.grid-menu a.card'), function (a) {
+                    var arq = (a.getAttribute('href') || '').split('#')[0].split('?')[0];
+                    if (!PAGINAS[arq]) return;
+                    a.addEventListener('click', function () {
+                        abriuDaqui = true;
+                        refTela.set({ pagina: arq, em: TS });
+                    });
+                });
+                // Quando volta para esta tela (fechou o sistema), a TV volta para o início
+                document.addEventListener('visibilitychange', function () {
+                    clearTimeout(voltarT);
+                    if (document.visibilityState === 'visible' && abriuDaqui) {
+                        voltarT = setTimeout(function () {
+                            if (document.visibilityState !== 'visible') return;
+                            abriuDaqui = false;
+                            refTela.set({ pagina: 'inicio', em: TS });
+                        }, 1500);
+                    }
+                });
+            }
+
+            // ---------- Mensagens e arquivos da Mesa ----------
+            var ov = document.getElementById('avOv'), lista = document.getElementById('avLista');
+            var VISTO = 'plenario.msgVisto', conhecidas = null, porId = {}, fecharT = null;
+            function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+            function pad(n) { return (n < 10 ? '0' : '') + n; }
+            function quando(t) { var d = new Date(t); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' às ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+            function tamanho(b) { b = +b || 0; return b >= 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
+            function visto(v) { try { if (v === undefined) return +localStorage.getItem(VISTO) || 0; localStorage.setItem(VISTO, String(v)); } catch (e) { return 0; } }
+
+            function item(m) {
+                var a = m.arquivo;
+                return '<div class="av-item">' +
+                    (m.texto ? '<p>' + esc(m.texto) + '</p>' : '') +
+                    (a ? '<div class="av-arq"><i class="fas fa-file-alt"></i><span><b>' + esc(a.nome) + '</b><small>' + tamanho(a.tamanho) + '</small></span>' +
+                         '<button class="av-baixar" type="button" data-baixar="' + esc(m.id) + '"><i class="fas fa-download"></i> Baixar</button></div>' : '') +
+                    '<small>' + esc(m.de || 'Mesa') + ' · ' + quando(m.criadoEm) + '</small></div>';
+            }
+            function mostrar(novas) {
+                clearTimeout(fecharT);
+                document.getElementById('avTit').textContent = novas.length > 1 ? novas.length + ' novas mensagens da Mesa' : 'Nova mensagem da Mesa';
+                lista.innerHTML = novas.map(item).join('');
+                ov.hidden = false;
+                var maior = 0; novas.forEach(function (m) { if (m.criadoEm > maior) maior = m.criadoEm; });
+                if (maior > visto()) visto(maior);
+                if (tv) fecharT = setTimeout(fechar, 60000);   // na TV, some sozinho depois de 1 minuto
+            }
+            function fechar() { clearTimeout(fecharT); ov.hidden = true; }
+            document.getElementById('avFechar').addEventListener('click', fechar);
+            document.getElementById('avX').addEventListener('click', fechar);
+            ov.addEventListener('click', function (e) { if (e.target === ov) fechar(); });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !ov.hidden) fechar(); });
+
+            refMsgs.orderByChild('criadoEm').limitToLast(30).on('value', function (s) {
+                var todas = [], novas = [];
+                s.forEach(function (c) { var v = c.val() || {}; v.id = c.key; if (v.criadoEm) todas.push(v); });
+                todas.sort(function (a, b) { return b.criadoEm - a.criadoEm; });
+                porId = {}; todas.forEach(function (m) { porId[m.id] = m; });
+                if (conhecidas === null) {
+                    // Ao abrir: mostra o que chegou nas últimas 2 horas e ainda não foi visto neste aparelho
+                    conhecidas = {};
+                    var v0 = visto(), limite = Date.now() - 2 * 3600 * 1000;
+                    todas.forEach(function (m) { conhecidas[m.id] = true; if (m.criadoEm > v0 && m.criadoEm > limite) novas.push(m); });
+                } else {
+                    todas.forEach(function (m) { if (!conhecidas[m.id]) { conhecidas[m.id] = true; novas.push(m); } });
+                }
+                // Se a TV estiver mostrando a Presença Plenária, o aviso já aparece lá dentro
+                if (novas.length && !(tv && atual === 'presenca_plenaria.html')) mostrar(novas);
+            }, function (e) { console.error('Mensagens:', e); });
+
+            // Baixar o arquivo anexado
+            lista.addEventListener('click', function (e) {
+                var b = e.target.closest ? e.target.closest('[data-baixar]') : null;
+                if (!b) return;
+                var m = porId[b.getAttribute('data-baixar')];
+                if (!m || !m.arquivo) return;
+                b.disabled = true; b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Baixando…';
+                refArq.child(m.id).once('value').then(function (s) {
+                    var v = s.val() || {}, d = '';
+                    for (var i = 0; i < (m.arquivo.partes || 0); i++) d += (v[i] || v[String(i)] || '');
+                    if (!d) throw new Error('vazio');
+                    var k = d.indexOf(','), bin = atob(d.slice(k + 1)), arr = new Uint8Array(bin.length);
+                    for (var j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
+                    var blob = new Blob([arr], { type: m.arquivo.tipo || 'application/octet-stream' });
+                    var u = URL.createObjectURL(blob), a = document.createElement('a');
+                    a.href = u; a.download = m.arquivo.nome || 'arquivo'; a.rel = 'noopener';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    setTimeout(function () { URL.revokeObjectURL(u); }, 10000);
+                    b.innerHTML = '<i class="fas fa-check"></i> Baixado';
+                }).catch(function () {
+                    b.innerHTML = '<i class="fas fa-download"></i> Tentar de novo';
+                }).then(function () { b.disabled = false; });
+            });
+        })();
+    </script>
+
+</body>
+</html>
