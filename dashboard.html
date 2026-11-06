@@ -701,9 +701,10 @@
             var tela = document.getElementById('tvTela'), quadro = document.getElementById('tvFrame'), atual = '';
             function mostrarPagina(p) {
                 var url = p && PAGINAS[p];
-                if (!url) { tela.hidden = true; if (atual) quadro.src = 'about:blank'; atual = ''; return; }
+                if (!url) { tela.hidden = true; document.documentElement.style.overflow = ''; document.body.style.overflow = ''; if (atual) quadro.src = 'about:blank'; atual = ''; return; }
                 if (atual !== p) { quadro.src = url; atual = p; }
                 tela.hidden = false;
+                document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden';   // sem barra de rolagem atrás do sistema
             }
             window.__tvInicio = function () { mostrarPagina(''); };
 
