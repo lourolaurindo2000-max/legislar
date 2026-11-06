@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tempo de Fala</title>
+    <!-- Tailwind CSS para estilização moderna e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonte Inter Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    colors: {
+                        governo: {
+                            blue: '#0B2545',
+                            darkBlue: '#134074',
+                            gold: '#D4AF37',
+                            accent: '#0066CC',
+                            dark: '#0A0F1D'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0A0F1D;
+            color: #F8FAFC;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        .timer-display {
+            font-family: 'Roboto Mono', monospace;
+            letter-spacing: -2px;
+            text-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Animações e Estados do Cronômetro */
+        .status-normal {
+            color: #22C55E;
+            text-shadow: 0 0 25px rgba(34, 197, 94, 0.4);
+        }
+
+        .status-alerta {
+            color: #EAB308;
+            text-shadow: 0 0 30px rgba(234, 179, 8, 0.6);
+            animation: pulse-yellow 2s infinite;
+        }
+
+        .status-critico {
+            color: #EF4444;
+            text-shadow: 0 0 35px rgba(239, 68, 68, 0.8);
+            animation: pulse-red 1s infinite;
+        }
+
+        .status-esgotado {
+            color: #DC2626;
+            animation: blink-fast 0.6s infinite;
+        }
+
+        @keyframes pulse-yellow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.9; }
+        }
+
+        @keyframes blink-fast {
+            0%, 100% { opacity: 1; background-color: rgba(220, 38, 38, 0.2); }
+            50% { opacity: 0.3; background-color: transparent; }
+        }
+
+        /* Efeitos de brilho e bordas */
+        .gold-border {
+            border-color: #D4AF37;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .card-active {
+            border-color: #0066CC !important;
+            background-color: rgba(19, 64, 116, 0.7) !important;
+            box-shadow: 0 0 20px rgba(0, 102, 204, 0.5);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B2545;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #134074;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37;
+        }
+
+        /* Tela de espera da Smart TV: tamanhos acompanham a altura da tela */
+        .tv-espera-brasao { height: clamp(120px, 26vh, 320px); }
+        .tv-espera-titulo { font-size: clamp(1.8rem, 5.2vh, 4.5rem); }
+        .tv-espera-sub { font-size: clamp(0.9rem, 2.2vh, 1.6rem); }
+        .tv-espera-aviso { font-size: clamp(1.4rem, 4vh, 3.4rem); }
+        .tv-espera-relogio { font-size: clamp(2.5rem, 8vh, 7rem); letter-spacing: -2px; }
+        #tv-espera { transition: opacity .5s ease; }
+        #tv-espera.saindo { opacity: 0; }
+
+        /* Estilização para TV e Monitores 4K */
+        @media (min-width: 1920px) {
+            .tv-text-huge {
+                font-size: 11rem !important;
+                line-height: 1;
+            }
+            .tv-avatar {
+                width: 320px !important;
+                height: 320px !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between font-sans antialiased bg-governo-dark">
+
+    <!-- CABEÇALHO OFICIAL DA SESSÃO -->
+    <header class="bg-governo-blue border-b-2 border-governo-gold px-4 py-3 md:px-8 flex justify-between items-center shadow-lg">
+        <div class="flex items-center space-x-4">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAaQAAAFlCAMAAACTJmwWAAAB4FBMVEUAAACaLCf7+fcaGRVEW5fwoCknSyjhaCmgXCr50SIBlUOmYlNeW1nXqZqkn5lbUyv8+vdhpi1cKyIxYZsCkDVkY2PhyrElJSTTlWopV1uikGIdHBytjydIgrXiq6Joa2huEA7Mb14uNVXcMSRkpU3u3KrZppX8AgGjGxWloZ6oX1yaIxqoTy9raxCbKyfvdXL+/QKtYFbcoWanZBenpGHbpZSpVimtXU3TlmibNEn47HINbQ5VWVHubxOklWTtzqktTzVmEGLHaFfrqOKknhdTTzHUlWtTOEsxUCVRTjH9BPncoSpnomUA/wCjG10RDGhTLCm0yZ/Ncl4tV0gvgbJso1WkmFz87eAgXFtwmVqlapfUcZXIiih2fIWo3KNNKktnpC4A//+noIkpisJdMifHeocAAP9mpx989XyiNUeYjCCp3mX8c/KjM0GfxGy18+feI2+ToC/v49EsNkZhoyVeo53LZSXNtMPdxG7hyqo1MEY1NJlKOKdIicGseYSSx157wDC8uMXJOmBENkRxcahqqvSbzl+/wMD1FaLDZzHHii8zqiAA/39kxGGQfIV/f/+Ki4S43J3GMxbOeIsXF4s6RUUAf/8yiBQ6t1ZtAJFygIl//wB3zT1zx2hywZV1w4A6WZhRAAAAoHRSTlMA/v78///9/vz//v3+/P7+B/3+//4K/qb6/P1e/v8YVQf7/f/7FlsCEhAQY6IKoQ8CXh0OFJxknFvzDAaWDV9Zng9aERVfof5kmgIiFgERB1v/oqL/npxYDlgVIVdYD1ajAWD/ov4BDQJpXRMGqfgGFqObn1kNUv//pF//////nv//TpEFBGj/CKyEDQL/YgKmXUpMC3YCVr0HWQJTiR3/VPDS3wAAV1VJREFUeNrtvYd/40a2JlokTbIkREEkCEJsSpRI5dxqtdQ5u4Pdztlre7ye5Mkzd/K9d/bOzWHzvrf78r/6zqkAFBIBqtUW2ur6daCYBNRXJydCXrS1FT48aJMPO3zpsfVVZx7f0Z6fbxObvFzf9LLbc7g6nVptnszVstY19mb2sNPBD7y5pnxJ++U+PqfF0OkoQHTGgNQJQQqfwy94ic9pw8JpB/7G4JFAtCcCKcRq/iVNnfLqZAPBQHIcq1KhlFYqlaUKPrIku8smtBpA35by6iVQJ6cg8uu5Du5jfH8dQMXhIK3hf7QJq96s8wX/U3jyK/yCefYypfIDKkgc/E577eV2T75WpADqSK6louM4S0tLCImjgITANIPFQboWgMThazYZWI4TghQQ5PzLXT8BHc13VNEi8KEMnGZziSFhRUBqCpg4VlGQmgp++CLjhgCSHZVTL5neBDyuPReX/x0GRF1QC+dpgpLsgN01BXxIZxX+wTckJYXwBYRWS9EqOuSlTXUiJaFjc/FPA3wYRPV6BKSl5tJgMPDwrzdYkiCRECTxIY4z5S9zpSP2++ZeQjB2zceUbC4+hI7mcC4XrkqEktxquDyJQkhJ9chHBTe8z762SR0nrqG/xCK+dvl/axGEnEoFUMFHawKkJc7PgFRcQMRbEtQiQKpWDc8z2ApBakuQPI4evGUAXyH1CvyFlgCQRoCyXxpRGUtBqMk0OK4czAm+BD+6Ib24KkgVAMmtyAUACpAWQpBcQ37Y4EQ4x0GqBLrIUggUt4PJ3EucQl/cHOcvYoeoootxDY6rcM0loAcglIGmVWjVWFriR55/pF6tSoy0VJA8NHK1gWdU3WbTCkGiXNNgONUFJ+RyyYaXX7qQxHGdk/xFbLewedh/YrO/IyRLVQuoBbYan2zLnQ5BoiErDEAyGEjBJ50ISE0p7epNoTS2kXw+FPLp3NtQa1JVIIKnUaEk832Tm83wg2eqA2Wrl/jnApBoCFIzAKkjQdKCV40YSANkngPxG+sCepX9ds4zPdmfhwZRm7MXBpLQxDxDKAB2CFJID9WlCEhLoUwCkOpUCpaOZHeD4NUoJVVQXjFp5RqoVDTFkYlaUZ258+k7su/HrROuaAPPAWPH5SJetToBt6oRgiS283bI7ijt0SZllBQHyVBo0GtKpZF9FCQdUJk2MIRSEYDUjuvlyJI/PE+OhXaobztSn2Ig1Ze4yWMM4MwvCeZjSxWOgQS2asDu3gwoqUrrU7gCkGqPOlzeCXZHAUoGodTsbQ69ETBKLYBeOtCdnuqXPV9sTzmkDmUqXG0hULQHVVejnFq4F3U+FDwucw5N1QNKml/lLqMApHoIklwWA6nJIGwqIJE4SPitAQ0Kwo5aUJ15+7xEvxWXgnQd1AhJSB7gUVID+FtBSVVtiiPhwmvh3oGDNYWSFJBcFSRJLQscJDfQC+F4KCB1BEggJCsqOX37YWovzClOBa5PLQlKCiSP0AG8UJeek3vtCZCMKEi41YUoiWrVgaSkNkdBBclbcqSZtFCTIDGvUug66pwDsyiEaImbj3WpbLWl5KlKRex3zOyEuB8XV7DXzWyQNAWkpqMsDlI9AKnZjFEZeKAE6XrsWtaY2BQgCc8sELxzbkDivM6xguDCUqARC1/aEggJijymEqp383zDvCqd4jwNQFpygjhgHKQlfvq5Xby0VF8KQUJ0FTqz2JmA1xCF71Y5VbeDC12KBjkq58VNzjZWHs8lhpKjqHcWGjVsQ2ngVhAWL4IUEgTwNBoG8hSQKq63FEaX2BtCkADd5hJVvYQeqIwBgNJCJpx40csB1loQh1Is3W8/SFZdsBHYA1ccUDugFxANuGtNpsIpIptRkthPveoFrhz2TSpI4OwGd7enACVfnbLMqg+/kEqVDW1ZT3xpM6mBo4QEM9djCAkv1do5Ceo5wvPMbFZPeuGkDg7mUJOBJGWElDxLzUD+H6PdqRDLkls9bgqQzGp0uehRqIgPmm7gwEWgkJI0wUOpUO54oKIjOaxr8Itcaiqq37c9e0Gc0CUW5MHoz1IglCIg1VHb4lTGqA91QRAofD+BXJYwniH+YTqapCRLE4ElXDJAUREQmszUEs7UJlcLpTaiaOC2zdky0mCFGsy6XlqyzgdIAgnGn8CtKdw0UZCAKjhIGgQkHG7xiuNfNfipbzqm0USW5oUhJiopyalEFyQJaQMJkmHSQI4xmWhIImtWhAbesRW2zFVNOkCqXgr9eucBJMbruWPaEA5P2BruB0cxD6edaQ6g3jGAZPwiBMlQ2BkjGU/CkLHqHAgXQ1KeEkoPQKIUOKHFDVbwp0oj2ZAuo8ESPTcgrQWGjfQrNAM/KnfxMP2gzo62G03GWgKQcLPBtNJ8b6DRCAxN8BflgESdimYIQWVAKJ3zSQ6SpRuVZtSpyn26TcoMXR4rPCeUxCUycz5DiA90ucAFYIuXUD9AwcH05RAk9I2jRJnCl7JwCNKJhHJAxX8VhB1BYtxLk4Toeiiu0E6qw5O0Gcl0YMqdB19bp+wsnRuRtMANEFSbQAmA7WS2J7v9jsxvQK7GQNKqYq8HA0P4xiscAycicxgYlCnjU5HFEZP/BSCxT8nwBKckuBDTQEQVtzczrAfM1GUBLOccZXxJRuKxXQ00hwiPobixTBA0RXAJAeLkwvALLFmx/3V1TSUeiHfRuFJRof5AqIWO4VGpmzuSklxG1OiXDeL17XMEUh1um4Pk1hWQ0MWDViW+hD4HAZDC0wKyiFBL2ppS/oaLNmlUllFBnIYvslLwEDjCZ+RW8FLQw7FUOT8iKciUcwUShmINccc4M3rYvqGebgT6AdfznmmFmLH8ffa1Sxy7ym+ZKiHcvuhQ5codO0mDap1bA+1zlEgMijbT4fghFX5pqykS78VLoMNJgGBDnxWfJFxTHKumAAm1CddT1XMgdwHSudIbgmgFS9Bqcp7GhBJEFLhStsQ0P67eSQKqP8clmCHawNSTLqAlrvQPQAVFkVQxhOY3d65SVbn3hwslzCmtyNIH5i4CFsdO9/OFJyqqhHbOcHIFPYnTQjUX5BVe9ofnDSQplExXCdrUcY8GUpp/s6vJeSsdcJzgwPyOC8eK5gK/PU96g1IIwcnFB4upHjhphKpdP5vVFCxWZHhJkaSBkneu9IYgAislD60OeLgBOY2BHr1ms352K4KTAAkDHM550huUeNqAORacKgulos1qAMOhZwqRRIp7VblspA7qDSyD7BzVWDChhEYIM1Ho33g8/mecNRFFCYpyry1c4LHUGwgh509zqAjNAeN/WpkgCjQJvKCKDnrDeQNJpuZjKIdrDpyI6uVc6Oil3CnSPmfFy5D1PYDcLXZeTe3M1LlCIBnnT28QtQ5ozxvfuM16EpAc0z93ekNbhpQGIgG/5Is651FvCHK33OozCiIeVOcOvvSoudr94YSrgskP5w8kWfdtnAQkbvgGKDhOpeBaap4IMfDFG1xv6NjnDiQn8F9OhE8WyRRdlE4IFWVpYM75a5YSag4FSSkVHkf8q+Ey1eVDIEqzKKeyVFIrDhX4G7xzyO3aQfOsagF+x8OkEXAc/KNpPkfEwERil+cTu+E/sAyDvUFjHdQqToIzFkEKfrWhnUeRJDSHpVyhJPBxIgAdaz5sPiYQuwwEw/Bxacry+eKvIoDsjZrlTK5acJFEz5spS0QfIYpC6bgyRm9rxhicg8RjIInAlnu+RtUV6fCkPE0BLZYVXmVY+VoKA6TZQC1VTHCFs9D5iJw/oeRgMoOWSkqs00+UwVGkC8AH0NHScElbansuCrnjkMjvvlVFmcUZYBSopVSkKoHecO5ao3TCLF6WT7Aku6BwhGLyXvc5Pr6gjWxMEj/Vky94Hud/qFkkmV+9GRdJ0pTdIudYcwj3NE1JsHxUDAxNK0I6qbRUF2V6QU9COBaeaOehWan2VIgU5MqinXAO9QaRti8KT+qRBqlRm+avcSf9OG9TOnWqHEpW/sWM1iRwSzwdyGNyytSOExbxUjNUwCEJ5VwqdyRoCcSEUijvQyYH/2sm6G+eApAUMZJB8o9Qi6Vvx9s/imxLK5X+AuAGLDnI8PVUO4qlSJqudv5c4LE8h0EliRCLXLtVJoOypE4lHZWM5UClYEVVJVB9XOI0xZPNDQ1Nqbh8Aun4WxE6P7cgsdKSpCCCXNK33BhAIWNjta61ky2nQpshDwwxFzglHBrYxkhwu7lz2PhbCCUXHENRhEAOub4XQ4gVx8L7TgpOHKrKUtAsUrpsWXWNqyX0CFc7X/UUJDX5TjWHqO8yRSGqF2B1fhY+fOwONKBE7G251tpsBAmsP3Q6WTSleoV4OQUnqIiFhnoDjTTPPZeO8JC9aCZ4egKIlE4kNAWcecSmULN1m2SBJX6V2szaY9mrIUjnMnSeUO8GAiGotDN4HVddrQ6n1KmlDEFKbXkRUlK7nTF+qZPC+hSZxypfDEU+OX8jXODnFiTs9c0LxBzQt5GIliIGUJKEGPVEqaQIJcXmmMWRwgr3iDk1QJ8EY3vOW0IkPSTncCzFnDRnXVYUiRaRuk2gKPC5HyoBnc4sDFhX5uYedlI5X12SscGlk+YOms1z6AJXNQdWMAYat+HxkiDeWoup5DGATmuTdtsK94sCpcSXmOsIyckNu4yfa6HE67ZU6U1pFKH285wSGFP5ImwPyal5fvWGQL2DvC5PEhH3+ThRErKf19SItmzwHyUoR3YIF57YpZcgcd9MM6WNpmLkP0dKSpsIxFvDhsr5eaunSEm+UzdEbRx8n4juHGcxuckJ9XJuyh6Q8zvlhTJPp0hmUNncmZzb1yI4LcnoyfnldqGPlZ9Zhc91zjr7IuxZjpfmnHeQHMHnFJNo/qyHFs0rOCHXs84zSGI2Rb2p+E47B2UY/hglp3OsNwQFf6FvrlOi7vVR+6lmn+v5cFZpO9evKebTueV20TGvpZyoEsB0fkFSxvOUd+jN3HkfPjsvIVoru35zjmfYt0OIyqw7tec69vmeLNspGrl7uc4KpDdf7sHL9XKRlxPb09dVFGS7Jb3uq1cnlsmnvd5oP48V12tS1Zw2RlW2yj6WFK3086Crttv2awttW32CKFlJc51bnc6tPvywtVu+1vlka9Jz1J7/d/P/57/D9Z+Cf+afYX05/3zWHCT0kVgDq1rnTZWg2k/mO7D2Op1Go9FqtaY79+8Cb3m9JOi8Dlxu4Q9duLZGdz6hTS8QRlx4A23OrUl6LLTkSwFk/pYyznRrBHntOH32a8thIbFpAAj+thqNN+/9qCzyE/d9rtEQ19a4BTC1uVSVTEC6f/Tlcc67ki9xxffmakAo09NwJmUA+QMd4hkLo8uaxWBqTIvVmJnxP/p1SWD6/kek1uWXhmTeuMVDQgfztftAR1vkTXaTSGiNa/dfWEqSPqLGtDiOABQ+f+33VZN58zVN1y3dchBC9nJtODMzM7xRBkN99KeZmf/YCI4PXmC3fe8KJ5P3OQeo8dfhwhuNG6oChCAtnt6qLSK9midYeohG2udVkFrT4l7gPDJ0OEg1HRpJWLj4aZ1uWDNs2WftT7HJ/+uzK4mA1GpY1rV19EvqDkcJrrklXu3eVS4aQFp85fTWIp7t6kmWApKZ8rIE6SrZqrWUO21weOCvbzm8w4fVaPF3NIYzjJTOnJK+T/4nQjScQZmkgNSw+F0DA7AQpVYruK13+lF2tzh7iiAtZmxy7lL4mjEGJFjvtFrKnQqYajWgIkAJxqN5wxa+owUYMZD+4sxNpy2yz0Ga6SoHDOnF9Pmlc5gaIUhzMZl0mpT0x27GJuctU+F21XEgfc/earQitypQ0kAaaTo0zPF6CFKLMTvYF3+XnLmxtEW+4JzXil57q8FICRv+WA4I0/B5Ym89N0qaPSlIOdxOoSTb/lw9j5KWZnwmj7q6rvkzEiNcByXw8G+RK+JqZhqtVuTqQaTWrB5wac/X5X0hIS0k2N3sqYJ0EnanhRPiquNBArviVrel3iqqQ3gagWEATICSPt2qiT0Z3iiFn8gmB4LhNWqNCMMDpVR3LN4xK6CjW3c/I+T5UtJJQHLGE1I12mnj89h55CAxJQlxshoNtiPD4cyNf7pKyrC+Tz6akRwvyqs1rQHXrCsodcGjNSojSLVJQPqBvd7tTrci96p7KJQw1d8BYhI6w4xVGp/dFnlf0NJMV9Hx4HTh4WIMQNOGyAC710Z/H61lLQlIZg63i1HSZ+B1qHVRi2XWO4olB0DSOT1KaTQDia+N+/bfl8PlbF+zrOFQXFc3AMnyNI0zgK6uwdPdrmnb/YTHoQwghYTkFwHpR8KF0uIWLdMcej6CBAbijDyxPHFaL0VmwGhOHB8G09Bq8MUo6ZhzAKCmbhduRU/EZcoBkpnH7WIgvcYwYjghLNZMC8tD9ECjmwkgKkvqKzoc4YIbUp9BoIDFWTUuTHkTJn7yatcIKSNI1ngjKQ4S6HfCFckpCrDhdwl7METQxPfhrpQiYa/9+CMLLoVd74x6kIZg3/XQL9wIrjil9WIpQDJyCSkK0i6ryRYcg92Yy+ws8DH4urxVAaJFrpQApY/tW8oVM7vupzP8aNV6qPE0GA1xGO1vAqRnsGT1ahGQyHfwulWQGl0BEiefYJWnH9Frteh11XRmNHGnkKW+0klYdqUAKZ+QYiBt2WvqLUu21xgOG9FVmuzkqxgvil5vQ4BkxZ4/SCsjO03f3YlAUtSGajGQQKGdT0OJGfThcw0cm1COtE97y35Ui54fazjTCAN9wV1cIwep7G72bEHKVxuSIBFyP353TMNthIy/Ua5SjI/tRhQQayYNpIf2qF1CkNwC3C5JSYyWalGQ4pQEbcTbJcrm4tkzNYWSohiJ4hGbpIM0e5YgFVAb0iipTdYe1eRdBiDJe66VsYs4oNRIgqSetPu3r6aXNp8mSK/ok4NUQCKlgYR5T/OKri1AanBzhIkj8nqpMFqzyUcKJDNxdlfrfGjbdiZIp6c5TE5JodrgTAYS2fo3Yn8urPSQkuAnMGY7b9h22XJZcf/XrgXHSmLEf0YyItlNAk5TBT8BJRWRSOkgsfWvrNGhKIIGhwOktMDyCfm7H5Qy+dZ+bR64NPpEwDlS00M/wxx5Qq6OAWn2DEFyC3G7am7ndkFJP61qzBHWWSCkxN0zdPAjo3tRxzrY9mttHnIeS0lnCZJeiJDGgdQO5gUAJf3UwKgfpN507FLCZNuPeJt7vSrMpLlCqJ4tSMUIKZ+SfsUNJV8k3jjlHJmwQO6L6LHuhiC1nzNIs88IUkFCygdJdubAdAEdYwBzdilLXx4hQpjVZA5rtW+GkmZPD6TqM4MEpgcL/kHuneFppWxzs0UeQRQJExq0eEfB8oJkFjFk00C6Gq8lA5BeBcUBWB3OPfM9l9glrPRbtx/AoC+WZ1sTUa+5mHhtPwePQ+yzE4Kk07q4Vrd6CuzOmoEQusMOqu8vl4+Udsgyh0iDbBlhJ8mTFqjf7ZXTBgk/q358MpBMPtMbcapOBFL72mKj23jn2kdPQXH9/g+2pExyMEVSZwxFA1tppWzM7oANp0TdRn9VG4rovi27cz79eP7h3Jp9+ooDuBhODpIfDLKyzAlAgpbmXZ5312joe6riYGnHDaE96cel0xwOyPtcqwGmDCAFFT07rMJs7p0GyxbqkO8ViifN8j9FwJuF39PtduXnJgPJCkBqUm0SkNYaLV6khAUIH9kXZTtkyz8OUiS/gtSvq3aZ5mm2yQ2OECz92OdWN7dh77/T4LcE6WkFg34cpEIozTJTv8vf2y2gp0Vyi6eCgUzNem8St1CQ+I4VJKGK6NQh9Z1Ziw6fB9AuGTk5DCEHE4s9S/YY/PgfrnV5oSZP1i8KEuz5Yq1bBCW2QzqTa4u1yUDSA0qqw0y5OjWLg3QtSAKFlM/QILY8FEoiKW+68U6Jxlt8jBztV+JaUbnxwstuhPm4rcb/Vjh8Pjv7Kui0hXQ7qIFiHG92ERVpvThIZo1OKfPNAaXCkVn7cVgmgnWX8mYhi+24wUDiyeLdhX+9WpLic3vrnW5Q9gYg+coMAzU9vLFQHCSEPL/aAkDqAjKApy68BhOApNfqU1Oh6oC0pBUE6TX7VlctbKwF8XPf163gvkFglaT7xtaHRFTF8+QTHQhJRlhq00pV3PQ1YhcGCT88WwCk2VlI39bCeFAOSL+FmcLhxtcBo0AsAUh16hcD6bH9T93w1pDjDVma1ExjqL0qDie+2tC/LkvP94e8EqQltFDfbzE7SVfpCI7b4rLdPn2QFoGSzND5lg0SjNK2aA+NOQsG1zNvg5BHPT49G2GiflFj9qCr1L9g/SneOzwneR87luhyvVEK7/d7rBSzFdQlwoMZkZmiVFq1urft28VTumqamW9BAUZdVtkXJtpngGRaGuAA3K2nwVRa+M+CatEGZULJoVJ5gFns1CzqcVi/FuF4XZHCD3i1Gmw/0IwqRR3ZLishs9jltgIhJBQeRU9tYa+U22QCkFDS5Kh3HCOdQWOMA8n0ewDQFAgeC2RPb4otC5K3NeR2VIBENcbxzKKJKL/0a9PTrbDYDwtKWuJ2W7wdAsuNf+/Mw+YjlvktDPCQ/htBaQj/sfFKlbxBCoLEdTbkR/rseK1B2q5WEGlIAcnUegwhWBatTwULCpF7U1NCGnFSQp3cKgaS6CDSUuubI6XdHCNWfv5vZwrSFfIjUS/b4AeoFZ6rmpBU/CffXCPFQZpFkHBnujJkNJvUGABJaRXVsinJ1RgVAX9DMEKIpurgH8AnULELdAeYTZEqlpIgzYncgG4EpJC/g2+PVwO91796xhbtVZBIEqWgoUaLy6euoK6usKB+XBSkV9j+82qHRe5CZRqCWItdtF15bx9dRhyqGSAZlDM6WtciECG7szwGEvI5iRIM0q7TwiDxLBsoxWpwzXZayCLeDoWX1fkHJejjsDXkRbzWolo5rxK/TEgpTElMJjFVoFYTDlg9td2PbkqzVM8Aifm5OavrBSREIyDBz/UApCY8WtLyQWqTh2HGXcNqsJokVjsHhxL+s4Zh+XkZkrmOgpKkhugg1JruMkpSM3DhTwZI3VRxw7W2SBMMAclQ17krSFe20EwHCfgZwEB7PSuAaKpHKed2TkBJdekfsuBxM013iIO0Re4paZFYRtZidtIMAoQ/iT35+m4pjNkt8qP3RJEoXCJUXcKfV5mTcWjNyPOF9/JoApBeQe5mhcFTx8yJr6rx8DB+5/em6l6d9poqGemeJCQACZ+p9xgBhaRU14vkgg8jadS6r5Y0i1PbvXW7JFUVcFL+hDWYQ1mMOeQ1ZBhMDlKPs+oS00FiUogLHNMvkjpnpoLkIzSUDiijJ7Zg7D1ndlOwpdTzBUj1nph/btUdtGuNfJk0+qUTyXV/C213uP+3fF7VbFm8H97FssQpbtUasUMElzf0WU50cBfrk4DEQ0PaeC8PtDjjjTL0ahpIJuVGEPUkFU31BK+bsnoMJI977zQplJjwgqlWWhE7qR2pcNQZSDNwpnxRncoVi04Z2N1V+6EQO6wXyMxP33qLgwQt5JRqHcg03pqA3QVBCGt8FonuqlpDFKRXURwh/wpZHUgf9ojid4M7iL+mCCWm6cF8uAIeh7ZU8BTRiymseqye5GFJxm00hM2Ad27yBFbeBK4WlJVmDHsYBxJTunNTfQQ5JUEye5yOQsPIkryuJ0CShhPoCz2pOmiptlISJGjXc0OPVQuz6vN41excCZQ7VojNanTERZmQwGqFjQ5Eq9LslK7uuPyFnNxfM5GMFYBk+vWQcqJ0VOfzoEOQaOB0QH7noIJXIFtoLl7dg5TEezuoBDZ6oxSVSbFizNr0TCN++dfmJ6WkwC83DiQjIbQCkDSmEMR4nSAcPvjemZLGU2gpwSxi9pC6BVK6oqXmAqRYZXPtql2GtjVbibpL0Q4kWus8OUi5kXC9xrYvDhLX7HyuWYfWUV1yPiAgHt6HRwmQkJRwFKRfAKT7AdVIbj8T0cuFBW+XoX7s/VqMlsD9EAUuW3yOYXfd3BiryUOxVipITB1QzKO6pCrUDfiWTgXckNZVfpdiKqWAZGOLobCKuRGyO+VsliQ/8u4a+S+1UCYxkGaSIH0/vUJpDEi5qb8cJDfatEmAZPamqGIe9UKMEBCRJzMFwSXxXKjfNTlV0UIZrDVVtYtRUi1TWzqjLl16Ta0/V7ofyeslkysOaCYVAAlhMSIg/SNPe1S8dUxhkxhRKlMwEMh6Ugnv0WZRkIjUX33uq+KdYGRrkXapajHt/9qppYGkS4zmTwSSmwvSX4tavRSQtF4gkCjjZoH+4FsKSDRDKMX8d1kgzQtELG4RzLDmQlIk2WStXBWzNxTfAgeJdUQPLrc9IUizei63g23x09xC/4jcjgWJREwCMQp1PNoLsuQCkKaspsLvUlJSkiDh/r8O9T7C1uAd3MEbpIchjNfIVVKmBFb7WmDV6f4QU2ccdrb49f4ss+typhd8tpsAyTUxhVcP032q4i1GwsHqexYNdLmmQkcYPA/zTaekpQSuI4Xf4cOmX7SqQkxycE3FNGQgfVSysoq2pHvWPUyfYSC5og/Fo4Ox9UndrHw6M6Pgy4mDVFU4I5dQfj2UNgpGGLSYUuJRU1JwMddELwAJ+V0eSLfffDh3G4tQeWsUiG3FbNuPSlf6snXlkdoSgDkCLH6wviTkJCAlFfBE4eRvJUhhHorQ7nyq9UK1rhdGknpTlgqSas426QQgvQ4jVCC7poNk1NHZnSqd7pD9lXIimX2tFvUKm+ySobHBtTl7bW7uD58fnA5ICheUj81aNQ4SDTCypBO8B365qZ4a2K3LCCCzo6yJKKkz3WqoEUkWUAoHUK+VdArhXCNCScwJLhr8wvPdxfUU+s8IVYhMlFSQqkmQ9BhIJmXJJ1M9YHuWFEcsTFFXd7Lai/A7kSRZ55atlpfjMN2IhvJ10Q3lEaiyI0LKOtNPnW9Ts9yh+mOjVXucRUmzKUG/pN4gvN7VXJAgelFXBE3A6mJ0BAqZj/zOqosYOrWkeqflgtQm97utZNJF6z+8T0q8IIO44/ApQrplJS+/0Zogx4HFZVOsJNc03EIgTYl8OimOQKvzQUrVIxdmcpAkKdU9KkGCR808mWR3Gq0UkN4jW6UdEA5ics9hNWRg1g1nGkmQpm9NBlKulTQGJIyK01fDTMge5QaRH5EbzHlUFxEnRnZCKPkezbeTyEK3pUolpji0/sMXr3+/tHRE+r9/wEr9oBqzKhupRQipu5CmkmaA1C3WkzhLcWAg9UIfg8ZcrXVdHe7CPutPSVOpzl2wbGkAUi/H4wCk9CueTczzUPh7ACTy/dLS0ddsuMurDKeqP8P1HQWiVrdjv1GUklC1K9Q3ehxIdaktYDwWAev5kVFW7DeYqN/VaRykAc333d22gZRYQmgDk/RNAdJ7LEug3f7Od/7tB1ftUmF0j7KpIT6rP+fszkRPgEwHh7qXonbSLKvELNbbOx0kl6cJocqNpfqc09X9tyJZfMIrC2+kTb8u1HUrLFWiBXIcPm8EObvTDfYea/gLci/0BY1KJJ7aP9jD3eAj7TSNszsM9YhEYzxv70wAUq2QQFISV82Ix8EVyVwAkt/rCbUAUXedWnzgmFlXpJIMKoEfvF4k6Gf/bThgDVDCHnK8hKL9t2iK3JqHYcCvlUf7PtDFcBffp9j/yUKQdFlVgQJ2qwBIs7Miam5WJwPJj3scWLFLXXhYez3fjPe2C34HU/B6VPheLUFJ9QIgAS/7+S1Z24Mj/Fh25A2y/l4wKrSLbe9KwvPs0ZzoMAE1PzIFxdQayhzG72eEkRGkC2q+3WJtkqJXLd2Y5TDJZabMhINkRplThO49nm6MVWS8yDmRaRwH6TGxMQ/lVlD70moxhXz6UYfN7BE1SvAOe70cnVjXdcj95i0moE+ALkbShKU7ra45N7dlt/NAAowak4yaCOBMA2lsk0iFofp1hhI3rHqs9C8pktIoSTRP6wYMT7rFWpFq2jdL4We1P36nwcso2BQuravjMJGaHHcFZNRgil4mu7ugOuwmGQcS+MNfLQSSmcLtWFuUqV4FI4RYmEmF4pCbd9cmr4lE1YYYDDwdVMpGJu52SmEhrXf5WFU2nAb6A0zzpIxuWPPLTlinAEiTjbYMU1drhUCqRS1Zud6iTLOjokKGd94okMFqy6CsKA1uyQqlKEimnejVcwZrjtNMS2A0bPGS2UB4Cqs8vSlphN1NOH403GlFGxxTfZ7K7ZANghXFY+ZBZaaVD9LHtuzbjoMWsadIGkiNxk9vlmA4z/fsLq/CtBhGvZZgzw1RN2rxnE5od/nGeJBm/zjZ6KOQkEwlXygbJD2d2zGUgiRWrt8lC5TSQJoLYkeshqKh8PignBsHtO2f/ezzez8dcnrHOZg+EhIbMQvsjlW8yeqXjJRoBOmvQj9DBIRc3c5M6g3ZIP1NFiGJIpmexVoFcKFUqCnhQhjktMR8uEY3Skas1uRPZx5Gsr9gBbNwapxXoflob1pSEgxPg2sMksJr6cdJpaTZyAHP0yHCyjGzVgSkbEKSZZs0iPqZxTpHzinFfuJWASalAYfOyoA+OuN8FJvc9WXxebfrD0VRb0NUGMyEdzFHchWHV2pRBWC838GURpIZ2fNMkKKRpKR+7vNmHMx3V6jZxhViv6qkNJgmT2FlAopVouq8mnhm/3X7rFPuhrwSs9sQzQGmu+JoDYc1JVNwlEtJTChJ/05+UzQpiMxavD5pEv070jRFgESNQiDZbfuGApKFbqGGrHgM1xdXztznsEVeC0afyzUcokzyXaVAqZZRVBE3ZoMNNHMpidf3mfEtzwJJT9e/o5KJZhFSKruziVpGxuuxWEWznNeM6z2bnP3Qiv+L3AtGl4b/sNxItb5q9Iadqzgw12pQZQ7jAIPdNyDu4WD/WZl0Z7LpyBxJs1oAJHec2hAqFzq2IXaLdjO2PzyIFpGBZBpWfZWOPiKkDJ2nf0D2UXcQVD4MQNLV68+keOZgvRBUM6duoBFv4qDXpAiIQ5QJkp4IUkw8Gyb1+h/K6hcB0hBcgm+JqcBgk7xHSGkyUMLD05oZuu5MKzaia3583t2FV9JUh7BTanKxgJ1l+alo5IHkVE8NpAWWv6oQ09A1o0fqYXyQ+FmtBUz6trAsHlQaOEr+jCNBYrM1nC+/szYGpL965QJfr/zlYoKUTN74ji/RUXKcbp4BUq7acEJKageFFUKldWrR9MNyZOC17bVOWNfMCsLNoZwrbbERKLWvxo3m6f4V4gPrwgWmOThGjAK6orkQF1s5s8bSQXpWQhqTC263O7Xg/hszkRog9uzW2fdEse2+HqsXg2HAIgTqaGJSzcG4qgqkJKk7/GWkZRCS0aIeAjTL5dY4tS8fJPN0QSJiwpUAqREfB1yKecDxwmbMWx3Ki6baMY4/dz7PA4kxu1f+GDTjulA1OXPvikEHHCme2zqOlFJBcgvo35OD9GFwT78WvduBdcSKvEsxWBus2UYtXnEtQQI3vs8i6lZ7HEj/fhYhAmK6wOllMdzQxVcuzKoN7tg/3XE1gHqa8qYX0b9PQEkfXg2mUbTZWL8ESDXnv5QifP4wDlJDgITR9Fcx78HzRj9azwFJrlfexbIXhtPiYlp7z9nxIY1ckKqnBtKv16KTbGpsoGHsvH5UjhSHdqzpBBwftJN8EyYCOCw9BfIM7pLPfpYPEhDT7AWpJMDj2XczSpeySzX1NO/peLfdiUDaIm/C7I13AIIDWwYBg2GmYWXzj8qT0xVXO4c809rnKCFMNxZsuxAlvcuUiL985d13383o3c4dE+YEID2z2pCe4wCeyu7iLTuM1MIefEHmxVhkhGielCZZCIipE6lxa0iQ9BpPItKO9Ubts7TrTYAEML17YfaPIJ8CGTTR8Ow0kJ5ZbUgF6XOIHUEgTf/SFpNgcA9+wbxFZH5+/nN2u7tlqnqZ78j+kOhLHbKkH5gU2XBqPNkLQoD9giBJLeJC2mDFMBnCLAyS/8xqQwYl8d7Awy9xYLUA6X3ggyvrm2+Wceoinp+5ufnP57gcFSAhu2M5RA6ElbsfZyXsJ0ES8ukkc+hTQDoFbpcG0sOgnzaB9kGQIIog/YlcXUfzvXbrHlkvG0RXrwYuqnabTDOQftcDkPShyHoaTkBJ3Gy6kD23NNuiTQHpFLhdKiXJZujTvN8i6k8WhMof6cwX1iln9QvAcxsp6Sp5j4Hk+lpD6Zv940KKQxFKmh1DSkmQtOcD0usrclYFZEAu89gSZq69D4VRbNpXKWeYKuM9/xev2DFgKldXdt3vZHXYB5BeuZAK04ULF8Y1LNSLgaRyO/8UKcmWpATpAkMJUuALK+vM5lCPeE+UVbl6V3bd7/4hc87sv3/3QpH17rvsH+EQ72YwvIQx6z5jJCkLpC3yVILUnW7MbTGQdHA3woTMY5hhanVWygzSa+T9Bucsv1XqKsh3stqJvDJbcFhp4GYVUyrSUEpQkv6cQIL1t2F9UoNTUss1qMOdLP61UrO7LfILAVKQtN9qzI3t+fIirOTF3w/LkxrXfoy3MvydBnF9HYcBew/uErv0IJkhRqCAZ7hYX2CQ7Ku/HAZVCa3u58zV4vm644hSrRt2+wUAqRaO5tHtbx0lzUHKTCMsT2LBvv/o+sddtN4ZTHaJSelAgDSUBbOQy+nfJqkNYztM2J5wheIm8txidxEX/ts9rZVRnwQJA9OyKliApDEvCzrDjksJ0vckSP/A4rNh8QuUh0BVRQZIJ3UCYOpd0rUNPiD95FO6M1XLVJAaOBdP6kYs+cJ3Qy+L1SmjdST/A5CGkemljRneM7Z9uiCZac4e/ZlAylwpIHWYqxuSQqdDkH7qej4PBCzWGvNlM43WSOiVf619cygmqbHBphD4r2XF+k8HpOoZgGTzeERjRhATA8l19UZ4NhfnSta0Zv1Wp7PYfadz61efQP8C9LCi5sOnD1q1xvMASU9zbX9zIHVED2eWoy8UB30xOtf0mv1ZeUzaUYfN9GN/uhDr+sIS3I6V6HB/yWmD5Ka6tr85difnxVlivhcvmW21lPHHsBdrpVEeHiqT4vDRLT7SD0f7zYjJAKcPUiq3+2ZBEnfGyhVqKdWYuBX9kqA0r0795SVK4gYsVgDHb+VNSMo9TZBSud03B1Lb7oT99WfEDJXpxIIWAaWwih6G82Sn1emYFj9hopJet0+ZktIdct8YSGsKKTH1ged5TLfUAwsbURLlodZKHiDmI+EYifswTxmkdG73DbI7NS20Zv2Ul8yKmdphh4B3/vVxKXzenVaswcQ0HwQ+MzNUZwKcMkjp3O40QFKTX2QmTGqXLnVeHG8LzlQIdWiz9SPyg1JMfWl3xWDmoJOQSOzylSbUc2kS6RlAMjICec8Mksg4Dx6zR7Ms8T5ueNid8BAOBUhob3RFKBA1vz+N7FEpXA1+TbEOgOS51l2rhmMbap3bbXKqIJkZRRLPTkk8bCUwwsyyd3mmX7I24jsqKbH6Dz651GLPdC2LTz7/fhkM2YNwDjBWNXfFdEy9KukI53ERcrogZSVpPTsldfWAfmRV1IVUmUQ+tNuRWrnazP+nVDUP5Xj6MvT7xOnnQzg9XX58+MUxfa7WqI1vEFAEJFPH5o893pgJWkGa2X670wGJFa2FVPVH5lLPnvpSU5o5wLX4rVa8+LwMrdTsWE08DmX3o4nHc+SEIJm+FozM4e1sYeIyVh7rWSVh2SDNFkRpEYs5WBI6pKJ3x0VmyS52CVBAYlcwnFGKzz8qS9rJWgyiHmyiFRlcQT48EUia1sPp8nz1WN9o1hiaamZmSmomSChYuoVEEn7tX3JOx2ulTFbNFh9GdABO5bV1puKJ3G+d18WLwcgI1Boh5WhJSFAohbXnM28FCrIEaY0nobQnC1X4wRgW0YcdxmNTLEkDlJzMlNRsSurWCoOkM47HCqX+Oi0Rpf3r+WuQEPnrNp7RmwFI0LNAVwYjW3ugW+yWZkyF/Q89iRKUyZpSZgjFzm63J2d3piV5HO9v1mQ4BajJXvl6tSBIjCqKgmSwCkM1tS9GSXcb041f3Wc0tWbb99UG6Go/91KFKuBadT5VW2zdMCjIrN3CakBE6Ufz10aFQfJ7IQ316h5VpyiKrvkTgsQS9QqChN/yaoRMIyDdhooKMDm68yN4aLM8yY5al6TUy9oHZUHodbJ1Sx20GMnr/eWNG18CRlsdUP2SWazpIHEymuLkEzQZnooumppIl8nuasVAYiVqnBHo2Xl3cw0WlNG3Ahk1V6slKx4btXZpshx+/EZiYqloV2JWDVZjMEfQ3G3VilGS0QslUTNgcnymQT0Ckl4tClIXBzotRnw+KcVPs6zY01AaJWeA1GIx5253xxYu8bnoPNBG3ljQb57XJc8QH3OHm8amjAgnfvdxEZB0yptlsYGJMS7HKexEIPlVNgYoKJR+ZVYUtc+Gle2zck70hVi9Zwyk90QAravbglayQCqNWJqLYyR7TzimoQuUWOS2++MCIJkMo56EKAYSdcQsl156kUQWSNhnEphYYC8hQCFEEYzMWDPKJEg2z1bDP/d5Bk7/Fh++xkvpAtlUa5Sg1Uaw00kyEou327AcBpJ+kxzkgeQz24hNEcUGwwGDq/OO3QIjrt7p1YkoCa23WcWbwLFRHN9hRc14kEY9KwiQ74N5sbtmi1k/NdG9Xm7Dh6Q8lFSLIzTkKYtOrceGjDCQgDt8GZ/dkADJZMSDZITT26KcDpurU0lR7ARMAhKfZh+q4bO6ju4eSKAEZx1rjYPOBtGNpTYOpJUn78ukQpxmw9RXDpLOWHsA0qPPSpO0v4v8LtL3TefWLDAYx8LcdShxbjAH+X/NBYl3EwZu14txOiSsQTi2KqskbAxIpjDfOPvrpuYSmyltXRMgvUb+n2GQ+dn9CO+JTZ2supaQwA0cxjb3kJDPSjTdb0615CDHlvH/mu5RqDHg42BmsGxxeDPeRjEOkiamEDgqQIz/Wc2eJcZRhUaSn6gK88fYSYnmKCwxWfP14Odkp+RUkOyPZsJ0hkYwGtTRkWkATrU319bWRcl3idbjeWkpYR50Q+dntgeFINAgABs5eJiCN/OzuCsrBpLJRRFTGGJUxOZcioGKPTEOA0a2WG4izpTpcdCVkK5uFuqUnArSLrkCwRmZXNd9+EZQeAC8HeZ2WE6QjljGdZ9lquOB4tfM2m1gIwdNG7a6VuuNHO1OYBTq2VwW4RzzSjhiXg521Bnjc4tREpKSz9oWFwlWaWOLyOyPIWIm6+OmfwVCibFKq8ZHSFmNhR1S3vXI4aU5YhcZSKISRIcJQzOJprFRkEyGkRX1LVCp6YUj+mQPMP56QZBmUVylEEmhTl8qSGwq/YxMYwMFb52zex/cqxbChL2UdkuLkf3IoXiUPKdmBiDxdhtOo6sP3/8f4ykJGV2Txjld02NzySVmvvSBSzAjtDQGJOYxHYeRaI1spnibopTE8tWC8VAwZY2BpB1bWOWHIth7TMpbPfYl1IoCXwZBxIhJtNtAQQX6H+YPjsaBZPKJHlGtm5FRL6Qr4Hay4EW+yS8gkxhOORO0uMfO1Gup0fpQCVirNcJEfcxS5SJJ07qW4O3+QQmmiKT7We2RmL0IVK9JkKBLAJ8FbM2wuMUYkGDSaD2CERNGbPyoXJZUGlAtkYN+VZSyQeJ+OS2n13hG1xR42g6jnMzY6DksUR+AWmRBdDA2sDMAl8nvl68fioyyIER82qzOI+jWMZh3fHZal6cQxZp1qSCZPRqqdXUJkUpazOVai0gkBM6a8ouAxCrWc2eUOKnvUSipTb6EG8MqP1bQB0Dx6UPW7xAkUeV3mZS1fcMBQsSatqD8ZBeudR122royEffvEgaWGUqkcMZynTnpIpwOR8I2aS8IyrJXmOEERpVZgN3puT0CmHmUBtI/qjxgbblzX1Qtju7PWY7wVPq/81lLebQTG2WVSFfIE9EWt+Z0jz3Km0eyVC9GR5i5b3318U4cpMABFzjmAkZHLZX79YAZBgIJDjK+xOQStUIVbwwlLeZ2RDHZ4NUUlyB8a1hceRHMwp1PNw8PLx89XSH2XzzisU73d8DvHAf4vPPVa6TEyp0l9ARd80TCkCj2Gw6/eNj+jPO6daWuqh2CZApOVxfGa73n9FQ9D0e69XqBu4CzQYeTUi8QS2Z2IgpcTa6BZDLWZo4FiaxvVsK1QcjX7K5hHCfyO9NcXSXlyT8hiXbz9x4BGenoZfDFPJEWn9Tz8C+wMdT63t76/up1Ems6KQkp4HQ91LiblNKIuQTpQj0advfmc5gZOQGbnKJuHiUVmV8rQKplg7RCVi5XomuD7H/FevoNsdMGnMjutdukzMtu/6cqcwXJoS8wVqkxdD+4+WATK7IrlFbojX3FY5IAqd7jWjeNxZEQs54SAuEiSe9xfhdIpWxKKgxSCkoBSCsL/3m7klh3yJ2vGhbk4HQtFldvNN7ZOuPJVmMgun0N56xaoIEPG11RsYODEQwauak9PJEBSGYwWI9pCl69qVkxiBirUzFyeuwdPY2PLQctXcvz3XUL+BpqMlDhJ3wQspZ8o5KyDskvDQDJCltvNF4jH5YSo/sNbjg0nFe7LTEk04J8Uy9xU9v7ZEfKJDkxCWUR6IU8dSvmF8LnpizFg21Rrjd4fBQ9vErNXJD0ZAozG/eTACktUtHGvKB1cphEyMF/BmDmOUwhb4nhulul1MDnumKYdIsP9mvx1tAuTTl62/bCbtRQMkUacTwriMfRwWzylTCDI7ghBJ44SMArtVyQzIx5MmYcpKzA7DrZS7sZtjTQ7jW0m/gOTLcsmzwuXa+Nzxuxij+omsfOhOn3tMliLW3MeNfleOvk6ol8IXioq+29NQFSr9mT7HDKz5FJi5nNWXNBQpEEl2uv7lTGLM0NqIlZHQ/L1kvtdXBoxSpnoQwGblnLuqU9cc6klPZ7aQgxFQIf+5E+nbQnKImzO0Zq3M+ard0lG77riSzYMSBxQmqOQ4kNA9SYtwjF0q2T5tztrK4uMDtl93RRfn29G8eoNcwkI7bspysR9Y6jRGVivk8HzaagIiZwFEKyRK5DXRP0h4oG1+/MnMhsCkiKF0ICpicKcTuI0RNayVkeaECaqCJr2CdS8C5KiwYRWrFPUyDNd2MV6ENG/GPuZ5tpeO1Q32UbDhE9zuKaPEt/SpBRDCRLvCC8Rqg5cKE0BiQ/HSSVCWaAxDsjXSeXK7kLqclF77Je/ezHJySE/p3Dwz6isz86zQ79Nlnr8pJMrjm0WqB3ezn3c4j957HuNPA59FjYCKpcer1eEELqCb1N1e08HkvqUQWkup8BEkvc6i6mWklm1Jkny52iIJmCkD7VKkXWAGGqDAzY3skDtN+xf3NZYwS7vUNGl5b7pxrz+Kdf6ZwXY9P5AhDB2vnOCh9OrYzkhbS7KcXtDcRiJqeC9ALlToCEYNV7mSCxHtVFmuvLpmxpIC2QzUrBpSFMxw8u2eT6ZJu4smK/3Qx46vZt8t8v9Ul/9xSJyYXsDOjf15i+MF4YBeufGcOL2/emrwMhcfrwzbSGt1ZdZB/7dSGTelpPRGjT2B0PnRepza1107KFdF48f71CK5PBdGlEdg8m6QD1c/LnZtTj1F8+vaSwK5AgyAqULGuILp5it7IW8TlEkML1Nxl98q26pjGQLAlSXQNFomdmg1RwSkXI7sy4SFolR5VJFjA9Y0Av9SccGabFdeD9S5fsK1Faun79ZMlIowNyg08o/r/tDwZFb+Qys4ELbaAeBYln4NG6JkDyrGyQWES22CSRUHEwo1F11IfpRCAxFcIbeDdH5PpO4RZAR/Ffcmh/YiyrydnXF5At3rbxv1UyaYuhL7HYD7zdP5zgRnZW2kl+lztfnvYESJqMtrPc1noqSLPF6SjDTtJZxM/+pDLp0nDIAPVAgSgGE0qkFPXqUPvgXmhDAb0dPWgea5XmUaiuF6fUL774Yp+sT3QbG8Dq20WGsUTmy3NHOaMk6TpnILnpIOnFJ/KkgsS43W1ymU6MUgUUzoHmPVguGjbtD9KUYP9S8JZVsg9eeIqXQtH73j7BSJGD7cluYhuptlNg9mskYbuODgeeMy7yvzhIRhpIixOMqPDTQBLcbr1ykgU8DxSI5pH9M7KWq6Stk/+eJin2+5duByG7qGPq3qSCaYFc3J74Jg7hY/P5/C5CSI4sXGLJRawkpontHmiS3XW7i5MMttLTQGLcrj2h2hDjedrgZoHJcRfJp2nUenhl+RO5xRtxh8BEIAGv/PQEt7BpL7xBOrkbGRk4ofHQ7ZSgJFG4WU+zk7qTDR8LDosCEieki9+jlZMudI9XBg9Al27ngfQvNHWP+n1BaQl5v57eVyuLjNKjYbnrxgqvySjO7XSfg4RZEHVNgIRtOZJuIX2y2WNmAKgCks5T7vYrJ19ITBX6XbBtd+wckDJ80fuoQPfJXspLxUBaIaMR8Mrtk93AZhHVIcLtTD9gdyFI+EQAkq50BZikvVQ38LUqh6aGQdn29zYrz7IYMVHv5vhimNWMcNUG07X79m+SLx33yUrR+edjyQjiLGOcXtcBpU4OKUXny0NakcdJCTo8SJB69YTvDnO4tMm6syVIiv1q8myEFBKThxPLHk8qk5gODFikBrMWCpFSHxjmeDKqjvUSbduruaQU4XYsZbzJ2w2Bx4E9wJ+bZpSS0Kc6ESGFFqxiy2K7EDj9e5VnXUBMfmXggZOnn63dHdH0eAHJdB2uFgDJtoFVjtMYBhq6scb5IPZzSSnK7cBZLvhdT1ISZrbWqQz6WXoqt7PyBV/YcVz91YDR00khcSoadRIwuQPqocd0ZzKQNhmuC5UTgjSy+7Z9OP78GDkOcSTm8aqDExuLrUmh5HtcNjUHmqytCEF6RfZkCLdbH8/tnAAttacQthDamdA6wpNZHaR6XTXvpp0RfmiTfiULpPWMa8gHyR6Ncq6fJ3yMv6WRGNFTkNuxMibeBk8TIDHMUkBSfA1a7nBMmV5sKJeCyP590jwZn+kgtQ8jNXBraANwjpMru6kqWAZIa3ANhycCybaBCg9zBWYuSJKUzCLcDndA534hAKnOuw5BpKJOq3GQhLtBQKDXchwbelD5rKvHY87eIqMJjCQlGSkjvv5djykQa/12AiRbSwcJRdL2SUBCjJ5sjiF5ye/yQNomXCrpBbhdLagI7NUDY5Zl6mlZIEm3kK5mogRDsSInoepGLStuyK5OQkiDsENStnPc8IxLaDH14+xudJy+QajD/ST16xbshWzbiBxAFP5OTqhfnCw358b28Rdlk1ItMShWCqUQJDXNOAqSbprjHRigDb4a9pyJB5JYxctENiB4P9mByaQ+pHnD8C59AF99cX1kK7var2SDtJkBUn+si2E0Vl+Q1znIJ6VN2Qoin9upBdB1FqoQIGnVNJC6afT525QmG7rMZ41jCcJ8Zacyubod3vMx1D6mwmQYNxlAW+2dHRvW7jpZzjRmM0HKLCm0+wvkykaCeDyhdDJl2JAk5BYgJeF2SGV4Wky3U0iJelRgRM1UkPTkl7qij4PopbZYq2X9YpP1fuzvT+zwYgdGSWxN0fQY09Po5X9Z/iCkpIWVO6kg3RkHUuoUPiTLVWJvjDk9VZaGooknaDU35WFzd31tK0t3cFKG+Zq8IUdPk6VmfjUVpCRKvHg5bP3EnbBZbLZjb43WRpMSkqI1hCIqbkgx9DSINnnLI+jCj6S0qvLVqhfYWZ+A/3w1g+c+tdczXEzJoISmyEpPPJCXZiQvMenMhWBAukVrps6X13i5JmN6mKhXTQVJ11nBuVKW6zAZFG1HmHE4OLMD4T4pIXmhGGbXBXwtTTBzmAxoSwH9YhjzW7C3FaC10CcD0moy7Q6SIFY20ilc5HEZ/Be4wRP5pHQDFZ12VpfBtP7SFraxAXsJCcmjRjWDkpitFLQRYo9nX4l2jJxNJyUcdNZhvuftkxOSIbZgUE3PcfOYYAChpYG+t684n36vyHHmulNVTFfL9N2tCCqyN8aYB+zKYAA4yiVDktAgXyr1kZTm0850xuhyYHhOk1FSs25Fs0ZUkLDm/NWIhpDo6ckcE3oqswOjc7mvcDtalJAMJzi6/GE1i5sgOX1AfsZMW4kRPSR9BYcfcpAOlb1ODSjtMq1+1Ier/m/b2f4fflwoVxeMkIQMg+aqDuCntTupNXa11ElJZtB6n8aabURAQu2guyjspVq3m9Z4NY2UBLO7skwOKRp9dMBWs0lysKIKIfnBQ2OMTq5dfnNjY+PnIET2YK2u7sbo4A4qcOvknsK2DCXhCnS4/bU+iwve7aMPiKwmhJER8DvPC4+Lwb6ngCUbBK/66QxPTzajC5q7C4zM6jiQBHPDscvgHk9CJJsRpml20K8ORBL1jKMnuyjZ7f0nR+RtjeWBOGPUby987CZYYNYHtzdWMfV7tPrmRgROanMm9n+oFnOI0koQQR8tQ1ayneIDMmSpJUWiCYSPEaoM1cFYu08usozZZXOpyljqyDFsqMsw0qvjQSo4RMRMYMR047vk6Z0giZRzFvtg/eLqXucrh2ao365aYxFXykH6GN4ksfhtdn7hd1+O+DUgYdzh/K5/8+YyX6M0V7CnaJcgAtnPQuvmJhI4G1MuaHt7e/POnfX+z0b2Zzt3thlxkhsPyM5CAiU/4W2IoNSr98wECTj6xBOTYr1S2NFQI91Ptva3RAR0NZAB9t528t5clXkgNmwrAx1KFsl7xUHaeNy/wuIYkYhglXnUkd/tL/QZSIjkne1Mx4LUDgbScEW+7GkgE7UE/97ePky0NL57dHmP/MsDVoPQiRxqNxKSTTF0dbf6rCCpTYwVZSXwfq5c3L/COcpoZ+/JPsdn7T4bbT7apEnXnREzHjVu0GqhElzAVabqDX2ut60nNI5q9dKN0ExKQei71fB3GjJALMMoRroFV9n+GO9s/8ElXAb+Iz1PtnEJKmH4nLxaKrcrFmQ9CUhi0ksEo7kwG2EFs96u8NxI9s/m238m5Maj9joQ1dFPKI0dW5rqEzckRpjUWi1Y0oDritTfVhPSwjMgoHe0Oc71oXF+J7kww0Ro3dy4jJU0b9+xyf5l+sADHd34/fIy56SXlkf75OJF1Bx3SRwlJ1siZYM0uUwCRV05BXpkFMgWWh3J6PkmnOCF1R2E6bIWOeBy9w1NkQhst7TA4NeKFzVs2jJfb7dZmdz34XFkTKEv8IwYyW+h6tyL50GSowcDEJuXltW0W5sLvFjT3SQh+c8TpEjkqab2qAHbPTX07DibeNUXLwJMd44zNAiNE58hsHEDAqKF1V5uyo5LU8mx2cRBoVwUMX7HmDK/yHi+ycX7jqMblzCVc391Y2Nvc7PibG5ugFkARTj9/koEJT2hf1efK0izQRplHKMn2WHN7UM44wsAU5pfVJPH1dFUQgr9q4VBWpXOhPWTJClRcTqErsG5XqqnDkoLn0DL3FrtBtz3Rqz0dBN6KO3vQ1xlVx2UdyKJdHKQJEpRXrdCnox1Cm1+eoXYUCh+JQkTldrBQAZtpMrghvblseGCBqwVoiQg6eKU5AYU68kD41SijDf+WzdXyZeGodcegfRLO5gI02gUG2doqoSkV58vSEJ30KN0tLKwT/MifId9wjwCWuydDtMOtIEhNW4vGVjXxgdxpZkfOLYvV4rHszyZoaT4uMPfZiQwurwyWnbd32NHoSxNBGHq2yuPVblkOpMT0jOAJF1HnXZu+k700veuoOS6kiiNCT2NXqDoeVwfp7E4xhjeN1oZBRlfewVTYUIfguB3UlXI1v5XoYr69zehWG1lXNbK5hMySrTsn5iQTs7ugOGxjlWdaI7VcYFN0e4iR9pNJM153IjjWYdhSD045hqL/GnGOLPpshpdf1Ikeu9yPT8MeTiB7iBQSnKH41WydgnVudWcdOrt1dVlmdncjqFkfgMg8XGlnb+LVFwVKu8b2Kj6PCY7zTjPwzjRIPTOeDGPXsU3pGZhZJedhMlfTwtGhZVvM8RjNwzyuQmy3RzZ6LHY2dgs4KS6FFSH8irNyQnpRG4h7oBlEnDOjkZnrhfB6AEWJGtYevE2HSsn4o9UkzdfbyBb//vlQtEsPwqaahE4lSREYBzZy5d2+oVqEugIPIntSKfjydTvZwGJKynQ1O57kXSb3QJX/vaIPCUbxzbqD3cy3++qHnHjRCAtjEnPUn8PZTxY04Q00irj4+O/AW0AYpvFtBJ6BbwOOySJ0oSlEROxOz4zTrC6djJT4Dd5ai8dsIu2379IdpEx3aE5lIR8b+DEWZQxphQyLNTbKVi/wZUW5vGR/A7RSwtIbI8AI4iG2HsFffLrtlJt0w7Uh+rzAgmjS7NiQEJUZQiE0ijH5qQe5Gmvb2xCCBfdN2DZ9inNEhawXQ5NkM1gXJben5U+ACvk4hjtRfV0GKpJ5AZCUUvT8AmmG7VX1q5vT+QAifbRnUgkTQrSbJgG0UlPLxx/6RRca3CaKIXUr8c2997YlzNJyTWMmMKtDdxxoQu6H+Et18f4f6gSLJHZL9VACcfjlPK5J+TuzZvcr09GRVDaT8nzW+vkDjt6FnbHNO9aOqvjHGZhLIeh/3yFrP/yA+AUP+/3hSMUvuiTzTEZoyEimmbkWbO0HymHzmr4QZVv9eUxENkvRva3Xx6ByuANgGVfwvNobxfgdgspB3l9co9DbQKQ5LDyTnam7piMLgp+/T2DHdVV+5Lcz5WFjKIzbrwK9SpEKL0BqjBgbBWkTJ+DmlgRSjhXkFIWSMYHULt0bxOhAcEKw8/tzcKeRFUFxsKcziQwFackxusauUPK1zNRokD7ZJljBCB5R4ED53ZWDbEWpByH7oixrrufxE7M0RjryIiZRsLXDq8dZ3zml6yrng0sXbs02rFXFnLT10Z5EwNNt1BNZSGQkM2xes2kcRTXHRZSesmwBW1jDqncmx+SX3xK7inQjvXhCH3VMDQtOzMlqMQM1uOs2l0vksusKeq4hv9q6b6j33/CtDq6BynMg2WysgunYLzLYSejjHqFmU6FHQ+1oiB1F1/NpSK59tJyewCiS6H5/hNy44bapwlO5eiQ5tczTKhMPc20YN0UO4iDlKZtIqrLT2zINEIX8obtgdvkZ7DTkB825nDt2WO7utj3a7VCKoSeb8zCTFlIQF6sjVMY4vZSZL/p3sZTQu5dNhSJT/tf34i2JwGn6/XNdBwMN5/R8fVmTJlazSIkrRJJzKJYsatlaiR45VjIBle8ygNO0A4ESqa2sJBmdTvTZstbH84V8uPp+YpDt/uqTGrtFOuBAMJyhHHKvb0fvrmx+nO8ucP33agXbPXgKNZDBqqudn+zOY4/5Sc6HMYKzewstSGa5IhZkFqmjwEzio1PcMondEH8eZB6ju4tsrK/HpuYolD1+kpec6nQNZ5WF1YAJJ68qneDtOOHhRu+bPXvKhWOFw8vIS1Ea+pBvUvLm7/4wzHtqfNhglJ1VQxkFMAYjIbCbwvqFwZZZHRJOODWiYiYobZBB0hdKwcLGJndTGK0VqzD4lzgz8vCKYXdMcfPYhfmZy8uBgnHhWQRN5XApQgZ1v279s0PPvhgGTIbB24Kr/ohSWnEuQsN6fY3x0smbWwXs+/1o+04jtITymPFR9xCTv1qpqEvy9Ys4cwAhO544L19BDixI7m/sRGk2GwesnifXbRd25w6cDlPu5vlrrlZwEfnA/skQkUhWgtY2Gj5gYsVKnj/rpfo0vAT0u+n9OECBeLJfxvX7H0sSHG9wR7bmkWNS2m+pmVV7EIRQntHkmYYq3SZ7Usv3cTmHGtcO7f3IVt3dYdVSNv9SdrqhfSEAW89AhZSkqWHC1UEhXy4JJrL0RZ2+rggCx7Pjv0BS+OF+H/dc8fI+53+cmrnILjD/cNsXVyb0HbMUeyN3P69xnJW01eN1+EcH4M+DqisfcyVFvsDaBNWmIyUNd+pnWx15tfyO/Eoj5ePPFzS9hyTNbLQfz+zMBJs+RO1YttPdBZfozm5DTldYSEHlRwEmvRtyM1IpMUCTv6NG0dHN6Gkd+f6ev/mB/39Ppm4QSUfYfKHTm0SqOC92RSEZ6V/sLPDyiLJ6AMgnaOjo+XlXwpHZWB5Zq+F0S+yDtt1hOkkbcxSvuvkbZxQqbt0FOmNuJDQ6TVNcIsBFrYpUhYZC9DTyu7Kyu7EiHGaykGrcy3ERzjYdsHYZtCsIVuLnPybKHo8Q/HceJqm5VfvrGVzBBwN8mRijJJxgRzHjTdGxjEyAtpQ1eitldU03xWPRhkDz9v857f37sCJvRm5tYsXD/onafxvZ63Iu94QtSvtOEntI+U8eABZz5cU55PL0CmaD0zG9lnfxbjthCCleZwP84Ln6SBt/phA6rCtOkWYtriX0SnFN8Lz6UNR7wNMNMbttOUxb++s4bp3795F+HuwtvbxQYZDIl+aLayvr7dhrcPXXYSvWmuvyU8CJUH+BctIF1pbiM5AK0A80bUyGt8hcGthwpZsKQG2fXt8Cx0tndvRJ1CzeCkxnsReubI5LgtKMhPQalEuf1cboC9DG7z99lHGgdyx2/bOLq+4Q9a4uwv8Cv5ZYT/bCAR0rdjh/66vH7Qzm2ZfObp0ycPBMhpyNRUcwzC04rQTT12z+zvjTfI2bPqT4l+eNgd1gUwu2zbXQadGiPp2vAvi9QIJa5Blq5xe47eImIEp/Tdu3NiDATVff/2bTz8F+f1J/8oJRjZAAWn/7t27ogzu6NNPv9472rtztIy5va4bYWvGxHSTml+Ye0nrmH64UehXUXsr1UM1Kc+s7F3HzpF9klSir4+Jx8czdTVVSKtMxxV0xtYl4Eg3j/ZXFxYW7q3iv6ur16//5x//2P5kNApF0Ogu/N3/+Q4IF6Y6e3z57HvisQ4GDq2c0voh5jns5p0bVGZHG3s0Py0n6ysmawc7uANmOJpGu6lNXye/TWQ1Rkw8VNPh48ABtwpwCJfyWjVKMvKzmkZPDZto3mC+FUbYROf9jcOxV3C4n9EjbX2i5h/bq8y6AHmfenquPDP7wAaMqKwjam7VrT7LQpIcnCLVpF7u02IgATEwcQnOsZ+knxV6eYNkjl5aLW5xAUSk3880RK+T66e3IY6j8ka2vEHgRkuSilABvIGvPWdcYhrz8nLh4REHjJ5gWs7G4eGmpvaGgJqtfZtP9MtoAlqwTmlzYwXUV/tu5mDAp5P3ln3x14K9PMkIvt3V/f7fCyNvfx3iVRsbhxf3bRnBOkHWRbTCjZCby0hGdnaSzeb5A2kDQFqZSPu078K40ovMfSkX/LC6s5szzuBGHkJ76MhZXrbHd91fpd+q/WeyMd/n0D/RLMv+aNQP1qhARGCB/DkHIbs/2h9BqX/bHvctq98qjGi1mt8PDnuXkG9mwdZfzqhow+D+2oiPArRzJgHtFe1XWikVyVHUTDwvrm4YhTIStgnMhjsRLa0E3G53peCAEOxNoIqUn2zu9UU1PzDP3UJDYDYL98F0ywHPwIhoiUZaoziaBxKod98MMdmjheTMi58xfrnMeG4797BAM7BBkY1xY1xEO0OqSlhWKS8audbs0TfF8VhjkoWVlRU2C3D3MZdqd+1JxndfpEUJKfStO98t3oLi+YOkFjr4+fXHuL4iDy6TfXImy96RMdx+QVOtoEiK7wZy/r8++TZ7PIcJm+JoJwQJoycolmIU7sqaHyOHki5fnnz66ymux5O8eZX8c3FCClm9MVmPsTTmaRQavJAFUoDBcfRLGGT8i8cnbtPLk4xvO9tVLOhRFd3Dg914RpD4UacnBMmNEEo13rbOjb8jld1tbr5AIBXxAfJWO7FumM8OUrQt4GSfrqaXGhtho/PxqYyk8uKABMrdcVH+onJ6Lw6ScxKQngHianoGmwQnj5Q2CN2ceNR1qUHSgpLORBftCnq4ee84oQJosb6lqc7tTJC0YwVuTWmAkQ5SvEdJUIqcR0oLd7W3J510fWbLzpgDlCoD3LA7hKG24REtcvA9onDRC9qMuGqaouMwMB1H9GPUIBNJmKcAhkPx3QEqQZLjILVWUgk4hrh6AXw5ttK9vcGI7HyLQApOpdLqMiAFBklYrhjxAmihX0D0UZY+G8GjguPOWk8OInao4lMYZOmaAkU/qUSwY5BNSsDtjs7KTHo+IEU6XSpNO4zQgPK0oNWYFnaeqlZT+pqqz7gqSEbkvSIc6KW5S2mWNSvURRiNzduiZfpZV59oN+0+eXFkklaIkIIJAYMUkDRgODTaicyQH8TYLLewaATFCEj8mYFG+Wvi+6nSyzGioch0yL+GL/eV5gqJfizHWYGK9x/YK+RbBJKwj2hE3kdAMkI/gPoipoFpChcaBPttVINesApImtJgc+BKwznS+h9JJGYaORU38ovj1JpKSKsV+2Q+8DNZK7nanRbLSOB7FwEpRMJLr+uoyvavctJQGkhGtM0BpVGQBorToxrpb6VFRFsBUtoj29R+YSzZIh6HxOn05bPfTYI0SAOJeqGvJsOYVcwalUqoUBY1VRBpCdVNHg8xAsnTeN5xZnCFXNTetne+TSBVU1lIBkhaDCQ6CDCOTmaLgWRE9UatElUOI2QySJiq8uh4UV3By4grrfaPH5AXaq2T8TVTBp+04Jlh5qpWFKQIEaaBZGSA5AUfdgcRiwzVBXlRUVqnKbZRulTaIQ/e7r9YID0dH6qI+ZODH4uwO0/Uc6mu6XyQXA6KV1XAMmJzZwKXAwguRdmO99BKnWTTJ8uXyAukNYi2mDRftUscziKUFH0pMtE1FyQt8CSkDYswhMvBiLQYTrqCIJk2PjxgA9KnRrsvFkY51qwWP5yu2OkIE0oFyVEohz1SAxPeeHbHnbmD+GzELJcDvxTHT1UUIp7f7YsEM9xWyAu2FsZ1qEk4V+RpjYBEYyD5DCRfguQIGjLCCXrVarQzSCpIinsoxy/ELwAyh8bbfNoeubvcf+0F43WE5StfGYxLxPe1NB9RAZA0LhEcsaVUYUeGApKfCVKgoSSccIpfyChcrEQ3RpgpSsguefEWdMqmk+SHQv1QEZCk5JAl+6EoEY3Sq8q3DBKuW5ercvxvXPo7k9f4bW/gwMiRTV7QBT25mieJu+WBFJx3z1BCcZwyxoPkOuFsCJwe7J48QCh8DPssRdgm5IVF6Tr5ZNI0OiprIjVf8kN4ZhCQ20ALIhMQPwqs26AvGW9db6j+dUNmPvJAn2gmwX7XhHHfuDu1v4vlWaz9yy55YdcOGb39fFKBJVfimDpBBJc7bgDLgaa8ngzTPvO6/Amqct+zkYpeYIRw3Z5MMJ3Gcp7/r9h88GQX5xLaI/KtWf3Kt2n9RPQA2OmPrnxrIGpjK8LL3wp86OU//x0f/36XfNsW3lf/cOMFBoqCpn2483SXdVDpk2/n4vnjn2xsX9ZetOo/qm1ub+wJ4bPwdDQakW/tWllf4O3K7mxsbFL6YpAPFG8ffiqaiOyP1lbIOVg7cmZ4/wiqrLcrxxVaTnCOYfL3xsZvRBU4DvwFH1fhdlMvPkHtrAfT3Uejoz0gq58clwkh6KBwuBc4eVZXVw/sc0FAKSJqfXU1zJde29/fOwTS2tzcDGeLf1MMjUf44FdvQs/vO2ELS2hbdLFNXi4bprtDE6doW8Gjr/f2NrY3t7cBMHraeIQl1Phoc/MyUPLhD4/6qi4APaXW2ysv0Ymtx+0dQCsGFwD2T6S/srK6sLW/v7+zt3cZFqWXU7o2UWWl4KJdvvz22w/eh3aq+/sH8IfcXl1ZuW7H/NbY8Gthvf34JRwFGOHBRUZeccRCoW3jvJ+L0Kga3vHGG7efPr19MVhbv74N6w1OD6sX7/3ss8/sT8a1mkBoVtd3dl5u/DPYwKyyehcoDZF7ltqshYWL0OITW0rCN67wgu0Xbf3/fbYBt8+QrS0AAAAASUVORK5CYII=" alt="Brasão de Almadina-BA" class="h-12 md:h-16 w-auto flex-shrink-0 drop-shadow-lg">
+            <div>
+                <h1 class="text-lg md:text-2xl font-black uppercase tracking-wider text-white">Câmara Municipal de Almadina</h1>
+                <p class="text-xs md:text-sm text-governo-gold font-medium flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
+                    SESSÃO PLENÁRIA ORDINÁRIA DE HOJE
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3 md:space-x-6">
+            <!-- Relógio do Horário Atual -->
+            <div class="text-right hidden sm:block">
+                <span class="text-xs text-gray-400 uppercase tracking-widest block">Hora Local</span>
+                <span id="current-clock" class="text-xl md:text-2xl font-mono font-bold text-gray-200">00:00:00</span>
+            </div>
+
+            <!-- O que a Smart TV mostra: tela de espera ou o orador (só no notebook) -->
+            <button id="btn-tv-tela" type="button" title="Alternar o que a Smart TV mostra" class="bg-governo-darkBlue hover:bg-governo-accent text-white px-3 py-2.5 rounded-xl border border-gray-600 transition hidden sm:flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                <i class="fa-solid fa-tv"></i><span id="btn-tv-tela-txt">TV: espera</span>
+            </button>
+
+            <!-- Botão de Tela Cheia para Smart TV / Apresentação -->
+            <button id="btn-fullscreen" title="Modo Tela Cheia (Smart TV)" class="bg-governo-darkBlue hover:bg-governo-accent text-white p-3 rounded-xl border border-gray-600 transition flex items-center justify-center">
+                <i class="fa-solid fa-expand text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- CORPO PRINCIPAL DO SISTEMA -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-3 md:p-6 max-w-[1920px] mx-auto w-full">
+        
+        <!-- PAINEL CENTRAL (DISPLAY DE TV / TELA DE FALA) - 8 Colunas em Telas Grandes -->
+        <section class="lg:col-span-8 bg-gradient-to-b from-governo-blue/60 to-governo-dark/90 rounded-2xl border border-gray-800 p-4 md:p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden backdrop-blur-md">
+            
+            <!-- Marca d'água de fundo -->
+            <div class="absolute -right-20 -bottom-20 opacity-5 pointer-events-none">
+                <i class="fa-solid fa-landmark text-[400px] text-white"></i>
+            </div>
+
+            <!-- Topo do Display: Modo de Sessão Atual -->
+            <div class="flex flex-wrap justify-between items-center border-b border-gray-700/60 pb-4 gap-2">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs md:text-sm font-semibold uppercase text-gray-400">Modo Atual:</span>
+                    <span id="current-mode-badge" class="bg-governo-gold/20 text-governo-gold border border-governo-gold/40 text-xs md:text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        Pequeno Expediente (5m)
+                    </span>
+                </div>
+                <div class="text-xs md:text-sm text-gray-400 font-mono flex items-center gap-2">
+                    <i class="fa-solid fa-microphone text-red-500 animate-pulse"></i>
+                    <span id="speaker-status-label" class="font-bold text-gray-200 uppercase">Aguardando Início</span>
+                </div>
+            </div>
+
+            <!-- ÁREA DO PARLAMENTAR E CRONÔMETRO -->
+            <div class="my-auto py-6 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
+                
+                <!-- Foto do Vereador -->
+                <div class="relative group">
+                    <div class="w-44 h-44 md:w-64 md:h-64 tv-avatar rounded-2xl overflow-hidden border-4 border-governo-gold shadow-2xl bg-gray-900 transition-all duration-300">
+                        <img id="display-photo" src="" alt="Foto do Vereador" class="w-full h-full object-cover">
+                    </div>
+                    <span id="display-cargo-badge" class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-governo-gold text-governo-dark text-xs md:text-sm font-black px-4 py-1 rounded-full uppercase shadow-lg whitespace-nowrap">
+                        Vereador
+                    </span>
+                </div>
+
+                <!-- Detalhes e Cronômetro Gigante -->
+                <div class="text-center md:text-left flex-1 flex flex-col justify-center">
+                    <div>
+                        <h2 id="display-name" class="text-2xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+                            Selecione um Vereador
+                        </h2>
+                        <div class="flex items-center justify-center md:justify-start space-x-3 mt-1">
+                            <span id="display-partido" class="text-sm md:text-xl font-bold text-governo-gold bg-governo-darkBlue/80 px-3 py-0.5 rounded-lg">---</span>
+                            <span id="display-partido-nome" class="text-xs md:text-base text-gray-300">Nenhum vereador selecionado</span>
+                        </div>
+                    </div>
+
+                    <!-- CRONÔMETRO REGRESSIVO GIGANTE -->
+                    <div class="mt-4 md:mt-6 bg-black/40 rounded-2xl p-4 md:p-6 border border-gray-800 text-center shadow-inner">
+                        <div id="display-timer" class="timer-display text-6xl md:text-8xl lg:text-[9rem] tv-text-huge font-black status-normal leading-none tracking-tighter">
+                            05:00
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROLES RÁPIDOS DE SESSÃO E TEMPO -->
+            <div class="border-t border-gray-700/60 pt-4 flex flex-col gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button id="btn-mode-pequeno" class="bg-governo-darkBlue hover:bg-blue-800 text-white font-bold py-2 px-3 rounded-lg border border-blue-500/30 text-xs md:text-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-clock"></i> Pequeno Exp. (5m)
+                    </button>
+                    <button id="btn-mode-grande" class="bg-governo-darkBlue hover:bg-blue-800 text-white font-bold py-2 px-3 rounded-lg border border-blue-500/30 text-xs md:text-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-hourglass-half"></i> Grande Exp. (20m)
+                    </button>
+                    <button id="btn-add-1m" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded-lg border border-gray-600 text-xs md:text-sm transition">
+                        +1 Minuto
+                    </button>
+                    <button id="btn-add-3m" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded-lg border border-gray-600 text-xs md:text-sm transition">
+                        +3 Minutos
+                    </button>
+                </div>
+
+                <!-- Botões Principais de Ação do Cronômetro -->
+                <div class="grid grid-cols-3 gap-3">
+                    <button id="btn-start-pause" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 px-4 rounded-xl shadow-lg transition text-base md:text-xl flex items-center justify-center gap-2 uppercase tracking-wider">
+                        <i class="fa-solid fa-play"></i> <span>Iniciar</span>
+                    </button>
+                    <button id="btn-reset" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition text-base md:text-lg flex items-center justify-center gap-2 uppercase">
+                        <i class="fa-solid fa-rotate-left"></i> Reiniciar
+                    </button>
+                    <button id="btn-stop" class="bg-rose-700 hover:bg-rose-600 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition text-base md:text-lg flex items-center justify-center gap-2 uppercase">
+                        <i class="fa-solid fa-square"></i> Zerar
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- PAINEL LATERAL: LISTA DOS VEREADORES (4 Colunas em Telas Grandes) -->
+        <aside class="lg:col-span-4 bg-governo-blue/40 border border-gray-800 rounded-2xl p-4 flex flex-col shadow-xl">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-700">
+                <h3 class="text-base md:text-lg font-bold uppercase text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-users text-governo-gold"></i>
+                    Bancada de Parlamentares
+                </h3>
+                <span class="text-xs bg-governo-gold/20 text-governo-gold px-2 py-0.5 rounded font-mono font-bold">9 VEREADORES</span>
+            </div>
+
+            <!-- Lista de Cards dos Vereadores com Rolagem -->
+            <div id="vereadores-list" class="space-y-2.5 overflow-y-auto max-h-[500px] lg:max-h-[calc(100vh-220px)] pr-1">
+                <!-- Inserido dinamicamente via JS -->
+            </div>
+
+            <!-- Ajuste Manual Rápido e Modal de Configuração -->
+            <div class="mt-4 pt-3 border-t border-gray-700 flex justify-between items-center">
+                <span class="text-xs text-gray-400">Ajuste manual de tempo:</span>
+                <div class="flex gap-1">
+                    <input type="number" id="custom-minutes" placeholder="Min" min="1" max="60" class="w-16 bg-gray-900 border border-gray-700 text-white text-xs rounded px-2 py-1 text-center focus:outline-none focus:border-governo-gold">
+                    <button id="btn-set-custom" class="bg-governo-gold hover:bg-yellow-500 text-governo-dark font-bold text-xs px-2 py-1 rounded transition">
+                        Definir
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- RODAPÉ DE AJUDA E ATALHOS PARA O OPERADOR -->
+    <footer class="bg-governo-dark text-gray-400 text-xs py-2 px-4 md:px-8 border-t border-gray-800 flex flex-wrap justify-between items-center gap-2">
+        <div class="flex items-center space-x-4">
+            <span class="font-bold text-gray-300">Atalhos do Teclado:</span>
+            <span><kbd class="bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded text-white font-mono">Espaço</kbd> Iniciar/Pausar</span>
+            <span><kbd class="bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded text-white font-mono">R</kbd> Reiniciar</span>
+            <span><kbd class="bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded text-white font-mono">F11</kbd> Tela Cheia</span>
+        </div>
+        <div class="text-gray-500 flex items-center gap-2">
+            Sistema do Plenário v2.5 &bull; Câmara Municipal
+            <!-- Engrenagem discreta: modo administrador (não aparece na Smart TV) -->
+            <button id="btn-admin" type="button" title="Configurações" aria-label="Configurações" class="w-6 h-6 flex items-center justify-center text-gray-500 opacity-30 hover:opacity-100 hover:text-governo-gold focus:opacity-100 transition">
+                <i class="fa-solid fa-gear text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- TELA DE ESPERA DA SMART TV (aparece só na TV até o notebook escolher o orador) -->
+    <div id="tv-espera" class="fixed inset-0 z-40 hidden flex-col items-center justify-center text-center px-6 bg-gradient-to-b from-governo-blue via-governo-dark to-governo-dark overflow-hidden">
+        <div class="absolute inset-x-0 top-0 h-1.5 bg-governo-gold"></div>
+        <div class="absolute -right-24 -bottom-24 opacity-5 pointer-events-none"><i class="fa-solid fa-landmark text-[420px] text-white"></i></div>
+        <img id="tv-espera-brasao" alt="Brasão de Almadina-BA" class="tv-espera-brasao w-auto drop-shadow-2xl mb-6">
+        <h1 class="tv-espera-titulo font-black uppercase tracking-wider text-white leading-tight">Câmara Municipal de Almadina</h1>
+        <p class="mt-3 text-governo-gold font-semibold uppercase tracking-[0.3em] tv-espera-sub">Plenário Jonas Plínio · Sessão Plenária</p>
+        <div class="w-28 h-1 bg-governo-gold rounded-full my-8"></div>
+        <div class="tv-espera-aviso inline-flex items-center gap-4 bg-black/30 border border-governo-gold/40 rounded-2xl px-8 py-5 shadow-2xl">
+            <i class="fa-solid fa-microphone-lines text-governo-gold animate-pulse"></i>
+            <span id="tv-espera-texto" class="font-bold text-gray-100">Aguardando o próximo orador</span>
+        </div>
+        <p class="mt-5 text-gray-400 tv-espera-sub">Tempo de fala: <span id="tv-espera-modo" class="text-governo-gold font-bold">Pequeno Expediente (5m)</span></p>
+        <div id="tv-espera-relogio" class="mt-10 font-mono font-bold text-gray-200 tv-espera-relogio">00:00:00</div>
+        <p class="text-xs uppercase tracking-[0.3em] text-gray-500 mt-2">Hora local</p>
+    </div>
+
+    <!-- MODO ADMINISTRADOR (só no notebook / computador) -->
+    <div id="admin-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label="Modo administrador">
+        <div class="bg-governo-blue border border-governo-gold/60 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <form id="admin-login" class="p-6 flex flex-col items-center text-center gap-3" autocomplete="off">
+                <div class="bg-governo-gold/20 p-3 rounded-full border border-governo-gold"><i class="fa-solid fa-lock text-governo-gold text-xl"></i></div>
+                <h3 class="text-lg font-black uppercase tracking-wider text-white">Acesso restrito</h3>
+                <p class="text-sm text-gray-300">Digite a senha do administrador.</p>
+                <input id="admin-senha" type="password" autocomplete="off" placeholder="Senha" class="w-full max-w-xs bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-center focus:outline-none focus:border-governo-gold">
+                <p id="admin-erro" class="text-xs text-red-400 min-h-[1rem]"></p>
+                <div class="flex gap-2">
+                    <button type="button" class="admin-fechar bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white font-bold px-4 py-2 rounded-lg text-sm transition">Cancelar</button>
+                    <button type="submit" class="bg-governo-gold hover:bg-yellow-500 text-governo-dark font-black px-4 py-2 rounded-lg text-sm transition">Entrar</button>
+                </div>
+            </form>
+            <div id="admin-painel" class="hidden p-5">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-700">
+                    <h3 class="font-black uppercase tracking-wider text-governo-gold flex items-center gap-2"><i class="fa-solid fa-gear"></i> Modo administrador</h3>
+                    <button type="button" class="admin-fechar bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition"><i class="fa-solid fa-xmark mr-1"></i>Fechar</button>
+                </div>
+                <p class="text-xs text-gray-400 mb-3">Foto, nome e partido dos vereadores. A mudança aparece na hora no notebook e na Smart TV.</p>
+                <div id="admin-lista" class="space-y-2"></div>
+                <p id="admin-msg" class="text-xs text-emerald-400 min-h-[1rem] mt-3"></p>
+                <div class="flex justify-end mt-2">
+                    <button type="button" id="admin-sair" class="bg-rose-700 hover:bg-rose-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition"><i class="fa-solid fa-lock mr-1"></i>Sair do modo administrador</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase (sincronização em tempo real) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+    <script>
+        $(document.body).ready(function() {
+            
+            // --- BASE DE DADOS DOS 9 VEREADORES FICTÍCIOS ---
+            const vereadores = [
+                {
+                    id: 1,
+                    nome: "Ver. Rogério Gotado",
+                    partido: "PT",
+                    cargo: "Presidente",
+                    foto: "https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=400"
+                },
+                {
+                    id: 2,
+                    nome: "Ver. Lucas Cavalcante",
+                    partido: "PODEMOS",
+                    cargo: "Vice-Presidente",
+                    foto: "https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=400"
+                },
+                {
+                    id: 3,
+                    nome: "Ver. Dilson Junior",
+                    partido: "PV",
+                    cargo: "1º Secretário",
+                    foto: "https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=400"
+                },
+                {
+                    id: 4,
+                    nome: "Ver. Wilson Freitas",
+                    partido: "PC do B",
+                    cargo: "2º Secretário",
+                    foto: "https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=400"
+                },
+                {
+                    id: 5,
+                    nome: "ver. José Lindomar (Bimba)",
+                    partido: "PODEMOS",
+                    cargo: "Vereador",
+                    foto: "https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=400"
+                },
+                {
+                    id: 6,
+                    nome: "Prof. Sylas Souza",
+                    partido: "PODEMOS",
+                    cargo: "Vereador",
+                    foto: "https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=400"
+                },
+                {
+                    id: 7,
+                    nome: "Vera. Maria Nilza",
+                    partido: "PODEMOS",
+                    cargo: "Vereadora",
+                    foto: "https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=400"
+                },
+                {
+                    id: 8,
+                    nome: "Vera. Marilene Costa",
+                    partido: "PP",
+                    cargo: "Vereadora",
+                    foto: "https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=400"
+                },
+                {
+                    id: 9,
+                    nome: "Ver. Jackson Costa",
+                    partido: "AVANTE",
+                    cargo: "Vereador",
+                    foto: "https://2.gravatar.com/userimage/277172047/8039d08ed8a294328b8f8b70bbbeb765?size=400"
+                }
+            ];
+
+            // =====================================================================
+            //  SINCRONIZAÇÃO COM FIREBASE (tempo real entre todos os aparelhos)
+            // =====================================================================
+            const firebaseConfig = {
+                apiKey: "AIzaSyAHawTmb2za8y2Eq70FWejq64-5J6Pbqfo",
+                authDomain: "projeto-teste-f08c4.firebaseapp.com",
+                databaseURL: "https://projeto-teste-f08c4-default-rtdb.firebaseio.com",
+                projectId: "projeto-teste-f08c4",
+                storageBucket: "projeto-teste-f08c4.firebasestorage.app",
+                messagingSenderId: "788863562302",
+                appId: "1:788863562302:web:2ddcfb6c2c892770de976f"
+            };
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+            const refEstado = db.ref('legislar/controleFala/estado');
+
+            // Diferença entre o relógio deste aparelho e o do servidor
+            let serverOffset = 0;
+            db.ref('.info/serverTimeOffset').on('value', s => { serverOffset = s.val() || 0; });
+            const agora = () => Date.now() + serverOffset;
+
+            // Estado compartilhado (o que está gravado no banco)
+            const ESTADO_PADRAO = {
+                vereadorId: 1,
+                modoLabel: 'Pequeno Expediente (5m)',
+                initialSeconds: 5 * 60,
+                running: false,
+                endAt: 0,            // quando está rodando: momento (servidor) em que o tempo acaba
+                remaining: 5 * 60,   // quando está parado: segundos restantes
+                status: 'aguardando',// aguardando | discurso | pausado | esgotado | concluida
+                fimId: 0,            // marca o momento do alarme de fim (toca em todos os aparelhos)
+                exibir: false        // Smart TV: false = tela de espera; true = mostra o orador
+            };
+            let estado = { ...ESTADO_PADRAO };
+            let primeiraLeitura = true;
+            let ultimoFimId = 0;
+
+            // --- ESTADO LOCAL DO CRONÔMETRO ---
+            let selectedVereador = vereadores[0];
+            let timerSeconds = 5 * 60;
+            let initialSeconds = 5 * 60;
+            let isRunning = false;
+            let soundBeep1MinPlayed = false;
+            let soundBeep30SecPlayed = false;
+
+            // SINTETIZADOR DE ÁUDIO PARA BIPS E ALERTAS (Web Audio API)
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // Libera o som na TV/tablet no primeiro toque (exigência dos navegadores)
+            $(document).one('click touchstart keydown', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); });
+
+            function playBeep(frequency = 800, type = 'sine', duration = 0.2) {
+                try {
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {
+                    console.error("Erro ao tocar áudio", e);
+                }
+            }
+
+            // Bip contínuo e bem audível de 5 segundos para o fim da fala
+            function playEndBleep5Sec() {
+                try {
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                    const duration = 5.0;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+
+                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime + duration - 0.2);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {
+                    console.error("Erro ao tocar alarme de 5s", e);
+                }
+            }
+
+            // FUNÇÃO PARA ATUALIZAR O RELÓGIO GERAL DA SESSÃO
+            function updateClock() {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                $('#current-clock').text(`${hours}:${minutes}:${seconds}`);
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // POPULAR LISTA LATERAL DE VEREADORES
+            function renderVereadoresList() {
+                const $container = $('#vereadores-list');
+                $container.empty();
+
+                vereadores.forEach(v => {
+                    const isActive = v.id === selectedVereador.id;
+                    const card = `
+                        <div data-id="${v.id}" class="vereador-card bg-governo-darkBlue/40 hover:bg-governo-darkBlue/90 border border-gray-700/80 p-2.5 rounded-xl flex items-center gap-3 cursor-pointer transition ${isActive ? 'card-active' : ''}">
+                            <img src="${v.foto}" alt="${v.nome}" class="w-12 h-12 rounded-lg object-cover border border-governo-gold">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-xs md:text-sm font-bold text-white truncate">${v.nome}</h4>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-[10px] font-bold text-governo-gold bg-black/40 px-1.5 py-0.2 rounded">${v.partido}</span>
+                                    <span class="text-[11px] text-gray-400 truncate">${v.cargo}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    $container.append(card);
+                });
+            }
+
+            // ATUALIZAR INTERFACE COM O VEREADOR (somente na tela)
+            function mostrarVereador(id) {
+                const found = vereadores.find(v => v.id === id);
+                if (!found) return;
+                const mudou = found.id !== selectedVereador.id || !$('#display-photo').attr('src');
+                selectedVereador = found;
+                if (mudou) {
+                    $('#display-photo').attr('src', selectedVereador.foto);
+                    $('#display-name').text(selectedVereador.nome);
+                    $('#display-partido').text(selectedVereador.partido);
+                    $('#display-partido-nome').text(selectedVereador.cargo);
+                    $('#display-cargo-badge').text(selectedVereador.cargo);
+                    renderVereadoresList();
+                }
+            }
+
+            // FORMATAR SEGUNDOS PARA 00:00
+            function formatTime(seconds) {
+                const absSec = Math.abs(seconds);
+                const m = Math.floor(absSec / 60);
+                const s = absSec % 60;
+                const formatted = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                return seconds < 0 ? `-${formatted}` : formatted;
+            }
+
+            // Segundos restantes calculados pelo relógio do servidor (igual em todas as telas)
+            function calcularSegundos() {
+                if (estado.running) return Math.max(0, Math.ceil((estado.endAt - agora()) / 1000));
+                return Math.max(0, estado.remaining || 0);
+            }
+
+            // ATUALIZAR MOSTRADOR DO CRONÔMETRO E CORES DE STATUS
+            function updateTimerDisplay() {
+                const $timer = $('#display-timer');
+                $timer.text(formatTime(timerSeconds));
+
+                $timer.removeClass('status-normal status-alerta status-critico status-esgotado');
+
+                if (timerSeconds > 60) {
+                    $timer.addClass('status-normal');
+                    soundBeep1MinPlayed = false;
+                    soundBeep30SecPlayed = false;
+                } else if (timerSeconds > 30) {
+                    $timer.addClass('status-alerta');
+                    soundBeep30SecPlayed = false;
+                    if (!soundBeep1MinPlayed && isRunning) {
+                        playBeep(600, 'sine', 0.3);
+                        soundBeep1MinPlayed = true;
+                    }
+                } else if (timerSeconds > 0) {
+                    $timer.addClass('status-critico');
+                    if (!soundBeep30SecPlayed && isRunning) {
+                        playBeep(900, 'square', 0.4);
+                        soundBeep30SecPlayed = true;
+                    }
+                } else {
+                    $timer.addClass('status-esgotado');
+                }
+            }
+
+            // Botão Iniciar/Pausar/Continuar e texto de status
+            function renderStatus() {
+                const $btn = $('#btn-start-pause');
+                const $lbl = $('#speaker-status-label').removeClass('text-emerald-400 text-amber-400 text-red-500');
+
+                if (isRunning) {
+                    $btn.removeClass('bg-emerald-600 hover:bg-emerald-500').addClass('bg-amber-600 hover:bg-amber-500')
+                        .html('<i class="fa-solid fa-pause"></i> <span>Pausar</span>');
+                } else {
+                    const txt = estado.status === 'aguardando' ? 'Iniciar' : 'Continuar';
+                    $btn.removeClass('bg-amber-600 hover:bg-amber-500').addClass('bg-emerald-600 hover:bg-emerald-500')
+                        .html(`<i class="fa-solid fa-play"></i> <span>${txt}</span>`);
+                }
+
+                switch (estado.status) {
+                    case 'discurso':  $lbl.text('Em Discurso').addClass('text-emerald-400'); break;
+                    case 'pausado':   $lbl.text('Discurso Pausado').addClass('text-amber-400'); break;
+                    case 'esgotado':  $lbl.text('Tempo Esgotado!').addClass('text-red-500'); break;
+                    case 'concluida': $lbl.text('Fala Concluída!').addClass('text-red-500'); break;
+                    default:          $lbl.text('Aguardando Início');
+                }
+            }
+
+            // Aplica o estado do banco na tela
+            function aplicarEstado() {
+                isRunning = !!estado.running;
+                initialSeconds = estado.initialSeconds || 300;
+                timerSeconds = calcularSegundos();
+                mostrarVereador(estado.vereadorId || 1);
+                $('#current-mode-badge').text(estado.modoLabel || 'Pequeno Expediente (5m)');
+                renderStatus();
+                atualizarTelaEspera();
+                updateTimerDisplay();
+
+                // Alarme de fim: toca em todos os aparelhos ao mesmo tempo
+                if (estado.fimId && estado.fimId !== ultimoFimId) {
+                    if (!primeiraLeitura && agora() - estado.fimId < 6000) playEndBleep5Sec();
+                    ultimoFimId = estado.fimId;
+                }
+                primeiraLeitura = false;
+            }
+
+            // Ouve o banco em tempo real
+            refEstado.on('value', snap => {
+                const val = snap.val();
+                if (!val) { refEstado.set(ESTADO_PADRAO); return; }
+                estado = { ...ESTADO_PADRAO, ...val };
+                aplicarEstado();
+            }, err => {
+                console.error('Firebase: sem permissão. Verifique as regras do banco.', err);
+                $('#speaker-status-label').text('Sem conexão com o banco').addClass('text-red-500');
+            });
+
+            // Relógio local: atualiza o mostrador e encerra quando o tempo acaba
+            setInterval(() => {
+                if (!estado.running) return;
+                timerSeconds = calcularSegundos();
+                updateTimerDisplay();
+                if (timerSeconds <= 0) {
+                    // Só um aparelho grava o fim (transação evita duplicidade)
+                    refEstado.transaction(cur => {
+                        if (!cur || !cur.running || cur.endAt > agora()) return;
+                        return { ...cur, running: false, remaining: 0, endAt: 0, status: 'esgotado', fimId: agora() };
+                    });
+                }
+            }, 250);
+
+            // --- AÇÕES (gravam no banco; a tela atualiza pelo ouvinte) ---
+            function startTimer() {
+                if (estado.running) return;
+                let seg = calcularSegundos();
+                if (seg <= 0) seg = estado.initialSeconds || 300;
+                refEstado.update({ running: true, endAt: agora() + seg * 1000, status: 'discurso', exibir: true });
+            }
+
+            function pauseTimer() {
+                if (!estado.running) return;
+                refEstado.update({ running: false, remaining: calcularSegundos(), endAt: 0, status: 'pausado' });
+            }
+
+            function resetTimer(newSeconds = initialSeconds, extra = {}) {
+                refEstado.update({
+                    running: false, endAt: 0, remaining: newSeconds,
+                    initialSeconds: newSeconds, status: 'aguardando', ...extra
+                });
+            }
+
+            function setMode(minutes, label) {
+                resetTimer(minutes * 60, { modoLabel: label });
+            }
+
+            function adicionarTempo(seg) {
+                if (estado.running) {
+                    refEstado.child('endAt').transaction(v => (v || agora()) + seg * 1000);
+                } else {
+                    refEstado.update({ remaining: calcularSegundos() + seg });
+                }
+            }
+
+            // EVENTOS DOS BOTÕES DE CONTROLE
+            $('#btn-start-pause').on('click', function() {
+                if (estado.running) {
+                    pauseTimer();
+                } else {
+                    startTimer();
+                }
+            });
+
+            $('#btn-reset').on('click', function() {
+                resetTimer();
+            });
+
+            // Botão "Zerar" encerra a fala e dispara o bip de 5 segundos em todos os aparelhos
+            $('#btn-stop').on('click', function() {
+                refEstado.update({ running: false, remaining: 0, endAt: 0, status: 'concluida', fimId: agora() });
+            });
+
+            // MODOS PRÉ-DEFINIDOS
+            $('#btn-mode-pequeno').on('click', function() {
+                setMode(5, 'Pequeno Expediente (5m)');
+            });
+
+            $('#btn-mode-grande').on('click', function() {
+                setMode(20, 'Grande Expediente (20m)');
+            });
+
+            // TEMPO EXTRA
+            $('#btn-add-1m').on('click', function() {
+                adicionarTempo(60);
+            });
+
+            $('#btn-add-3m').on('click', function() {
+                adicionarTempo(180);
+            });
+
+            // TEMPO PERSONALIZADO
+            $('#btn-set-custom').on('click', function() {
+                const val = parseInt($('#custom-minutes').val());
+                if (val && val > 0) {
+                    setMode(val, `Tempo Especial (${val}m)`);
+                    $('#custom-minutes').val('');
+                }
+            });
+
+            // SELEÇÃO DE VEREADOR POR CLIQUE NO CARD (reseta o tempo ao mudar)
+            $(document).on('click', '.vereador-card', function() {
+                const id = $(this).data('id');
+                resetTimer(initialSeconds, { vereadorId: id, exibir: true });
+            });
+
+            // MODO TELA CHEIA (SMART TV)
+            $('#btn-fullscreen').on('click', function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Erro ao ativar Tela Cheia: ${err.message}`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+
+            // ATALHOS DE TECLADO
+            $(document).on('keydown', function(e) {
+                if ($(e.target).is('input')) return;
+
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    $('#btn-start-pause').click();
+                } else if (e.code === 'KeyR') {
+                    $('#btn-reset').click();
+                } else if (e.code === 'Digit5') {
+                    $('#btn-mode-pequeno').click();
+                } else if (e.code === 'Digit2') {
+                    $('#btn-mode-grande').click();
+                }
+            });
+
+            // =====================================================================
+            //  MODO ADMINISTRADOR (engrenagem discreta) — trocar fotos dos vereadores
+            //  Só no notebook/computador: na Smart TV a engrenagem não aparece.
+            // =====================================================================
+            const FOTOS_PADRAO = {}, DADOS_PADRAO = {};
+            vereadores.forEach(v => { FOTOS_PADRAO[v.id] = v.foto; DADOS_PADRAO[v.id] = { nome: v.nome, partido: v.partido }; });
+            const refFotos = db.ref('legislar/controleFala/fotos');   // { v1: "data:image/jpeg…", … }
+            const refDados = db.ref('legislar/controleFala/dados');   // { v1: { nome, partido }, … }
+            let fotosCustom = {}, dadosCustom = {};
+            const escAttr = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+            // Atualiza o vereador em destaque (foto, nome e partido) sem mexer no cronômetro
+            function atualizarDestaque() {
+                if (!selectedVereador || !selectedVereador.id) return;
+                $('#display-photo').attr('src', selectedVereador.foto);
+                $('#display-name').text(selectedVereador.nome);
+                $('#display-partido').text(selectedVereador.partido);
+            }
+            function aplicarMudancas() {
+                vereadores.forEach(v => {
+                    const d = dadosCustom['v' + v.id] || {};
+                    v.foto = fotosCustom['v' + v.id] || FOTOS_PADRAO[v.id];
+                    v.nome = d.nome || DADOS_PADRAO[v.id].nome;
+                    v.partido = d.partido || DADOS_PADRAO[v.id].partido;
+                });
+                atualizarDestaque();
+                renderVereadoresList();
+                // não refaz a lista do administrador enquanto alguém está digitando nela
+                if (!$('#admin-painel').hasClass('hidden') && !$('#admin-lista').find(':focus').length) montarListaAdmin();
+            }
+
+            // Fotos, nomes e partidos trocados valem para todos os aparelhos (notebook e Smart TV) na hora
+            refFotos.on('value', snap => { fotosCustom = snap.val() || {}; aplicarMudancas(); });
+            refDados.on('value', snap => { dadosCustom = snap.val() || {}; aplicarMudancas(); });
+
+            // Smart TV: dentro do painel da TV (quadro) ou aparelho marcado como TV pelo painel inicial
+            let ehTV = false;
+            try { ehTV = window.self !== window.top || localStorage.getItem('pld_tv') === '1'; } catch (e) { ehTV = true; }
+            if (ehTV) { $('#btn-admin').remove(); $('#btn-tv-tela').remove(); }
+
+            // =====================================================================
+            //  TELA DE ESPERA DA SMART TV
+            //  A TV só mostra o vereador quando o notebook escolhe o orador ou inicia a fala.
+            //  Ao abrir o Controle de Fala no notebook, a TV volta para a tela de espera.
+            //  Depois que uma fala termina, a TV volta sozinha para a espera em 10 segundos.
+            // =====================================================================
+            $('#tv-espera-brasao').attr('src', $('header img').first().attr('src'));
+            function telaDeEspera() {
+                if (!estado.exibir) return true;
+                const fim = estado.status === 'esgotado' || estado.status === 'concluida';
+                const reexibido = (estado.mostrarDesde || 0) > (estado.fimId || 0);   // o notebook pediu para mostrar de novo
+                return fim && !estado.running && !reexibido && estado.fimId && agora() - estado.fimId > 10000;
+            }
+            function atualizarTelaEspera() {
+                const espera = telaDeEspera();
+                $('#btn-tv-tela-txt').text(espera ? 'TV: espera' : 'TV: orador');
+                $('#btn-tv-tela').toggleClass('border-emerald-500 text-emerald-300', !espera).toggleClass('border-gray-600', espera);
+                if (!ehTV) return;
+                $('#tv-espera-modo').text(estado.modoLabel || 'Pequeno Expediente (5m)');
+                const $t = $('#tv-espera');
+                if (espera && $t.hasClass('hidden')) { $t.removeClass('hidden saindo').addClass('flex'); }
+                else if (!espera && !$t.hasClass('hidden') && !$t.hasClass('saindo')) {
+                    $t.addClass('saindo');
+                    setTimeout(() => { if (!telaDeEspera()) $t.addClass('hidden').removeClass('flex saindo'); else $t.removeClass('saindo'); }, 500);
+                }
+            }
+            if (ehTV) {
+                $('#tv-espera').removeClass('hidden').addClass('flex');   // começa na espera até o banco responder
+                setInterval(() => {
+                    $('#tv-espera-relogio').text($('#current-clock').text());
+                    atualizarTelaEspera();                                   // volta à espera 10 s após o fim da fala
+                }, 1000);
+            } else {
+                // Notebook: ao entrar no Controle de Fala (sem fala em andamento), a TV fica na tela de espera
+                refEstado.once('value').then(s => { const v = s.val(); if (v && !v.running && v.exibir) refEstado.update({ exibir: false }); });
+                $('#btn-tv-tela').on('click', () => {
+                    if (telaDeEspera()) refEstado.update({ exibir: true, mostrarDesde: agora() });
+                    else refEstado.update({ exibir: false });
+                });
+            }
+
+            // Senha guardada só como código de conferência (SHA-256), nunca em texto
+            const HASH_ADMIN = 'e3eba6726f556922fb7c8cf51167ce9d308f9b917bffcdfcbbadff3fe63ee27b';
+            async function senhaCorreta(t) {
+                if (!(window.crypto && crypto.subtle)) return false;
+                const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('controle-fala:' + t));
+                return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('') === HASH_ADMIN;
+            }
+            function adminLiberado() { try { return sessionStorage.getItem('cf_admin') === '1'; } catch (e) { return !!window.__cfAdmin; } }
+            function liberarAdmin(on) {
+                try { on ? sessionStorage.setItem('cf_admin', '1') : sessionStorage.removeItem('cf_admin'); } catch (e) { window.__cfAdmin = on; }
+            }
+
+            function abrirAdmin() {
+                $('#admin-modal').removeClass('hidden').addClass('flex');
+                if (adminLiberado()) { mostrarPainelAdmin(); return; }
+                $('#admin-painel').addClass('hidden');
+                $('#admin-login').removeClass('hidden');
+                $('#admin-senha').val(''); $('#admin-erro').text('');
+                setTimeout(() => $('#admin-senha').trigger('focus'), 50);
+            }
+            function fecharAdmin() { $('#admin-modal').addClass('hidden').removeClass('flex'); }
+            function mostrarPainelAdmin() {
+                $('#admin-login').addClass('hidden');
+                $('#admin-painel').removeClass('hidden');
+                montarListaAdmin();
+            }
+            function avisoAdmin(txt, erro) {
+                $('#admin-msg').toggleClass('text-red-400', !!erro).toggleClass('text-emerald-400', !erro).text(txt);
+                clearTimeout(avisoAdmin.t); avisoAdmin.t = setTimeout(() => $('#admin-msg').text(''), 3500);
+            }
+
+            function montarListaAdmin() {
+                const campo = 'bg-gray-900 border border-gray-700 text-white text-xs md:text-sm rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-governo-gold';
+                $('#admin-lista').html(vereadores.map(v => {
+                    const propria = !!fotosCustom['v' + v.id];
+                    const editado = !!dadosCustom['v' + v.id];
+                    return `
+                    <div class="bg-governo-darkBlue/40 border border-gray-700/80 p-3 rounded-xl space-y-2">
+                        <div class="flex items-center gap-3">
+                            <img src="${escAttr(v.foto)}" alt="${escAttr(v.nome)}" class="w-14 h-14 rounded-lg object-cover border border-governo-gold flex-shrink-0">
+                            <div class="flex-1 min-w-0 flex flex-col sm:flex-row gap-2">
+                                <label class="flex-1 min-w-0"><span class="block text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Nome</span>
+                                    <input type="text" maxlength="60" class="admin-nome w-full ${campo}" data-id="${v.id}" value="${escAttr(v.nome)}" placeholder="${escAttr(DADOS_PADRAO[v.id].nome)}"></label>
+                                <label class="sm:w-28"><span class="block text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Partido</span>
+                                    <input type="text" maxlength="15" class="admin-partido w-full uppercase ${campo}" data-id="${v.id}" value="${escAttr(v.partido)}" placeholder="${escAttr(DADOS_PADRAO[v.id].partido)}"></label>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-end gap-2">
+                            <span class="mr-auto text-[11px] ${propria || editado ? 'text-governo-gold' : 'text-gray-400'}">${[propria ? 'Foto trocada' : 'Foto original', editado ? 'nome/partido alterados' : ''].filter(Boolean).join(' · ')}</span>
+                            <label class="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white font-bold text-xs px-2.5 py-1.5 rounded cursor-pointer transition">
+                                <i class="fa-solid fa-camera mr-1"></i>Trocar foto
+                                <input type="file" accept="image/*" class="hidden admin-foto" data-id="${v.id}">
+                            </label>
+                            ${propria ? `<button type="button" class="admin-restaurar bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white text-xs px-2 py-1.5 rounded" data-id="${v.id}" title="Voltar para a foto original"><i class="fa-solid fa-rotate-left"></i></button>` : ''}
+                            ${editado ? `<button type="button" class="admin-dados-original bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white text-xs px-2.5 py-1.5 rounded" data-id="${v.id}" title="Voltar para o nome e o partido originais"><i class="fa-solid fa-rotate-left mr-1"></i>Nome original</button>` : ''}
+                            <button type="button" class="admin-salvar bg-governo-gold hover:bg-yellow-500 text-governo-dark font-bold text-xs px-3 py-1.5 rounded transition" data-id="${v.id}"><i class="fa-solid fa-floppy-disk mr-1"></i>Salvar</button>
+                        </div>
+                    </div>`;
+                }).join(''));
+            }
+
+            // Recorta em quadrado (rosto mais para cima) e reduz para ficar leve no banco
+            function prepararFoto(file) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image(), url = URL.createObjectURL(file);
+                    img.onload = () => {
+                        const s = Math.min(img.width, img.height), c = document.createElement('canvas');
+                        c.width = c.height = 400;
+                        const ctx = c.getContext('2d');
+                        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 400, 400);
+                        ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2.6, s, s, 0, 0, 400, 400);
+                        URL.revokeObjectURL(url);
+                        resolve(c.toDataURL('image/jpeg', 0.85));
+                    };
+                    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('imagem')); };
+                    img.src = url;
+                });
+            }
+
+            $('#btn-admin').on('click', function (e) { e.preventDefault(); e.stopPropagation(); abrirAdmin(); });
+            $(document).on('click', '.admin-fechar', fecharAdmin);
+            $('#admin-modal').on('click', function (e) { if (e.target === this) fecharAdmin(); });
+            // Com a janela aberta, as teclas não acionam os atalhos do cronômetro
+            window.addEventListener('keydown', function (e) {
+                if ($('#admin-modal').hasClass('hidden')) return;
+                if (e.key === 'Escape') { fecharAdmin(); return; }
+                // dentro dos campos de texto os atalhos já não funcionam; fora deles, bloqueia
+                if (!$(e.target).is('input, textarea')) e.stopPropagation();
+            }, true);
+
+            $('#admin-login').on('submit', async function (e) {
+                e.preventDefault();
+                const ok = await senhaCorreta($('#admin-senha').val());
+                if (ok) { liberarAdmin(true); mostrarPainelAdmin(); }
+                else {
+                    $('#admin-erro').text($('#admin-senha').val() ? 'Senha incorreta.' : 'Digite a senha.');
+                    $('#admin-senha').val('').trigger('focus');
+                }
+            });
+            $('#admin-sair').on('click', function () { liberarAdmin(false); fecharAdmin(); });
+
+            $(document).on('change', '.admin-foto', async function () {
+                const id = +$(this).data('id'), f = this.files && this.files[0];
+                this.value = '';
+                if (!f) return;
+                const v = vereadores.find(x => x.id === id);
+                try {
+                    avisoAdmin('Enviando foto…');
+                    const dataUrl = await prepararFoto(f);
+                    await refFotos.child('v' + id).set(dataUrl);
+                    avisoAdmin('Foto atualizada: ' + (v ? v.nome : ''));
+                } catch (err) {
+                    console.error(err);
+                    avisoAdmin('Não foi possível salvar a foto. Verifique a internet e tente de novo.', true);
+                }
+            });
+            // Salvar nome e partido
+            $(document).on('click', '.admin-salvar', async function () {
+                const id = +$(this).data('id');
+                const nome = $(`.admin-nome[data-id="${id}"]`).val().replace(/\s+/g, ' ').trim();
+                const partido = $(`.admin-partido[data-id="${id}"]`).val().replace(/\s+/g, ' ').trim().toUpperCase();
+                if (nome.length < 3) { avisoAdmin('Digite o nome do vereador.', true); $(`.admin-nome[data-id="${id}"]`).trigger('focus'); return; }
+                const pad = DADOS_PADRAO[id];
+                try {
+                    if (nome === pad.nome && partido === pad.partido) await refDados.child('v' + id).remove();
+                    else await refDados.child('v' + id).set({ nome: nome, partido: partido || pad.partido });
+                    $(document.activeElement).trigger('blur');
+                    montarListaAdmin();
+                    avisoAdmin('Salvo: ' + nome + (partido ? ' (' + partido + ')' : ''));
+                } catch (err) {
+                    console.error(err);
+                    avisoAdmin('Não foi possível salvar. Verifique a internet e tente de novo.', true);
+                }
+            });
+            // Enter dentro do campo também salva
+            $(document).on('keydown', '.admin-nome, .admin-partido', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); $(`.admin-salvar[data-id="${$(this).data('id')}"]`).trigger('click'); }
+            });
+            $(document).on('click', '.admin-dados-original', async function () {
+                const id = +$(this).data('id');
+                try { await refDados.child('v' + id).remove(); montarListaAdmin(); avisoAdmin('Nome e partido originais restaurados.'); }
+                catch (err) { avisoAdmin('Não foi possível restaurar. Verifique a internet.', true); }
+            });
+
+            $(document).on('click', '.admin-restaurar', async function () {
+                const id = +$(this).data('id');
+                try { await refFotos.child('v' + id).remove(); avisoAdmin('Foto original restaurada.'); }
+                catch (err) { avisoAdmin('Não foi possível restaurar. Verifique a internet.', true); }
+            });
+
+            // INICIALIZAÇÃO (mostra o padrão até o banco responder)
+            selectedVereador = { id: 0 };
+            mostrarVereador(1);
+            updateTimerDisplay();
+        });
+    </script>
+</body>
+</html>
