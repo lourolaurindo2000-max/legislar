@@ -489,6 +489,14 @@
                 }
             });
 
+            // Smart TV (dentro do quadro da TV ou aparelho marcado como TV): já abre em tela cheia,
+            // então o botão "Tela Cheia" não aparece lá (continua só no notebook)
+            (function () {
+                var ehTV = false;
+                try { ehTV = window.self !== window.top || localStorage.getItem('pld_tv') === '1'; } catch (e) { ehTV = true; }
+                if (ehTV) $('#btn-tv-mode').remove();
+            })();
+
             // Entra em tela cheia no primeiro gesto (o navegador não permite sem um toque ou tecla)
             (function () {
                 var EV = ['click', 'keydown', 'change'], NAO = 'select,a,label,input[type=file],#btn-tv-mode,#btn-sair,#admin-gear,#admin-modal';
