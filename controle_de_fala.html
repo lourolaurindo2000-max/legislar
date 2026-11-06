@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tempo de Fala</title>
+    <!-- Tailwind CSS para estilização moderna e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonte Inter Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    colors: {
+                        governo: {
+                            blue: '#0B2545',
+                            darkBlue: '#134074',
+                            gold: '#D4AF37',
+                            accent: '#0066CC',
+                            dark: '#0A0F1D'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0A0F1D;
+            color: #F8FAFC;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        .timer-display {
+            font-family: 'Roboto Mono', monospace;
+            letter-spacing: -2px;
+            text-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Animações e Estados do Cronômetro */
+        .status-normal {
+            color: #22C55E;
+            text-shadow: 0 0 25px rgba(34, 197, 94, 0.4);
+        }
+
+        .status-alerta {
+            color: #EAB308;
+            text-shadow: 0 0 30px rgba(234, 179, 8, 0.6);
+            animation: pulse-yellow 2s infinite;
+        }
+
+        .status-critico {
+            color: #EF4444;
+            text-shadow: 0 0 35px rgba(239, 68, 68, 0.8);
+            animation: pulse-red 1s infinite;
+        }
+
+        .status-esgotado {
+            color: #DC2626;
+            animation: blink-fast 0.6s infinite;
+        }
+
+        @keyframes pulse-yellow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.9; }
+        }
+
+        @keyframes blink-fast {
+            0%, 100% { opacity: 1; background-color: rgba(220, 38, 38, 0.2); }
+            50% { opacity: 0.3; background-color: transparent; }
+        }
+
+        /* Efeitos de brilho e bordas */
+        .gold-border {
+            border-color: #D4AF37;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .card-active {
+            border-color: #0066CC !important;
+            background-color: rgba(19, 64, 116, 0.7) !important;
+            box-shadow: 0 0 20px rgba(0, 102, 204, 0.5);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B2545;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #134074;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37;
+        }
+
+        /* Estilização para TV e Monitores 4K */
+        @media (min-width: 1920px) {
+            .tv-text-huge {
+                font-size: 11rem !important;
+                line-height: 1;
+            }
+            .tv-avatar {
+                width: 320px !important;
+                height: 320px !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between font-sans antialiased bg-governo-dark">
+
+    <!-- CABEÇALHO OFICIAL DA SESSÃO -->
+    <header class="bg-governo-blue border-b-2 border-governo-gold px-4 py-3 md:px-8 flex justify-between items-center shadow-lg">
+        <div class="flex items-center space-x-4">
+            <img src="data:image/png;base64,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" alt="Brasão de Almadina-BA" class="h-12 md:h-16 w-auto flex-shrink-0 drop-shadow-lg">
+            <div>
+                <h1 class="text-lg md:text-2xl font-black uppercase tracking-wider text-white">Câmara Municipal de Almadina</h1>
+                <p class="text-xs md:text-sm text-governo-gold font-medium flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
+                    SESSÃO PLENÁRIA ORDINÁRIA DE HOJE
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3 md:space-x-6">
+            <!-- Relógio do Horário Atual -->
+            <div class="text-right hidden sm:block">
+                <span class="text-xs text-gray-400 uppercase tracking-widest block">Hora Local</span>
+                <span id="current-clock" class="text-xl md:text-2xl font-mono font-bold text-gray-200">00:00:00</span>
+            </div>
+
+            <!-- Botão de Tela Cheia para Smart TV / Apresentação -->
+            <button id="btn-fullscreen" title="Modo Tela Cheia (Smart TV)" class="bg-governo-darkBlue hover:bg-governo-accent text-white p-3 rounded-xl border border-gray-600 transition flex items-center justify-center">
+                <i class="fa-solid fa-expand text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- CORPO PRINCIPAL DO SISTEMA -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-3 md:p-6 max-w-[1920px] mx-auto w-full">
+        
+        <!-- PAINEL CENTRAL (DISPLAY DE TV / TELA DE FALA) - 8 Colunas em Telas Grandes -->
+        <section class="lg:col-span-8 bg-gradient-to-b from-governo-blue/60 to-governo-dark/90 rounded-2xl border border-gray-800 p-4 md:p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden backdrop-blur-md">
+            
+            <!-- Marca d'água de fundo -->
+            <div class="absolute -right-20 -bottom-20 opacity-5 pointer-events-none">
+                <i class="fa-solid fa-landmark text-[400px] text-white"></i>
+            </div>
+
+            <!-- Topo do Display: Modo de Sessão Atual -->
+            <div class="flex flex-wrap justify-between items-center border-b border-gray-700/60 pb-4 gap-2">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs md:text-sm font-semibold uppercase text-gray-400">Modo Atual:</span>
+                    <span id="current-mode-badge" class="bg-governo-gold/20 text-governo-gold border border-governo-gold/40 text-xs md:text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        Pequeno Expediente (5m)
+                    </span>
+                </div>
+                <div class="text-xs md:text-sm text-gray-400 font-mono flex items-center gap-2">
+                    <i class="fa-solid fa-microphone text-red-500 animate-pulse"></i>
+                    <span id="speaker-status-label" class="font-bold text-gray-200 uppercase">Aguardando Início</span>
+                </div>
+            </div>
+
+            <!-- ÁREA DO PARLAMENTAR E CRONÔMETRO -->
+            <div class="my-auto py-6 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
+                
+                <!-- Foto do Vereador -->
+                <div class="relative group">
+                    <div class="w-44 h-44 md:w-64 md:h-64 tv-avatar rounded-2xl overflow-hidden border-4 border-governo-gold shadow-2xl bg-gray-900 transition-all duration-300">
+                        <img id="display-photo" src="" alt="Foto do Vereador" class="w-full h-full object-cover">
+                    </div>
+                    <span id="display-cargo-badge" class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-governo-gold text-governo-dark text-xs md:text-sm font-black px-4 py-1 rounded-full uppercase shadow-lg whitespace-nowrap">
+                        Vereador
+                    </span>
+                </div>
+
+                <!-- Detalhes e Cronômetro Gigante -->
+                <div class="text-center md:text-left flex-1 flex flex-col justify-center">
+                    <div>
+                        <h2 id="display-name" class="text-2xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+                            Selecione um Vereador
+                        </h2>
+                        <div class="flex items-center justify-center md:justify-start space-x-3 mt-1">
+                            <span id="display-partido" class="text-sm md:text-xl font-bold text-governo-gold bg-governo-darkBlue/80 px-3 py-0.5 rounded-lg">---</span>
+                            <span id="display-partido-nome" class="text-xs md:text-base text-gray-300">Nenhum vereador selecionado</span>
+                        </div>
+                    </div>
+
+                    <!-- CRONÔMETRO REGRESSIVO GIGANTE -->
+                    <div class="mt-4 md:mt-6 bg-black/40 rounded-2xl p-4 md:p-6 border border-gray-800 text-center shadow-inner">
+                        <div id="display-timer" class="timer-display text-6xl md:text-8xl lg:text-[9rem] tv-text-huge font-black status-normal leading-none tracking-tighter">
+                            05:00
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROLES RÁPIDOS DE SESSÃO E TEMPO -->
+            <div class="border-t border-gray-700/60 pt-4 flex flex-col gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button id="btn-mode-pequeno" class="bg-governo-darkBlue hover:bg-blue-800 text-white font-bold py-2 px-3 rounded-lg border border-blue-500/30 text-xs md:text-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-clock"></i> Pequeno Exp. (5m)
+                    </button>
+                    <button id="btn-mode-grande" class="bg-governo-darkBlue hover:bg-blue-800 text-white font-bold py-2 px-3 rounded-lg border border-blue-500/30 text-xs md:text-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-hourglass-half"></i> Grande Exp. (20m)
+                    </button>
+                    <button id="btn-add-1m" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded-lg border border-gray-600 text-xs md:text-sm transition">
+                        +1 Minuto
+                    </button>
+                    <button id="btn-add-3m" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded-lg border border-gray-600 text-xs md:text-sm transition">
+                        +3 Minutos
+                    </button>
+                </div>
+
+                <!-- Botões Principais de Ação do Cronômetro -->
+                <div class="grid grid-cols-3 gap-3">
+                    <button id="btn-start-pause" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 px-4 rounded-xl shadow-lg transition text-base md:text-xl flex items-center justify-center gap-2 uppercase tracking-wider">
+                        <i class="fa-solid fa-play"></i> <span>Iniciar</span>
+                    </button>
+                    <button id="btn-reset" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition text-base md:text-lg flex items-center justify-center gap-2 uppercase">
+                        <i class="fa-solid fa-rotate-left"></i> Reiniciar
+                    </button>
+                    <button id="btn-stop" class="bg-rose-700 hover:bg-rose-600 text-white font-bold py-4 px-4 rounded-xl shadow-lg transition text-base md:text-lg flex items-center justify-center gap-2 uppercase">
+                        <i class="fa-solid fa-square"></i> Zerar
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- PAINEL LATERAL: LISTA DOS VEREADORES (4 Colunas em Telas Grandes) -->
+        <aside class="lg:col-span-4 bg-governo-blue/40 border border-gray-800 rounded-2xl p-4 flex flex-col shadow-xl">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-700">
+                <h3 class="text-base md:text-lg font-bold uppercase text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-users text-governo-gold"></i>
+                    Bancada de Parlamentares
+                </h3>
+                <span class="text-xs bg-governo-gold/20 text-governo-gold px-2 py-0.5 rounded font-mono font-bold">9 VEREADORES</span>
+            </div>
+
+            <!-- Lista de Cards dos Vereadores com Rolagem -->
+            <div id="vereadores-list" class="space-y-2.5 overflow-y-auto max-h-[500px] lg:max-h-[calc(100vh-220px)] pr-1">
+                <!-- Inserido dinamicamente via JS -->
+            </div>
+
+            <!-- Ajuste Manual Rápido e Modal de Configuração -->
+            <div class="mt-4 pt-3 border-t border-gray-700 flex justify-between items-center">
+                <span class="text-xs text-gray-400">Ajuste manual de tempo:</span>
+                <div class="flex gap-1">
+                    <input type="number" id="custom-minutes" placeholder="Min" min="1" max="60" class="w-16 bg-gray-900 border border-gray-700 text-white text-xs rounded px-2 py-1 text-center focus:outline-none focus:border-governo-gold">
+                    <button id="btn-set-custom" class="bg-governo-gold hover:bg-yellow-500 text-governo-dark font-bold text-xs px-2 py-1 rounded transition">
+                        Definir
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- RODAPÉ DE AJUDA E ATALHOS PARA O OPERADOR -->
+    <footer class="bg-governo-dark text-gray-400 text-xs py-2 px-4 md:px-8 border-t border-gray-800 flex flex-wrap justify-between items-center gap-2">
+        <div class="flex items-center space-x-4">
+            <span class="font-bold text-gray-300">Atalhos do Teclado:</span>
+            <span><kbd class="bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded text-white font-mono">Espaço</kbd> Iniciar/Pausar</span>
+            <span><kbd class="bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded text-white font-mono">R</kbd> Reiniciar</span>
+            <span><kbd class="bg-gray-800 border border-gray-600 px-1.5 py-0.5 rounded text-white font-mono">F11</kbd> Tela Cheia</span>
+        </div>
+        <div class="text-gray-500 flex items-center gap-2">
+            Sistema do Plenário v2.5 &bull; Câmara Municipal
+            <!-- Engrenagem discreta: modo administrador (não aparece na Smart TV) -->
+            <button id="btn-admin" type="button" title="Configurações" aria-label="Configurações" class="w-6 h-6 flex items-center justify-center text-gray-500 opacity-30 hover:opacity-100 hover:text-governo-gold focus:opacity-100 transition">
+                <i class="fa-solid fa-gear text-xs"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- MODO ADMINISTRADOR (só no notebook / computador) -->
+    <div id="admin-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label="Modo administrador">
+        <div class="bg-governo-blue border border-governo-gold/60 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <form id="admin-login" class="p-6 flex flex-col items-center text-center gap-3" autocomplete="off">
+                <div class="bg-governo-gold/20 p-3 rounded-full border border-governo-gold"><i class="fa-solid fa-lock text-governo-gold text-xl"></i></div>
+                <h3 class="text-lg font-black uppercase tracking-wider text-white">Acesso restrito</h3>
+                <p class="text-sm text-gray-300">Digite a senha do administrador.</p>
+                <input id="admin-senha" type="password" autocomplete="off" placeholder="Senha" class="w-full max-w-xs bg-gray-900 border border-gray-700 text-white rounded-lg px-3 py-2 text-center focus:outline-none focus:border-governo-gold">
+                <p id="admin-erro" class="text-xs text-red-400 min-h-[1rem]"></p>
+                <div class="flex gap-2">
+                    <button type="button" class="admin-fechar bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white font-bold px-4 py-2 rounded-lg text-sm transition">Cancelar</button>
+                    <button type="submit" class="bg-governo-gold hover:bg-yellow-500 text-governo-dark font-black px-4 py-2 rounded-lg text-sm transition">Entrar</button>
+                </div>
+            </form>
+            <div id="admin-painel" class="hidden p-5">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-700">
+                    <h3 class="font-black uppercase tracking-wider text-governo-gold flex items-center gap-2"><i class="fa-solid fa-gear"></i> Modo administrador</h3>
+                    <button type="button" class="admin-fechar bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition"><i class="fa-solid fa-xmark mr-1"></i>Fechar</button>
+                </div>
+                <p class="text-xs text-gray-400 mb-3">Fotos dos vereadores. A troca aparece na hora no notebook e na Smart TV.</p>
+                <div id="admin-lista" class="space-y-2"></div>
+                <p id="admin-msg" class="text-xs text-emerald-400 min-h-[1rem] mt-3"></p>
+                <div class="flex justify-end mt-2">
+                    <button type="button" id="admin-sair" class="bg-rose-700 hover:bg-rose-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition"><i class="fa-solid fa-lock mr-1"></i>Sair do modo administrador</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase (sincronização em tempo real) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+    <script>
+        $(document.body).ready(function() {
+            
+            // --- BASE DE DADOS DOS 9 VEREADORES FICTÍCIOS ---
+            const vereadores = [
+                {
+                    id: 1,
+                    nome: "Ver. Rogério Gotado",
+                    partido: "PT",
+                    cargo: "Presidente",
+                    foto: "https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=400"
+                },
+                {
+                    id: 2,
+                    nome: "Ver. Lucas Cavalcante",
+                    partido: "PODEMOS",
+                    cargo: "Vice-Presidente",
+                    foto: "https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=400"
+                },
+                {
+                    id: 3,
+                    nome: "Ver. Dilson Junior",
+                    partido: "PV",
+                    cargo: "1º Secretário",
+                    foto: "https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=400"
+                },
+                {
+                    id: 4,
+                    nome: "Ver. Wilson Freitas",
+                    partido: "PC do B",
+                    cargo: "2º Secretário",
+                    foto: "https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=400"
+                },
+                {
+                    id: 5,
+                    nome: "ver. José Lindomar (Bimba)",
+                    partido: "PODEMOS",
+                    cargo: "Vereador",
+                    foto: "https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=400"
+                },
+                {
+                    id: 6,
+                    nome: "Prof. Sylas Souza",
+                    partido: "PODEMOS",
+                    cargo: "Vereador",
+                    foto: "https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=400"
+                },
+                {
+                    id: 7,
+                    nome: "Vera. Maria Nilza",
+                    partido: "PODEMOS",
+                    cargo: "Vereadora",
+                    foto: "https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=400"
+                },
+                {
+                    id: 8,
+                    nome: "Vera. Marilene Costa",
+                    partido: "PP",
+                    cargo: "Vereadora",
+                    foto: "https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=400"
+                },
+                {
+                    id: 9,
+                    nome: "Ver. Jackson Costa",
+                    partido: "AVANTE",
+                    cargo: "Vereador",
+                    foto: "https://2.gravatar.com/userimage/277172047/8039d08ed8a294328b8f8b70bbbeb765?size=400"
+                }
+            ];
+
+            // =====================================================================
+            //  SINCRONIZAÇÃO COM FIREBASE (tempo real entre todos os aparelhos)
+            // =====================================================================
+            const firebaseConfig = {
+                apiKey: "AIzaSyAHawTmb2za8y2Eq70FWejq64-5J6Pbqfo",
+                authDomain: "projeto-teste-f08c4.firebaseapp.com",
+                databaseURL: "https://projeto-teste-f08c4-default-rtdb.firebaseio.com",
+                projectId: "projeto-teste-f08c4",
+                storageBucket: "projeto-teste-f08c4.firebasestorage.app",
+                messagingSenderId: "788863562302",
+                appId: "1:788863562302:web:2ddcfb6c2c892770de976f"
+            };
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+            const refEstado = db.ref('legislar/controleFala/estado');
+
+            // Diferença entre o relógio deste aparelho e o do servidor
+            let serverOffset = 0;
+            db.ref('.info/serverTimeOffset').on('value', s => { serverOffset = s.val() || 0; });
+            const agora = () => Date.now() + serverOffset;
+
+            // Estado compartilhado (o que está gravado no banco)
+            const ESTADO_PADRAO = {
+                vereadorId: 1,
+                modoLabel: 'Pequeno Expediente (5m)',
+                initialSeconds: 5 * 60,
+                running: false,
+                endAt: 0,            // quando está rodando: momento (servidor) em que o tempo acaba
+                remaining: 5 * 60,   // quando está parado: segundos restantes
+                status: 'aguardando',// aguardando | discurso | pausado | esgotado | concluida
+                fimId: 0             // marca o momento do alarme de fim (toca em todos os aparelhos)
+            };
+            let estado = { ...ESTADO_PADRAO };
+            let primeiraLeitura = true;
+            let ultimoFimId = 0;
+
+            // --- ESTADO LOCAL DO CRONÔMETRO ---
+            let selectedVereador = vereadores[0];
+            let timerSeconds = 5 * 60;
+            let initialSeconds = 5 * 60;
+            let isRunning = false;
+            let soundBeep1MinPlayed = false;
+            let soundBeep30SecPlayed = false;
+
+            // SINTETIZADOR DE ÁUDIO PARA BIPS E ALERTAS (Web Audio API)
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // Libera o som na TV/tablet no primeiro toque (exigência dos navegadores)
+            $(document).one('click touchstart keydown', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); });
+
+            function playBeep(frequency = 800, type = 'sine', duration = 0.2) {
+                try {
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {
+                    console.error("Erro ao tocar áudio", e);
+                }
+            }
+
+            // Bip contínuo e bem audível de 5 segundos para o fim da fala
+            function playEndBleep5Sec() {
+                try {
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+                    const duration = 5.0;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+
+                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime + duration - 0.2);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {
+                    console.error("Erro ao tocar alarme de 5s", e);
+                }
+            }
+
+            // FUNÇÃO PARA ATUALIZAR O RELÓGIO GERAL DA SESSÃO
+            function updateClock() {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                $('#current-clock').text(`${hours}:${minutes}:${seconds}`);
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // POPULAR LISTA LATERAL DE VEREADORES
+            function renderVereadoresList() {
+                const $container = $('#vereadores-list');
+                $container.empty();
+
+                vereadores.forEach(v => {
+                    const isActive = v.id === selectedVereador.id;
+                    const card = `
+                        <div data-id="${v.id}" class="vereador-card bg-governo-darkBlue/40 hover:bg-governo-darkBlue/90 border border-gray-700/80 p-2.5 rounded-xl flex items-center gap-3 cursor-pointer transition ${isActive ? 'card-active' : ''}">
+                            <img src="${v.foto}" alt="${v.nome}" class="w-12 h-12 rounded-lg object-cover border border-governo-gold">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-xs md:text-sm font-bold text-white truncate">${v.nome}</h4>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="text-[10px] font-bold text-governo-gold bg-black/40 px-1.5 py-0.2 rounded">${v.partido}</span>
+                                    <span class="text-[11px] text-gray-400 truncate">${v.cargo}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    $container.append(card);
+                });
+            }
+
+            // ATUALIZAR INTERFACE COM O VEREADOR (somente na tela)
+            function mostrarVereador(id) {
+                const found = vereadores.find(v => v.id === id);
+                if (!found) return;
+                const mudou = found.id !== selectedVereador.id || !$('#display-photo').attr('src');
+                selectedVereador = found;
+                if (mudou) {
+                    $('#display-photo').attr('src', selectedVereador.foto);
+                    $('#display-name').text(selectedVereador.nome);
+                    $('#display-partido').text(selectedVereador.partido);
+                    $('#display-partido-nome').text(selectedVereador.cargo);
+                    $('#display-cargo-badge').text(selectedVereador.cargo);
+                    renderVereadoresList();
+                }
+            }
+
+            // FORMATAR SEGUNDOS PARA 00:00
+            function formatTime(seconds) {
+                const absSec = Math.abs(seconds);
+                const m = Math.floor(absSec / 60);
+                const s = absSec % 60;
+                const formatted = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                return seconds < 0 ? `-${formatted}` : formatted;
+            }
+
+            // Segundos restantes calculados pelo relógio do servidor (igual em todas as telas)
+            function calcularSegundos() {
+                if (estado.running) return Math.max(0, Math.ceil((estado.endAt - agora()) / 1000));
+                return Math.max(0, estado.remaining || 0);
+            }
+
+            // ATUALIZAR MOSTRADOR DO CRONÔMETRO E CORES DE STATUS
+            function updateTimerDisplay() {
+                const $timer = $('#display-timer');
+                $timer.text(formatTime(timerSeconds));
+
+                $timer.removeClass('status-normal status-alerta status-critico status-esgotado');
+
+                if (timerSeconds > 60) {
+                    $timer.addClass('status-normal');
+                    soundBeep1MinPlayed = false;
+                    soundBeep30SecPlayed = false;
+                } else if (timerSeconds > 30) {
+                    $timer.addClass('status-alerta');
+                    soundBeep30SecPlayed = false;
+                    if (!soundBeep1MinPlayed && isRunning) {
+                        playBeep(600, 'sine', 0.3);
+                        soundBeep1MinPlayed = true;
+                    }
+                } else if (timerSeconds > 0) {
+                    $timer.addClass('status-critico');
+                    if (!soundBeep30SecPlayed && isRunning) {
+                        playBeep(900, 'square', 0.4);
+                        soundBeep30SecPlayed = true;
+                    }
+                } else {
+                    $timer.addClass('status-esgotado');
+                }
+            }
+
+            // Botão Iniciar/Pausar/Continuar e texto de status
+            function renderStatus() {
+                const $btn = $('#btn-start-pause');
+                const $lbl = $('#speaker-status-label').removeClass('text-emerald-400 text-amber-400 text-red-500');
+
+                if (isRunning) {
+                    $btn.removeClass('bg-emerald-600 hover:bg-emerald-500').addClass('bg-amber-600 hover:bg-amber-500')
+                        .html('<i class="fa-solid fa-pause"></i> <span>Pausar</span>');
+                } else {
+                    const txt = estado.status === 'aguardando' ? 'Iniciar' : 'Continuar';
+                    $btn.removeClass('bg-amber-600 hover:bg-amber-500').addClass('bg-emerald-600 hover:bg-emerald-500')
+                        .html(`<i class="fa-solid fa-play"></i> <span>${txt}</span>`);
+                }
+
+                switch (estado.status) {
+                    case 'discurso':  $lbl.text('Em Discurso').addClass('text-emerald-400'); break;
+                    case 'pausado':   $lbl.text('Discurso Pausado').addClass('text-amber-400'); break;
+                    case 'esgotado':  $lbl.text('Tempo Esgotado!').addClass('text-red-500'); break;
+                    case 'concluida': $lbl.text('Fala Concluída!').addClass('text-red-500'); break;
+                    default:          $lbl.text('Aguardando Início');
+                }
+            }
+
+            // Aplica o estado do banco na tela
+            function aplicarEstado() {
+                isRunning = !!estado.running;
+                initialSeconds = estado.initialSeconds || 300;
+                timerSeconds = calcularSegundos();
+                mostrarVereador(estado.vereadorId || 1);
+                $('#current-mode-badge').text(estado.modoLabel || 'Pequeno Expediente (5m)');
+                renderStatus();
+                updateTimerDisplay();
+
+                // Alarme de fim: toca em todos os aparelhos ao mesmo tempo
+                if (estado.fimId && estado.fimId !== ultimoFimId) {
+                    if (!primeiraLeitura && agora() - estado.fimId < 6000) playEndBleep5Sec();
+                    ultimoFimId = estado.fimId;
+                }
+                primeiraLeitura = false;
+            }
+
+            // Ouve o banco em tempo real
+            refEstado.on('value', snap => {
+                const val = snap.val();
+                if (!val) { refEstado.set(ESTADO_PADRAO); return; }
+                estado = { ...ESTADO_PADRAO, ...val };
+                aplicarEstado();
+            }, err => {
+                console.error('Firebase: sem permissão. Verifique as regras do banco.', err);
+                $('#speaker-status-label').text('Sem conexão com o banco').addClass('text-red-500');
+            });
+
+            // Relógio local: atualiza o mostrador e encerra quando o tempo acaba
+            setInterval(() => {
+                if (!estado.running) return;
+                timerSeconds = calcularSegundos();
+                updateTimerDisplay();
+                if (timerSeconds <= 0) {
+                    // Só um aparelho grava o fim (transação evita duplicidade)
+                    refEstado.transaction(cur => {
+                        if (!cur || !cur.running || cur.endAt > agora()) return;
+                        return { ...cur, running: false, remaining: 0, endAt: 0, status: 'esgotado', fimId: agora() };
+                    });
+                }
+            }, 250);
+
+            // --- AÇÕES (gravam no banco; a tela atualiza pelo ouvinte) ---
+            function startTimer() {
+                if (estado.running) return;
+                let seg = calcularSegundos();
+                if (seg <= 0) seg = estado.initialSeconds || 300;
+                refEstado.update({ running: true, endAt: agora() + seg * 1000, status: 'discurso' });
+            }
+
+            function pauseTimer() {
+                if (!estado.running) return;
+                refEstado.update({ running: false, remaining: calcularSegundos(), endAt: 0, status: 'pausado' });
+            }
+
+            function resetTimer(newSeconds = initialSeconds, extra = {}) {
+                refEstado.update({
+                    running: false, endAt: 0, remaining: newSeconds,
+                    initialSeconds: newSeconds, status: 'aguardando', ...extra
+                });
+            }
+
+            function setMode(minutes, label) {
+                resetTimer(minutes * 60, { modoLabel: label });
+            }
+
+            function adicionarTempo(seg) {
+                if (estado.running) {
+                    refEstado.child('endAt').transaction(v => (v || agora()) + seg * 1000);
+                } else {
+                    refEstado.update({ remaining: calcularSegundos() + seg });
+                }
+            }
+
+            // EVENTOS DOS BOTÕES DE CONTROLE
+            $('#btn-start-pause').on('click', function() {
+                if (estado.running) {
+                    pauseTimer();
+                } else {
+                    startTimer();
+                }
+            });
+
+            $('#btn-reset').on('click', function() {
+                resetTimer();
+            });
+
+            // Botão "Zerar" encerra a fala e dispara o bip de 5 segundos em todos os aparelhos
+            $('#btn-stop').on('click', function() {
+                refEstado.update({ running: false, remaining: 0, endAt: 0, status: 'concluida', fimId: agora() });
+            });
+
+            // MODOS PRÉ-DEFINIDOS
+            $('#btn-mode-pequeno').on('click', function() {
+                setMode(5, 'Pequeno Expediente (5m)');
+            });
+
+            $('#btn-mode-grande').on('click', function() {
+                setMode(20, 'Grande Expediente (20m)');
+            });
+
+            // TEMPO EXTRA
+            $('#btn-add-1m').on('click', function() {
+                adicionarTempo(60);
+            });
+
+            $('#btn-add-3m').on('click', function() {
+                adicionarTempo(180);
+            });
+
+            // TEMPO PERSONALIZADO
+            $('#btn-set-custom').on('click', function() {
+                const val = parseInt($('#custom-minutes').val());
+                if (val && val > 0) {
+                    setMode(val, `Tempo Especial (${val}m)`);
+                    $('#custom-minutes').val('');
+                }
+            });
+
+            // SELEÇÃO DE VEREADOR POR CLIQUE NO CARD (reseta o tempo ao mudar)
+            $(document).on('click', '.vereador-card', function() {
+                const id = $(this).data('id');
+                resetTimer(initialSeconds, { vereadorId: id });
+            });
+
+            // MODO TELA CHEIA (SMART TV)
+            $('#btn-fullscreen').on('click', function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Erro ao ativar Tela Cheia: ${err.message}`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+
+            // ATALHOS DE TECLADO
+            $(document).on('keydown', function(e) {
+                if ($(e.target).is('input')) return;
+
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    $('#btn-start-pause').click();
+                } else if (e.code === 'KeyR') {
+                    $('#btn-reset').click();
+                } else if (e.code === 'Digit5') {
+                    $('#btn-mode-pequeno').click();
+                } else if (e.code === 'Digit2') {
+                    $('#btn-mode-grande').click();
+                }
+            });
+
+            // =====================================================================
+            //  MODO ADMINISTRADOR (engrenagem discreta) — trocar fotos dos vereadores
+            //  Só no notebook/computador: na Smart TV a engrenagem não aparece.
+            // =====================================================================
+            const FOTOS_PADRAO = {};
+            vereadores.forEach(v => { FOTOS_PADRAO[v.id] = v.foto; });
+            const refFotos = db.ref('legislar/controleFala/fotos');   // { v1: "data:image/jpeg…", … }
+            let fotosCustom = {};
+
+            // Fotos trocadas valem para todos os aparelhos (notebook e Smart TV) na hora
+            refFotos.on('value', snap => {
+                fotosCustom = snap.val() || {};
+                vereadores.forEach(v => { v.foto = fotosCustom['v' + v.id] || FOTOS_PADRAO[v.id]; });
+                if (selectedVereador && selectedVereador.foto) $('#display-photo').attr('src', selectedVereador.foto);
+                renderVereadoresList();
+                if (!$('#admin-painel').hasClass('hidden')) montarListaAdmin();
+            });
+
+            // Smart TV: dentro do painel da TV (quadro) ou aparelho marcado como TV pelo painel inicial
+            let ehTV = false;
+            try { ehTV = window.self !== window.top || localStorage.getItem('pld_tv') === '1'; } catch (e) { ehTV = true; }
+            if (ehTV) $('#btn-admin').remove();
+
+            // Senha guardada só como código de conferência (SHA-256), nunca em texto
+            const HASH_ADMIN = 'e3eba6726f556922fb7c8cf51167ce9d308f9b917bffcdfcbbadff3fe63ee27b';
+            async function senhaCorreta(t) {
+                if (!(window.crypto && crypto.subtle)) return false;
+                const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('controle-fala:' + t));
+                return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('') === HASH_ADMIN;
+            }
+            function adminLiberado() { try { return sessionStorage.getItem('cf_admin') === '1'; } catch (e) { return !!window.__cfAdmin; } }
+            function liberarAdmin(on) {
+                try { on ? sessionStorage.setItem('cf_admin', '1') : sessionStorage.removeItem('cf_admin'); } catch (e) { window.__cfAdmin = on; }
+            }
+
+            function abrirAdmin() {
+                $('#admin-modal').removeClass('hidden').addClass('flex');
+                if (adminLiberado()) { mostrarPainelAdmin(); return; }
+                $('#admin-painel').addClass('hidden');
+                $('#admin-login').removeClass('hidden');
+                $('#admin-senha').val(''); $('#admin-erro').text('');
+                setTimeout(() => $('#admin-senha').trigger('focus'), 50);
+            }
+            function fecharAdmin() { $('#admin-modal').addClass('hidden').removeClass('flex'); }
+            function mostrarPainelAdmin() {
+                $('#admin-login').addClass('hidden');
+                $('#admin-painel').removeClass('hidden');
+                montarListaAdmin();
+            }
+            function avisoAdmin(txt, erro) {
+                $('#admin-msg').toggleClass('text-red-400', !!erro).toggleClass('text-emerald-400', !erro).text(txt);
+                clearTimeout(avisoAdmin.t); avisoAdmin.t = setTimeout(() => $('#admin-msg').text(''), 3500);
+            }
+
+            function montarListaAdmin() {
+                $('#admin-lista').html(vereadores.map(v => {
+                    const propria = !!fotosCustom['v' + v.id];
+                    return `
+                    <div class="bg-governo-darkBlue/40 border border-gray-700/80 p-2.5 rounded-xl flex items-center gap-3">
+                        <img src="${v.foto}" alt="${v.nome}" class="w-12 h-12 rounded-lg object-cover border border-governo-gold flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-xs md:text-sm font-bold text-white truncate">${v.nome}</h4>
+                            <span class="text-[11px] ${propria ? 'text-governo-gold' : 'text-gray-400'}">${propria ? 'Foto trocada' : 'Foto original'}</span>
+                        </div>
+                        <label class="bg-governo-gold hover:bg-yellow-500 text-governo-dark font-bold text-xs px-2.5 py-1.5 rounded cursor-pointer transition flex-shrink-0">
+                            <i class="fa-solid fa-camera mr-1"></i>Trocar
+                            <input type="file" accept="image/*" class="hidden admin-foto" data-id="${v.id}">
+                        </label>
+                        ${propria ? `<button type="button" class="admin-restaurar bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white text-xs px-2 py-1.5 rounded flex-shrink-0" data-id="${v.id}" title="Voltar para a foto original"><i class="fa-solid fa-rotate-left"></i></button>` : ''}
+                    </div>`;
+                }).join(''));
+            }
+
+            // Recorta em quadrado (rosto mais para cima) e reduz para ficar leve no banco
+            function prepararFoto(file) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image(), url = URL.createObjectURL(file);
+                    img.onload = () => {
+                        const s = Math.min(img.width, img.height), c = document.createElement('canvas');
+                        c.width = c.height = 400;
+                        const ctx = c.getContext('2d');
+                        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 400, 400);
+                        ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2.6, s, s, 0, 0, 400, 400);
+                        URL.revokeObjectURL(url);
+                        resolve(c.toDataURL('image/jpeg', 0.85));
+                    };
+                    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('imagem')); };
+                    img.src = url;
+                });
+            }
+
+            $('#btn-admin').on('click', function (e) { e.preventDefault(); e.stopPropagation(); abrirAdmin(); });
+            $(document).on('click', '.admin-fechar', fecharAdmin);
+            $('#admin-modal').on('click', function (e) { if (e.target === this) fecharAdmin(); });
+            // Com a janela aberta, as teclas não acionam os atalhos do cronômetro
+            window.addEventListener('keydown', function (e) {
+                if ($('#admin-modal').hasClass('hidden')) return;
+                if (e.key === 'Escape') fecharAdmin();
+                e.stopPropagation();
+            }, true);
+
+            $('#admin-login').on('submit', async function (e) {
+                e.preventDefault();
+                const ok = await senhaCorreta($('#admin-senha').val());
+                if (ok) { liberarAdmin(true); mostrarPainelAdmin(); }
+                else {
+                    $('#admin-erro').text($('#admin-senha').val() ? 'Senha incorreta.' : 'Digite a senha.');
+                    $('#admin-senha').val('').trigger('focus');
+                }
+            });
+            $('#admin-sair').on('click', function () { liberarAdmin(false); fecharAdmin(); });
+
+            $(document).on('change', '.admin-foto', async function () {
+                const id = +$(this).data('id'), f = this.files && this.files[0];
+                this.value = '';
+                if (!f) return;
+                const v = vereadores.find(x => x.id === id);
+                try {
+                    avisoAdmin('Enviando foto…');
+                    const dataUrl = await prepararFoto(f);
+                    await refFotos.child('v' + id).set(dataUrl);
+                    avisoAdmin('Foto atualizada: ' + (v ? v.nome : ''));
+                } catch (err) {
+                    console.error(err);
+                    avisoAdmin('Não foi possível salvar a foto. Verifique a internet e tente de novo.', true);
+                }
+            });
+            $(document).on('click', '.admin-restaurar', async function () {
+                const id = +$(this).data('id');
+                try { await refFotos.child('v' + id).remove(); avisoAdmin('Foto original restaurada.'); }
+                catch (err) { avisoAdmin('Não foi possível restaurar. Verifique a internet.', true); }
+            });
+
+            // INICIALIZAÇÃO (mostra o padrão até o banco responder)
+            selectedVereador = { id: 0 };
+            mostrarVereador(1);
+            updateTimerDisplay();
+        });
+    </script>
+</body>
+</html>
