@@ -371,13 +371,26 @@
             const VALIDADE_MS = 3 * 60 * 60 * 1000;
             const expirado = e => !!(e && e.fim) && agora() - e.fim > VALIDADE_MS;
             const limpar = arr => Array.isArray(arr) ? arr.filter(n => n !== null && n !== undefined) : [];
-            // Só vale o sorteio feito depois que esta tela abriu: sorteios antigos não aparecem
-            const daSessao = e => !!(e && e.fim) && abertaEm > 0 && e.fim >= abertaEm - MARGEM_TV;
+            // Início da sessão: gravado no banco quando o tablet/notebook abre o Sorteio (vale para todos, inclusive a TV).
+            // Sem essa marca, vale o momento em que esta tela abriu.
+            const inicioSessao = e => (e && e.inicio) || (abertaEm - MARGEM_TV);
+            // Só vale o sorteio feito depois do início da sessão: sorteios antigos não aparecem
+            const daSessao = e => !!(e && e.fim) && abertaEm > 0 && e.fim >= inicioSessao(e);
             const lista = () => (expirado(estado) || !daSessao(estado)) ? [] : limpar(estado.sorteados);
             const contando = () => !!estado.fim && agora() < estado.fim;
             // Momento em que esta tela abriu: só destaca no centro sorteios feitos depois disso
             let abertaEm = 0;
-            db.ref('.info/serverTimeOffset').once('value', () => { abertaEm = agora(); render(); });
+            db.ref('.info/serverTimeOffset').once('value', () => {
+                abertaEm = agora();
+                // Tablet/notebook abriu (ou recarregou) o Sorteio: começa sessão nova, sem nenhum vereador sorteado.
+                // Se houver um sorteio rodando agora, não interrompe.
+                if (!ESTA_TV) refEstado.transaction(cur => {
+                    cur = cur || {};
+                    if (cur.fim && abertaEm < cur.fim) return;
+                    return Object.assign({}, cur, { inicio: abertaEm });
+                }).catch(() => {});
+                render();
+            });
 
             refConfig.on('value', snap => {
                 const v = snap.val();
@@ -426,7 +439,7 @@
                 pararAnimacao();
 
                 $('#btn-sortear').prop('disabled', false).removeClass('opacity-75');
-                const sorteioRecente = abertaEm && estado.fim && estado.fim >= abertaEm - MARGEM_TV;
+                const sorteioRecente = abertaEm && estado.fim && estado.fim >= inicioSessao(estado);
                 if (sorteadosHistorico.length && sorteioRecente) {
                     const vencedor = sorteadosHistorico[sorteadosHistorico.length - 1];
                     $('#status-title').html(`<span class="text-amber-400 drop-shadow-md">${vencedor.nome}</span>`);
@@ -555,7 +568,7 @@
                     if (usados.length >= TOTAL) usados = [];   // Novo ciclo automático após os 9
                     const disponiveis = vereadoresOriginais.map((v, i) => i).filter(i => !usados.includes(i));
                     const sorteado = disponiveis[Math.floor(Math.random() * disponiveis.length)];
-                    return { sorteados: [...usados, sorteado], fim: t + duracao };
+                    return { sorteados: [...usados, sorteado], fim: t + duracao, inicio: cur.inicio || null };
                 });
             });
 
