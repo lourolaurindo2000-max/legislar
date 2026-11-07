@@ -380,17 +380,24 @@
             const contando = () => !!estado.fim && agora() < estado.fim;
             // Momento em que esta tela abriu: só destaca no centro sorteios feitos depois disso
             let abertaEm = 0;
+            // Tablet/notebook abriu, recarregou ou voltou ao Sorteio: começa sessão nova, sem nenhum vereador sorteado
+            // (em todos os aparelhos, inclusive a TV). Se houver um sorteio rodando agora, não interrompe.
+            function novaSessao() {
+                if (ESTA_TV) return;
+                const t = agora();
+                refEstado.transaction(cur => {
+                    cur = cur || {};
+                    if (cur.fim && t < cur.fim) return;
+                    return Object.assign({}, cur, { inicio: t });
+                }).catch(() => {});
+            }
             db.ref('.info/serverTimeOffset').once('value', () => {
                 abertaEm = agora();
-                // Tablet/notebook abriu (ou recarregou) o Sorteio: começa sessão nova, sem nenhum vereador sorteado.
-                // Se houver um sorteio rodando agora, não interrompe.
-                if (!ESTA_TV) refEstado.transaction(cur => {
-                    cur = cur || {};
-                    if (cur.fim && abertaEm < cur.fim) return;
-                    return Object.assign({}, cur, { inicio: abertaEm });
-                }).catch(() => {});
+                novaSessao();
                 render();
             });
+            // Voltou para esta página pelo "voltar" do navegador (página restaurada sem recarregar)
+            window.addEventListener('pageshow', ev => { if (ev.persisted) { abertaEm = agora(); novaSessao(); render(); } });
 
             refConfig.on('value', snap => {
                 const v = snap.val();

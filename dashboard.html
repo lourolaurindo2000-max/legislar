@@ -729,6 +729,7 @@
                     var arq = (a.getAttribute('href') || '').split('#')[0].split('?')[0];
                     if (!PAGINAS[arq]) return;
                     a.addEventListener('click', function () {
+                        a.href = arq + '?v=' + Date.now();   // sempre abre a versão mais nova do sistema
                         abriuDaqui = true;
                         refTela.set({ pagina: arq, em: TS });
                     });
