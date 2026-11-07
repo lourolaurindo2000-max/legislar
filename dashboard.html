@@ -376,7 +376,7 @@
 
     <!-- Tablet da Mesa: entre tablets e celulares, só o tablet liberado vê Controle de Fala, Sorteio de Fala e Presença Plenária.
          Notebooks e a Smart TV continuam vendo tudo.
-         Liberar um tablet: abra no próprio tablet o endereço do painel com #mesa no final (pede a senha do tablet da Mesa).
+         Liberar um tablet: abra no próprio tablet o endereço do painel com #mesa no final (pede a senha de administrador do Sorteio).
          Tirar a liberação: abra no tablet o endereço com #mesa-sair no final. -->
     <script>
         (function () {
@@ -386,7 +386,8 @@
             var movel = !navTV && (/Android|iPad|iPhone|iPod|Mobile|Silk|Kindle|Tablet/i.test(ua) || (navigator.maxTouchPoints > 0 && !/Windows|CrOS/i.test(ua)));
             function liberado() { try { return localStorage.getItem('pld_mesa') === '1'; } catch (e) { return false; } }
             function limparHash() { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
-            var HASHES = ['c5139f5a9031ebc0177f5b256203f8fc16ea466bcc9663a88b6b70f86c657d8b'];   // senha do tablet da Mesa (SHA-256)
+            var HASHES = ['85ce9c211a744825d0ee2708bb63e4882f161f37e5ee33a2e928053cd4c6d316'];
+            var B64 = ['YWxtYWRpbmEyMDI2'];
             function conferir(t) {
                 if (window.crypto && crypto.subtle && window.TextEncoder) {
                     return crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)).then(function (b) {
@@ -394,7 +395,8 @@
                         return HASHES.indexOf(h) >= 0;
                     });
                 }
-                return Promise.resolve(false);
+                var ok = false; try { ok = B64.indexOf(btoa(t)) >= 0; } catch (e) {}
+                return Promise.resolve(ok);
             }
             function aplicar() {
                 var tvMarcada = false; try { tvMarcada = localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0); } catch (e) {}
@@ -410,7 +412,7 @@
             } else if (h === '#mesa') {
                 limparHash();
                 setTimeout(function () {
-                    var s = prompt('Liberar este tablet como TABLET DA MESA.\nDigite a senha do tablet da Mesa:');
+                    var s = prompt('Liberar este tablet como TABLET DA MESA.\nDigite a senha de administrador:');
                     if (!s) return;
                     conferir(s).then(function (ok) {
                         if (!ok) { alert('Senha incorreta. O tablet não foi liberado.'); return; }
