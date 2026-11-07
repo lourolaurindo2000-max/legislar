@@ -2,21 +2,6 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <script>
-        /* Acesso: entre tablets e celulares, so o "tablet da Mesa" (liberado no painel com #mesa) abre este sistema. Notebooks e a Smart TV continuam liberados. */
-        (function () {
-            try { if (window.self !== window.top) return; } catch (e) { return; }
-            var ua = navigator.userAgent || '';
-            if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|\bAFT[A-Z]/i.test(ua)) return;
-            var movel = /Android|iPad|iPhone|iPod|Mobile|Silk|Kindle|Tablet/i.test(ua) || (navigator.maxTouchPoints > 0 && !/Windows|CrOS/i.test(ua));
-            if (!movel) return;
-            try { if (localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0)) return; } catch (e) {}
-            var ok = false; try { ok = localStorage.getItem('pld_mesa') === '1'; } catch (e) {}
-            if (ok) return;
-            location.replace('dashboard.html#restrito');
-            try { window.stop(); } catch (e) {}
-        })();
-    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sorteio Plenário</title>
     <!-- Tailwind CSS -->
