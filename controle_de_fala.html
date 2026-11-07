@@ -405,7 +405,6 @@
             document.addEventListener('click', function (e) {
                 var b = e.target.closest ? e.target.closest('#cf-sair') : null;
                 if (!b) return;
-                if (!confirm('Encerrar o acesso da Presidência neste aparelho?')) return;
                 
                 html.classList.add('cf-bloq');
                 erro.textContent = ''; campo.value = '';
