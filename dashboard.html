@@ -342,7 +342,7 @@
                     <i class="fa-solid fa-pen-to-square text-3xl"></i>
                     <span>Anotações do Vereador</span>
                 </a>
-                <a href="controle_de_fala.html" class="card"target="_blank">
+                <a href="controle_de_fala.html" class="card so-mesa"target="_blank">
                     <i class="fas fa-users"></i>
                     <span>Controle de Fala</span>
                 </a>
@@ -358,7 +358,7 @@
                     <i class="fas fa-file-alt"></i>
                     <span>Arquivos Diversos</span>
                 </a>
-                <a href="sistema_sorteio.html" class="card" target="_blank">
+                <a href="sistema_sorteio.html" class="card so-mesa" target="_blank">
                     <i class="fas fa-dice"></i>
                     <span>Sorteio de Fala</span>
                 </a>
@@ -366,13 +366,68 @@
                     <i class="fas fa-play-circle"></i>
                     <span>Acompanhe as Sessões</span>
                 </a>
-                <a href="presenca_plenaria.html" class="card"target="_blank">
+                <a href="presenca_plenaria.html" class="card so-mesa"target="_blank">
                     <i class="fas fa-list-ol"></i>
                     <span>Presença Plenária</span>
                 </a>
             </div>
         </div>
     </div>
+
+    <!-- Tablet da Mesa: entre tablets e celulares, só o tablet liberado vê Controle de Fala, Sorteio de Fala e Presença Plenária.
+         Notebooks e a Smart TV continuam vendo tudo.
+         Liberar um tablet: abra no próprio tablet o endereço do painel com #mesa no final (pede a senha de administrador do Sorteio).
+         Tirar a liberação: abra no tablet o endereço com #mesa-sair no final. -->
+    <script>
+        (function () {
+            try { if (window.self !== window.top) return; } catch (e) { return; }
+            var ua = navigator.userAgent || '';
+            var navTV = /SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|\bAFT[A-Z]/i.test(ua);
+            var movel = !navTV && (/Android|iPad|iPhone|iPod|Mobile|Silk|Kindle|Tablet/i.test(ua) || (navigator.maxTouchPoints > 0 && !/Windows|CrOS/i.test(ua)));
+            function liberado() { try { return localStorage.getItem('pld_mesa') === '1'; } catch (e) { return false; } }
+            function limparHash() { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+            var HASHES = ['85ce9c211a744825d0ee2708bb63e4882f161f37e5ee33a2e928053cd4c6d316'];
+            var B64 = ['YWxtYWRpbmEyMDI2'];
+            function conferir(t) {
+                if (window.crypto && crypto.subtle && window.TextEncoder) {
+                    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)).then(function (b) {
+                        var h = Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+                        return HASHES.indexOf(h) >= 0;
+                    });
+                }
+                var ok = false; try { ok = B64.indexOf(btoa(t)) >= 0; } catch (e) {}
+                return Promise.resolve(ok);
+            }
+            function aplicar() {
+                var tvMarcada = false; try { tvMarcada = localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0); } catch (e) {}
+                var esconder = movel && !tvMarcada && !liberado();
+                Array.prototype.forEach.call(document.querySelectorAll('.grid-menu .so-mesa'), function (a) { a.style.display = esconder ? 'none' : ''; });
+            }
+
+            var h = (location.hash || '').toLowerCase();
+            if (h === '#mesa-sair') {
+                try { localStorage.removeItem('pld_mesa'); } catch (e) {}
+                limparHash();
+                setTimeout(function () { alert('Este aparelho deixou de ser o tablet da Mesa.'); }, 300);
+            } else if (h === '#mesa') {
+                limparHash();
+                setTimeout(function () {
+                    var s = prompt('Liberar este tablet como TABLET DA MESA.\nDigite a senha de administrador:');
+                    if (!s) return;
+                    conferir(s).then(function (ok) {
+                        if (!ok) { alert('Senha incorreta. O tablet não foi liberado.'); return; }
+                        try { localStorage.setItem('pld_mesa', '1'); } catch (e) {}
+                        aplicar();
+                        alert('Pronto! Este tablet agora é o tablet da Mesa e pode usar Controle de Fala, Sorteio de Fala e Presença Plenária.');
+                    });
+                }, 300);
+            } else if (h === '#restrito') {
+                limparHash();
+                setTimeout(function () { alert('Este sistema só pode ser aberto no tablet da Mesa ou nos notebooks.'); }, 300);
+            }
+            aplicar();
+        })();
+    </script>
 
     <!-- Tela cheia -->
     <button id="btnFullscreen" class="btn-fullscreen" title="Tela cheia" aria-label="Alternar tela cheia">
