@@ -402,32 +402,27 @@
                 Array.prototype.forEach.call(document.querySelectorAll('.grid-menu .so-mesa'), function (a) { a.style.display = esconder ? 'none' : ''; });
             }
 
-            // Também funciona se o painel já estava aberto e só o final do endereço (#mesa) foi trocado
-            function verHash() {
-                var h = (location.hash || '').toLowerCase();
-                if (h === '#mesa-sair') {
-                    try { localStorage.removeItem('pld_mesa'); } catch (e) {}
-                    limparHash();
-                    setTimeout(function () { alert('Este aparelho deixou de ser o tablet da Mesa.'); }, 300);
-                } else if (h === '#mesa') {
-                    limparHash();
-                    setTimeout(function () {
-                        var s = prompt('Liberar este tablet como TABLET DA MESA.\nDigite a senha do tablet da Mesa:');
-                        if (!s) return;
-                        conferir(s.trim()).then(function (ok) {
-                            if (!ok) { alert('Senha incorreta. O tablet não foi liberado.'); return; }
-                            try { localStorage.setItem('pld_mesa', '1'); } catch (e) {}
-                            aplicar();
-                            alert('Pronto! Este tablet agora é o tablet da Mesa e pode usar Controle de Fala, Sorteio de Fala e Presença Plenária.');
-                        });
-                    }, 300);
-                } else if (h === '#restrito') {
-                    limparHash();
-                    setTimeout(function () { alert('Este sistema só pode ser aberto no tablet da Mesa ou nos notebooks.'); }, 300);
-                }
+            var h = (location.hash || '').toLowerCase();
+            if (h === '#mesa-sair') {
+                try { localStorage.removeItem('pld_mesa'); } catch (e) {}
+                limparHash();
+                setTimeout(function () { alert('Este aparelho deixou de ser o tablet da Mesa.'); }, 300);
+            } else if (h === '#mesa') {
+                limparHash();
+                setTimeout(function () {
+                    var s = prompt('Liberar este tablet como TABLET DA MESA.\nDigite a senha do tablet da Mesa:');
+                    if (!s) return;
+                    conferir(s).then(function (ok) {
+                        if (!ok) { alert('Senha incorreta. O tablet não foi liberado.'); return; }
+                        try { localStorage.setItem('pld_mesa', '1'); } catch (e) {}
+                        aplicar();
+                        alert('Pronto! Este tablet agora é o tablet da Mesa e pode usar Controle de Fala, Sorteio de Fala e Presença Plenária.');
+                    });
+                }, 300);
+            } else if (h === '#restrito') {
+                limparHash();
+                setTimeout(function () { alert('Este sistema só pode ser aberto no tablet da Mesa ou nos notebooks.'); }, 300);
             }
-            window.addEventListener('hashchange', verHash);
-            verHash();
             aplicar();
         })();
     </script>
