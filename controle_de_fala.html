@@ -6,7 +6,7 @@
     <title>Tempo de Fala</title>
     <script>
         // Smart TV (dentro do quadro da TV ou aparelho marcado como TV): layout de tela inteira, sem rolagem
-        (function () { var tv = false; try { tv = window.self !== window.top || localStorage.getItem('pld_tv') === '1'; } catch (e) { tv = true; }
+        (function () { var tv = false; try { tv = window.self !== window.top || (localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0)); } catch (e) { tv = true; }
           if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) tv = true;   // navegador de Smart TV
           if (tv) document.documentElement.classList.add('modo-tv'); })();
     </script>
@@ -971,7 +971,7 @@
 
             // Smart TV: dentro do painel da TV (quadro) ou aparelho marcado como TV pelo painel inicial
             let ehTV = false;
-            try { ehTV = window.self !== window.top || localStorage.getItem('pld_tv') === '1'; } catch (e) { ehTV = true; }
+            try { ehTV = window.self !== window.top || (localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0)); } catch (e) { ehTV = true; }
             if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) ehTV = true;   // navegador de Smart TV (Samsung, LG, Sony, Android/Google TV, Fire TV, Roku…)
             if (ehTV) { $('#btn-admin').remove(); $('#btn-tv-tela').remove(); }
 

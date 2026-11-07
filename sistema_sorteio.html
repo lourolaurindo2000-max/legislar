@@ -344,7 +344,7 @@
             // Este aparelho é a Smart TV? (dentro do quadro da TV, marcado como TV ou navegador de TV)
             const ESTA_TV = (function () {
                 let tv = false;
-                try { tv = window.self !== window.top || localStorage.getItem('pld_tv') === '1'; } catch (e) { tv = true; }
+                try { tv = window.self !== window.top || (localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0)); } catch (e) { tv = true; }
                 if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) tv = true;
                 return tv;
             })();
@@ -530,7 +530,7 @@
             // então o botão "Tela Cheia" não aparece lá (continua só no notebook)
             (function () {
                 var ehTV = false;
-                try { ehTV = window.self !== window.top || localStorage.getItem('pld_tv') === '1'; } catch (e) { ehTV = true; }
+                try { ehTV = window.self !== window.top || (localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0)); } catch (e) { ehTV = true; }
                 if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) ehTV = true;   // navegador de Smart TV (Samsung, LG, Sony, Android/Google TV, Fire TV, Roku…)
                 if (ehTV) $('#btn-tv-mode').remove();
             })();

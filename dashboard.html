@@ -697,6 +697,9 @@
                 if (/[#?&]normal\b/i.test(marca)) localStorage.removeItem('pld_tv');
                 tv = localStorage.getItem('pld_tv') === '1';
             } catch (e) { tv = /[#?&]tv\b/i.test(marca); }
+            // Tablet / celular (tela de toque) nunca é a TV: fica sempre como controle, igual ao notebook
+            var navTV = /SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '');
+            if (tv && !navTV && navigator.maxTouchPoints > 0) { tv = false; try { localStorage.removeItem('pld_tv'); } catch (e) {} }
 
             var tela = document.getElementById('tvTela'), quadro = document.getElementById('tvFrame'), atual = '';
             function mostrarPagina(p) {
