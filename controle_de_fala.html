@@ -327,11 +327,11 @@
                 <div class="text-center md:text-left flex-1 flex flex-col justify-center">
                     <div>
                         <h2 id="display-name" class="text-2xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-                            Selecione um Vereador
+                            Aguardando orador
                         </h2>
                         <div class="flex items-center justify-center md:justify-start space-x-3 mt-1">
                             <span id="display-partido" class="text-sm md:text-xl font-bold text-governo-gold bg-governo-darkBlue/80 px-3 py-0.5 rounded-lg">---</span>
-                            <span id="display-partido-nome" class="text-xs md:text-base text-gray-300">Nenhum vereador selecionado</span>
+                            <span id="display-partido-nome" class="text-xs md:text-base text-gray-300">Câmara Municipal de Almadina</span>
                         </div>
                     </div>
 
@@ -981,7 +981,10 @@
             //  Depois que uma fala termina, a TV volta sozinha para a espera em 10 segundos.
             // =====================================================================
             $('#tv-espera-brasao').attr('src', $('header img').first().attr('src'));
+            const inicioPagina = Date.now();
             function telaDeEspera() {
+                // TV recém-aberta: fica na espera uns segundos (o notebook ainda pode estar zerando a sessão anterior)
+                if (ehTV && !estado.running && Date.now() - inicioPagina < 4000) return true;
                 if (!estado.exibir) return true;
                 const fim = estado.status === 'esgotado' || estado.status === 'concluida';
                 const reexibido = (estado.mostrarDesde || 0) > (estado.fimId || 0);   // o notebook pediu para mostrar de novo
