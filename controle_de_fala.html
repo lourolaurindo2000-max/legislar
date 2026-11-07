@@ -10,6 +10,60 @@
           if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) tv = true;   // navegador de Smart TV
           if (tv) document.documentElement.classList.add('modo-tv'); })();
     </script>
+    <script>
+        // Acesso do Presidente da Sessão: fora da Smart TV, o Controle de Fala só abre depois da senha
+        (function () {
+            var d = document.documentElement;
+            if (d.classList.contains('modo-tv')) return;
+            var ok = false;
+            try {
+                ok = sessionStorage.getItem('cf_presidente') === '1';
+                if (!ok) { var ate = +localStorage.getItem('cf_presidente_ate') || 0; ok = ate > Date.now(); if (!ok) localStorage.removeItem('cf_presidente_ate'); }
+            } catch (e) {}
+            if (!ok) d.classList.add('cf-bloq');
+        })();
+    </script>
+    <style>
+        /* Tela de acesso do Presidente */
+        #cf-login { display: none; }
+        html.cf-bloq, html.cf-bloq body { overflow: hidden !important; }
+        html.cf-bloq body > *:not(#cf-login) { display: none !important; }
+        html.cf-bloq #cf-login { display: flex; }
+        #cf-login { position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; padding: 16px; overflow-y: auto;
+            background: radial-gradient(ellipse at top, #13315C 0%, #0B2545 35%, #0A0F1D 100%); font-family: 'Inter', sans-serif; }
+        #cf-login .cf-cartao { box-sizing: border-box; width: 100%; max-width: 420px; margin: auto; background: rgba(10, 15, 29, .82); border: 1px solid rgba(212, 175, 55, .35);
+            border-radius: 20px; box-shadow: 0 25px 60px rgba(0, 0, 0, .55); overflow: hidden; }
+        #cf-login .cf-faixa { height: 6px; background: linear-gradient(90deg, #0B2545, #D4AF37, #0B2545); }
+        #cf-login .cf-corpo { padding: 28px 28px 22px; text-align: center; }
+        #cf-login .cf-brasao { height: 96px; width: auto; margin: 0 auto 14px; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .5)); }
+        #cf-login h1 { color: #fff; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; font-size: 1.05rem; margin: 0; }
+        #cf-login .cf-sub { color: #D4AF37; font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .28em; margin-top: 4px; }
+        #cf-login .cf-selo { display: inline-flex; align-items: center; gap: 8px; margin: 18px 0 6px; padding: 6px 14px; border-radius: 999px;
+            background: rgba(212, 175, 55, .12); border: 1px solid rgba(212, 175, 55, .4); color: #F3D774; font-size: .78rem; font-weight: 700; letter-spacing: .04em; }
+        #cf-login .cf-txt { color: #9CA3AF; font-size: .85rem; margin: 6px 0 18px; line-height: 1.45; }
+        #cf-login label { display: block; text-align: left; color: #D1D5DB; font-size: .78rem; font-weight: 600; margin-bottom: 6px; }
+        #cf-login .cf-campo { position: relative; }
+        #cf-login .cf-campo i.fa-lock { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #6B7280; }
+        #cf-login input[type=password], #cf-login input[type=text] { width: 100%; box-sizing: border-box; background: #111827; color: #fff;
+            border: 1px solid #374151; border-radius: 12px; padding: 13px 46px 13px 40px; font-size: 1rem; outline: none; transition: border-color .2s, box-shadow .2s; }
+        #cf-login input:focus { border-color: #D4AF37; box-shadow: 0 0 0 3px rgba(212, 175, 55, .2); }
+        #cf-login .cf-olho { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: #9CA3AF;
+            width: 38px; height: 38px; border-radius: 10px; cursor: pointer; }
+        #cf-login .cf-olho:hover { color: #fff; background: rgba(255, 255, 255, .06); }
+        #cf-login .cf-lembrar { display: flex; align-items: center; gap: 8px; color: #9CA3AF; font-size: .8rem; margin: 12px 0 4px; text-align: left; cursor: pointer; font-weight: 400; }
+        #cf-login .cf-lembrar input { accent-color: #D4AF37; width: 16px; height: 16px; }
+        #cf-login .cf-erro { color: #F87171; font-size: .8rem; min-height: 1.2em; margin: 8px 0 6px; }
+        #cf-login .cf-entrar { width: 100%; background: linear-gradient(180deg, #E5C04B, #C9A227); color: #0A0F1D; border: 0; border-radius: 12px;
+            padding: 13px; font-weight: 900; font-size: .95rem; text-transform: uppercase; letter-spacing: .08em; cursor: pointer; transition: filter .2s, transform .1s; }
+        #cf-login .cf-entrar:hover { filter: brightness(1.07); }
+        #cf-login .cf-entrar:active { transform: scale(.99); }
+        #cf-login .cf-entrar:disabled { filter: grayscale(.6) brightness(.8); cursor: not-allowed; }
+        #cf-login .cf-voltar { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; color: #9CA3AF; font-size: .8rem; text-decoration: none; }
+        #cf-login .cf-voltar:hover { color: #fff; }
+        #cf-login .cf-rodape { border-top: 1px solid rgba(255, 255, 255, .06); padding: 10px 16px; color: #6B7280; font-size: .68rem; text-align: center; }
+        #cf-login .cf-cartao.cf-tremer { animation: cfTremer .4s; }
+        @keyframes cfTremer { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+    </style>
     <style>
         /* Smart TV: entra direto na tela de espera (sem mostrar a página do orador enquanto carrega) */
         html.modo-tv:not(.tv-pronta), html.modo-tv:not(.tv-pronta) body { background: #0A0F1D !important; }
@@ -252,6 +306,117 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between font-sans antialiased bg-governo-dark">
 
+    <!-- ACESSO DO PRESIDENTE DA SESSÃO (não aparece na Smart TV) -->
+    <div id="cf-login" role="dialog" aria-modal="true" aria-labelledby="cf-login-titulo">
+        <form class="cf-cartao" id="cf-login-form" autocomplete="off" novalidate>
+            <div class="cf-faixa"></div>
+            <div class="cf-corpo">
+                <img id="cf-login-brasao" class="cf-brasao" alt="Brasão de Almadina" style="visibility:hidden">
+                <h1 id="cf-login-titulo">Câmara Municipal de Almadina</h1>
+                <div class="cf-sub">Plenário Jonas Plínio</div>
+                <div class="cf-selo"><i class="fa-solid fa-gavel"></i> Controle de Fala · Presidência</div>
+                <p class="cf-txt">Acesso restrito ao <b style="color:#E5E7EB">Presidente da Sessão</b>.<br>Digite a senha para conduzir o tempo de fala.</p>
+                <label for="cf-senha">Senha da Presidência</label>
+                <div class="cf-campo">
+                    <i class="fa-solid fa-lock"></i>
+                    <input id="cf-senha" type="password" placeholder="Digite a senha" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+                    <button type="button" class="cf-olho" id="cf-olho" aria-label="Mostrar senha" title="Mostrar senha"><i class="fa-solid fa-eye"></i></button>
+                </div>
+                <label class="cf-lembrar"><input type="checkbox" id="cf-lembrar"> Manter conectado neste aparelho por 12 horas</label>
+                <p class="cf-erro" id="cf-erro" role="alert"></p>
+                <button type="submit" class="cf-entrar" id="cf-entrar"><i class="fa-solid fa-right-to-bracket"></i>&nbsp; Entrar</button>
+                <a href="dashboard.html" class="cf-voltar"><i class="fa-solid fa-arrow-left"></i> Voltar ao painel</a>
+            </div>
+            <div class="cf-rodape"><i class="fa-solid fa-shield-halved"></i> Sistema (PLD) Plenário Legislativo Digital · Acesso protegido</div>
+        </form>
+    </div>
+    <script>
+        (function () {
+            var html = document.documentElement;
+            var HASH = '24b470371e3c653134430a638c6524a418d0fdc59bfad09c5b71e50523f9b077';   // senha da Presidência (SHA-256, nunca em texto)
+            var form = document.getElementById('cf-login-form'), campo = document.getElementById('cf-senha'),
+                erro = document.getElementById('cf-erro'), botao = document.getElementById('cf-entrar'), olho = document.getElementById('cf-olho');
+            var erros = 0, travadoAte = 0, travaT = null;
+
+            // Brasão igual ao do cabeçalho
+            document.addEventListener('DOMContentLoaded', function () {
+                var b = document.querySelector('header img'), t = document.getElementById('cf-login-brasao');
+                if (b && t) { t.src = b.getAttribute('src'); t.style.visibility = ''; }
+                if (html.classList.contains('cf-bloq')) setTimeout(function () { campo.focus(); }, 100);
+            });
+
+            // Enquanto a tela de acesso estiver aberta, os atalhos do teclado (Espaço, R, 5, 2) não funcionam
+            window.addEventListener('keydown', function (e) {
+                if (!html.classList.contains('cf-bloq')) return;
+                if (!form.contains(e.target)) { e.stopImmediatePropagation(); if (e.key === ' ') e.preventDefault(); }
+            }, true);
+            form.addEventListener('keydown', function (e) { if (html.classList.contains('cf-bloq')) e.stopPropagation(); });
+
+            olho.addEventListener('click', function () {
+                var ver = campo.type === 'password';
+                campo.type = ver ? 'text' : 'password';
+                olho.innerHTML = ver ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+                olho.setAttribute('aria-label', ver ? 'Ocultar senha' : 'Mostrar senha');
+                campo.focus();
+            });
+
+            function conferir(t) {
+                if (!(window.crypto && crypto.subtle && window.TextEncoder)) return Promise.resolve(false);
+                return crypto.subtle.digest('SHA-256', new TextEncoder().encode('cf-presidente:' + t)).then(function (buf) {
+                    return Array.prototype.map.call(new Uint8Array(buf), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('') === HASH;
+                });
+            }
+            function tremer() { form.classList.remove('cf-tremer'); void form.offsetWidth; form.classList.add('cf-tremer'); }
+            function contarTrava() {
+                clearInterval(travaT);
+                botao.disabled = true;
+                travaT = setInterval(function () {
+                    var s = Math.ceil((travadoAte - Date.now()) / 1000);
+                    if (s <= 0) { clearInterval(travaT); botao.disabled = false; erro.textContent = 'Pode tentar de novo.'; campo.focus(); return; }
+                    erro.textContent = 'Muitas tentativas erradas. Aguarde ' + s + 's.';
+                }, 250);
+            }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                if (Date.now() < travadoAte) return;
+                var s = campo.value.trim();
+                if (!s) { erro.textContent = 'Digite a senha.'; tremer(); campo.focus(); return; }
+                botao.disabled = true;
+                conferir(s).then(function (ok) {
+                    botao.disabled = false;
+                    if (!ok) {
+                        erros++;
+                        campo.value = ''; tremer();
+                        if (erros >= 5) { erros = 0; travadoAte = Date.now() + 60000; contarTrava(); return; }
+                        erro.textContent = 'Senha incorreta. Tentativa ' + erros + ' de 5.';
+                        campo.focus();
+                        return;
+                    }
+                    try {
+                        sessionStorage.setItem('cf_presidente', '1');
+                        if (document.getElementById('cf-lembrar').checked) localStorage.setItem('cf_presidente_ate', String(Date.now() + 12 * 3600 * 1000));
+                    } catch (e2) {}
+                    campo.value = ''; erro.textContent = '';
+                    html.classList.remove('cf-bloq');
+                    campo.blur();
+                    window.dispatchEvent(new Event('resize'));   // reajusta o layout que estava escondido
+                });
+            });
+
+            // Botão "Sair" no cabeçalho: encerra o acesso do Presidente neste aparelho
+            document.addEventListener('click', function (e) {
+                var b = e.target.closest ? e.target.closest('#cf-sair') : null;
+                if (!b) return;
+                if (!confirm('Encerrar o acesso do Presidente neste aparelho?')) return;
+                try { sessionStorage.removeItem('cf_presidente'); localStorage.removeItem('cf_presidente_ate'); } catch (e2) {}
+                html.classList.add('cf-bloq');
+                erro.textContent = ''; campo.value = '';
+                setTimeout(function () { campo.focus(); }, 100);
+            });
+        })();
+    </script>
+
     <!-- CABEÇALHO OFICIAL DA SESSÃO -->
     <header class="bg-governo-blue border-b-2 border-governo-gold px-4 py-3 md:px-8 flex justify-between items-center shadow-lg">
         <div class="flex items-center space-x-4">
@@ -275,6 +440,11 @@
             <!-- O que a Smart TV mostra: tela de espera ou o orador (só no notebook) -->
             <button id="btn-tv-tela" type="button" title="Alternar o que a Smart TV mostra" class="bg-governo-darkBlue hover:bg-governo-accent text-white px-3 py-2.5 rounded-xl border border-gray-600 transition hidden sm:flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
                 <i class="fa-solid fa-tv"></i><span id="btn-tv-tela-txt">TV: espera</span>
+            </button>
+
+            <!-- Encerrar o acesso do Presidente (não aparece na Smart TV) -->
+            <button id="cf-sair" type="button" title="Sair (encerrar acesso do Presidente)" class="bg-governo-darkBlue hover:bg-rose-700 text-white px-3 py-2.5 rounded-xl border border-gray-600 transition flex items-center gap-2 text-sm font-bold">
+                <i class="fa-solid fa-right-from-bracket"></i><span class="hidden md:inline">Sair</span>
             </button>
 
             <!-- Botão de Tela Cheia para Smart TV / Apresentação -->
@@ -973,7 +1143,7 @@
             let ehTV = false;
             try { ehTV = window.self !== window.top || (localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0)); } catch (e) { ehTV = true; }
             if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) ehTV = true;   // navegador de Smart TV (Samsung, LG, Sony, Android/Google TV, Fire TV, Roku…)
-            if (ehTV) { $('#btn-admin').remove(); $('#btn-tv-tela').remove(); }
+            if (ehTV) { $('#btn-admin').remove(); $('#btn-tv-tela').remove(); $('#cf-sair').remove(); }
 
             // =====================================================================
             //  TELA DE ESPERA DA SMART TV
