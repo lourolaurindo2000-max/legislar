@@ -10,6 +10,14 @@
           if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) tv = true;   // navegador de Smart TV
           if (tv) document.documentElement.classList.add('modo-tv'); })();
     </script>
+    <style>
+        /* Smart TV: entra direto na tela de espera (sem mostrar a página do orador enquanto carrega) */
+        html.modo-tv:not(.tv-pronta), html.modo-tv:not(.tv-pronta) body { background: #0A0F1D !important; }
+        html.modo-tv:not(.tv-pronta) body > *:not(#tv-espera) { visibility: hidden !important; }
+        html.modo-tv:not(.tv-pronta) #tv-espera { display: flex !important; position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 40;
+            flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff;
+            background: linear-gradient(to bottom, #0B2545, #0A0F1D 50%, #0A0F1D); }
+    </style>
     <!-- Tailwind CSS para estilização moderna e responsiva -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- jQuery -->
@@ -420,6 +428,7 @@
         <div class="absolute inset-x-0 top-0 h-1.5 bg-governo-gold"></div>
         <div class="absolute -right-24 -bottom-24 opacity-5 pointer-events-none"><i class="fa-solid fa-landmark text-[420px] text-white"></i></div>
         <img id="tv-espera-brasao" alt="Brasão de Almadina-BA" class="tv-espera-brasao w-auto drop-shadow-2xl mb-6">
+        <script>(function(){var t=document.getElementById('tv-espera-brasao'),b=document.querySelector('header img');if(t&&b)t.src=b.src;})();</script>
         <h1 class="tv-espera-titulo font-black uppercase tracking-wider text-white leading-tight">Câmara Municipal de Almadina</h1>
         <p class="mt-3 text-governo-gold font-semibold uppercase tracking-[0.3em] tv-espera-sub">Plenário Jonas Plínio · Sessão Plenária</p>
         <div class="w-28 h-1 bg-governo-gold rounded-full my-8"></div>
@@ -993,6 +1002,7 @@
             }
             if (ehTV) {
                 $('#tv-espera').removeClass('hidden').addClass('flex');   // começa na espera até o banco responder
+                document.documentElement.classList.add('tv-pronta');      // a partir daqui a página controla a tela de espera
                 setInterval(() => {
                     $('#tv-espera-relogio').text($('#current-clock').text());
                     atualizarTelaEspera();                                   // volta à espera 10 s após o fim da fala
