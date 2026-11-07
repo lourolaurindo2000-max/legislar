@@ -730,6 +730,15 @@
                     if (!PAGINAS[arq]) return;
                     a.addEventListener('click', function () {
                         a.href = arq + '?v=' + Date.now();   // sempre abre a versão mais nova do sistema
+                        if (arq === 'sistema_sorteio.html') {
+                            // Sorteio novo: limpa os vereadores do sorteio anterior (TV e tablets mostram só o brasão)
+                            var t = agora();
+                            rt.ref('legislar/sorteioFala/estado').transaction(function (cur) {
+                                cur = cur || {};
+                                if (cur.fim && t < cur.fim) return;   // não interrompe sorteio em andamento
+                                return Object.assign({}, cur, { inicio: t });
+                            }).catch(function () {});
+                        }
                         abriuDaqui = true;
                         refTela.set({ pagina: arq, em: TS });
                     });

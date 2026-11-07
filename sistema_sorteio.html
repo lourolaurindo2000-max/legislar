@@ -348,6 +348,13 @@
                 if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) tv = true;
                 return tv;
             })();
+            // Aparelho de controle (tablet, notebook, celular): qualquer um fora do quadro da TV e que não seja navegador de TV
+            // (mesmo que um dia tenha sido marcado como TV). Só ele começa sessão nova e chama a TV.
+            const CONTROLE = (function () {
+                let noQuadro = true;
+                try { noQuadro = window.self !== window.top; } catch (e) {}
+                return !noQuadro && !/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '');
+            })();
             // A TV pode abrir o sorteio alguns segundos depois do clique: aceita sorteios de até 1 min antes
             const MARGEM_TV = ESTA_TV ? 60 * 1000 : 0;
 
@@ -383,7 +390,7 @@
             // Tablet/notebook abriu, recarregou ou voltou ao Sorteio: começa sessão nova, sem nenhum vereador sorteado
             // (em todos os aparelhos, inclusive a TV). Se houver um sorteio rodando agora, não interrompe.
             function novaSessao() {
-                if (ESTA_TV) return;
+                if (!CONTROLE) return;
                 const t = agora();
                 refEstado.transaction(cur => {
                     cur = cur || {};
@@ -564,7 +571,7 @@
                 const duracao = (cfg.tempo || 5) * 1000;
 
                 // Qualquer aparelho (notebook, tablet, celular) que sortear faz a Smart TV abrir o Sorteio
-                if (!ESTA_TV) db.ref('legislar/painel/tela').set({ pagina: 'sistema_sorteio.html', em: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
+                if (CONTROLE) db.ref('legislar/painel/tela').set({ pagina: 'sistema_sorteio.html', em: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
 
                 // Transação: só um sorteio por vez e sem repetir vereador
                 refEstado.transaction(cur => {
