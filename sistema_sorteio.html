@@ -341,6 +341,16 @@
             db.ref('.info/serverTimeOffset').on('value', s => { serverOffset = s.val() || 0; });
             const agora = () => Date.now() + serverOffset;
 
+            // Este aparelho é a Smart TV? (dentro do quadro da TV, marcado como TV ou navegador de TV)
+            const ESTA_TV = (function () {
+                let tv = false;
+                try { tv = window.self !== window.top || localStorage.getItem('pld_tv') === '1'; } catch (e) { tv = true; }
+                if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) tv = true;
+                return tv;
+            })();
+            // A TV pode abrir o sorteio alguns segundos depois do clique: aceita sorteios de até 1 min antes
+            const MARGEM_TV = ESTA_TV ? 60 * 1000 : 0;
+
             let estado = { sorteados: [], fim: 0 };
             let sorteadosHistorico = [];
             let emSorteio = false;
@@ -362,7 +372,7 @@
             const expirado = e => !!(e && e.fim) && agora() - e.fim > VALIDADE_MS;
             const limpar = arr => Array.isArray(arr) ? arr.filter(n => n !== null && n !== undefined) : [];
             // Só vale o sorteio feito depois que esta tela abriu: sorteios antigos não aparecem
-            const daSessao = e => !!(e && e.fim) && abertaEm > 0 && e.fim >= abertaEm;
+            const daSessao = e => !!(e && e.fim) && abertaEm > 0 && e.fim >= abertaEm - MARGEM_TV;
             const lista = () => (expirado(estado) || !daSessao(estado)) ? [] : limpar(estado.sorteados);
             const contando = () => !!estado.fim && agora() < estado.fim;
             // Momento em que esta tela abriu: só destaca no centro sorteios feitos depois disso
@@ -416,7 +426,7 @@
                 pararAnimacao();
 
                 $('#btn-sortear').prop('disabled', false).removeClass('opacity-75');
-                const sorteioRecente = abertaEm && estado.fim && estado.fim >= abertaEm;
+                const sorteioRecente = abertaEm && estado.fim && estado.fim >= abertaEm - MARGEM_TV;
                 if (sorteadosHistorico.length && sorteioRecente) {
                     const vencedor = sorteadosHistorico[sorteadosHistorico.length - 1];
                     $('#status-title').html(`<span class="text-amber-400 drop-shadow-md">${vencedor.nome}</span>`);
@@ -532,6 +542,9 @@
                 e.preventDefault();
                 if (emSorteio || contando()) return;
                 const duracao = (cfg.tempo || 5) * 1000;
+
+                // Qualquer aparelho (notebook, tablet, celular) que sortear faz a Smart TV abrir o Sorteio
+                if (!ESTA_TV) db.ref('legislar/painel/tela').set({ pagina: 'sistema_sorteio.html', em: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
 
                 // Transação: só um sorteio por vez e sem repetir vereador
                 refEstado.transaction(cur => {
