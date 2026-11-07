@@ -878,8 +878,8 @@ function sha256(ascii){
   function saved(){ try { return localStorage.getItem(KEY) === HASH || sessionStorage.getItem(KEY) === HASH; } catch(e){ return false; } }
   function lock(){ document.body.classList.add("locked"); }
   function unlock(){ document.body.classList.remove("locked"); setTimeout(function(){ if (window.__refit) window.__refit(); }, 30); }
-  if (!saved()) lock();
-  window.__plenarioLogout = function(){ try { localStorage.removeItem(KEY); sessionStorage.removeItem(KEY); sessionStorage.removeItem("plenario.adm"); } catch(e){} if (window.__admChanged) window.__admChanged(); document.getElementById("lgPass").value = "123@entrar"; document.getElementById("lgErr").textContent = ""; lock(); };
+  // Login antigo (usuário/senha) desativado: o acesso é feito só pela Senha da Presidência no início da página.
+  window.__plenarioLogout = function(){ try { localStorage.removeItem(KEY); sessionStorage.removeItem(KEY); sessionStorage.removeItem("plenario.adm"); } catch(e){} if (window.__admChanged) window.__admChanged(); document.documentElement.classList.add("cf-bloq"); };
   window.__plenarioLocked = function(){ return document.body.classList.contains("locked"); };
   // Sair da página: encerra o acesso, sai da tela cheia e FECHA esta aba (fica a aba do dashboard).
   // Se o navegador não deixar fechar, troca esta aba pelo dashboard.
