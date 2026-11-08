@@ -374,12 +374,15 @@ html.tablet #v-vereador .ver{flex:1;width:100%;max-width:1200px}
 html.tablet #verBody{flex:1;grid-template-rows:auto minmax(0,1fr)}
 html.tablet #verBody > .votebtns:only-child{grid-row:1/-1}
 html.tablet .votebtns{min-height:0}
-html.tablet .vb{min-height:200px;height:100%}
+html.tablet .votebtns{align-self:start;align-items:start}
+html.tablet .vb{min-height:0;height:170px;height:clamp(140px,22vh,190px);font-size:2.1rem;padding:16px}
+html.tablet.vz .vb .vi{width:50px;height:50px;margin-bottom:2px}
+html.tablet.vz .vb .vi svg{width:28px;height:28px}
 .votebtns.minerva{grid-template-columns:repeat(2,1fr)}
 html.tablet #v-ver-login:not([hidden]){min-height:calc(100vh - 66px);min-height:calc(100dvh - 66px);display:flex;align-items:center;justify-content:center;padding-block:18px}
 html.tablet #v-ver-login .login{width:100%}
 html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3rem}
-@media (max-width:640px){html.tablet .vb{min-height:120px}}
+@media (max-width:640px){html.tablet .vb{height:110px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* mensagens e arquivos para todas as telas */
 .field textarea{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:10px 12px;min-height:84px;width:100%;resize:vertical;font:inherit;color:inherit}
