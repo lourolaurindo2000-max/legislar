@@ -835,7 +835,7 @@ function renderTelao(){
   $('#tvFootL').textContent = e.aberta ? `Quórum: ${pres} presentes de 9 · mínimo ${QUORUM}${e.presidente?' · Presidente: '+vName(e.presidente):''}` : 'Câmara Municipal de Almadina — Bahia';
   const body = $('#tvBody');
   if(!e.aberta){
-    body.innerHTML = `<div class="splash"><img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>A sessão ainda não foi aberta.</p></div>`;
+    body.innerHTML = `<div class="splash"><img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>A votação ainda não começou.</p></div>`;
     return;
   }
   const vs = m ? votosDe(m.id) : [];
