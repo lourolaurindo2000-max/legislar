@@ -748,7 +748,7 @@
                 fimId: 0,            // marca o momento do alarme de fim (toca em todos os aparelhos)
                 exibir: false        // Smart TV: false = tela de espera; true = mostra o orador
             };
-            let estado = { ...ESTADO_PADRAO };
+            let estado = Object.assign({}, ESTADO_PADRAO);
             let primeiraLeitura = true;
             let ultimoFimId = 0;
 
@@ -967,7 +967,7 @@
             refEstado.on('value', snap => {
                 const val = snap.val();
                 if (!val) { refEstado.set(ESTADO_PADRAO); return; }
-                estado = { ...ESTADO_PADRAO, ...val };
+                estado = Object.assign({}, ESTADO_PADRAO, val);
                 aplicarEstado();
             }, err => {
                 console.error('Firebase: sem permissão. Verifique as regras do banco.', err);
@@ -983,7 +983,7 @@
                     // Só um aparelho grava o fim (transação evita duplicidade)
                     refEstado.transaction(cur => {
                         if (!cur || !cur.running || cur.endAt > agora()) return;
-                        return { ...cur, running: false, remaining: 0, endAt: 0, status: 'esgotado', fimId: agora() };
+                        return Object.assign({}, cur, { running: false, remaining: 0, endAt: 0, status: 'esgotado', fimId: agora() });
                     });
                 }
             }, 250);

@@ -110,7 +110,7 @@ h2{font-size:1.45rem}
 .tog.on{background:var(--sim);border-color:var(--sim);color:#fff}
 .quorum{display:flex;flex-direction:column;gap:8px}
 .meter{position:relative;height:14px;border-radius:99px;background:var(--sunk);border:1px solid var(--line);overflow:hidden}
-.meter i{position:absolute;inset:0 auto 0 0;background:var(--nao);transition:width .3s}
+.meter i{position:absolute;top:0;bottom:0;left:0;background:var(--nao);transition:width .3s}
 .meter i.ok{background:var(--sim)}
 .meter b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
 .qtxt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.92rem}
@@ -162,7 +162,7 @@ h2{font-size:1.45rem}
 .lockico{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--brass-soft);color:var(--brass)}
 
 /* modal / toast */
-.modal{position:fixed;inset:0;background:rgba(8,12,24,.62);display:grid;place-items:center;z-index:50;padding:16px}
+.modal{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(8,12,24,.62);display:grid;place-items:center;z-index:50;padding:16px}
 .modal .box{background:var(--surface);border-radius:14px;padding:24px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:14px;border:1px solid var(--line)}
 .modal .box .big{font-family:var(--f-display);font-size:2.6rem;font-weight:700;line-height:1}
 .modal .row .btn{flex:1;min-height:56px;font-size:1.05rem}
@@ -229,6 +229,64 @@ img.seal{border:0;border-radius:0;background:none;object-fit:contain;padding:0}
 .tvfoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.85rem}
 .tvfoot button{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 10px}
 .banner{background:var(--abs-soft);color:var(--abs);border-radius:8px;padding:10px 14px;font-weight:600;font-size:.92rem}
+/* ===================== TELÃO: tela fixa 1920×1080, ampliada ou reduzida para caber em qualquer Smart TV =====================
+   (720p, 1080p, 4K ou TVs que mostram a página em 960×540: o desenho fica sempre igual e sem rolagem)
+   Espaçamentos com margem/grade (as TVs mais antigas não entendem "gap" em flex). */
+.tv{position:fixed;top:0;right:0;bottom:0;left:0;min-height:0;overflow:hidden;z-index:1}
+.tv .tvwrap{position:absolute;top:0;left:0;width:1920px;height:1080px;max-width:none;margin:0;padding:34px 56px 28px;
+  display:flex;flex-direction:column;gap:0;-webkit-transform-origin:0 0;transform-origin:0 0}
+.tv .tvwrap > * + *{margin-top:22px}
+.tv #tvBody{flex:1;min-height:0;display:flex;flex-direction:column}
+.tv #tvBody > * + *{margin-top:20px}
+.tv .tvtop{flex-wrap:nowrap;gap:0;padding-bottom:18px}
+.tv .tvtop > * + *{margin-left:20px}
+.tv .tvtop .seal{width:78px;height:78px}
+.tv .tvtop .brand small{font-size:1.05rem}
+.tv .tvtop .brand b{font-size:2.7rem}
+.tv .clock{font-size:2.7rem}
+.tv .tvstate{font-size:1.7rem;padding:8px 20px}
+.tv .tvmain{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-gap:20px;gap:20px}
+.tv .tvmat{padding:36px 40px;gap:0;min-height:0;overflow:hidden}
+.tv .tvmat > * + *{margin-top:14px}
+.tv .tvmat > .tvq{margin-top:auto}
+.tv .tvmat .mtipo{font-size:1.5rem}
+.tv .tvmat h2{font-size:3.4rem;line-height:1.1;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.tv .tvres + .tvmain .tvmat h2{font-size:2.7rem;-webkit-line-clamp:3}
+.tv .tvmat .autor{font-size:1.45rem}
+.tv .tvq{gap:0;flex-wrap:nowrap;padding-top:18px}
+.tv .tvq div + div{margin-left:46px}
+.tv .tvq small{font-size:1.05rem}
+.tv .tvq b{font-size:3.4rem;line-height:1.1}
+.tv .tvgrid{min-height:0;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));grid-gap:14px;gap:14px}
+.tv .tvv{padding:16px 20px;gap:0;justify-content:center;min-height:0;overflow:hidden}
+.tv .tvv > * + *{margin-top:12px}
+.tv .tvv .nm{font-size:2.05rem}
+.tv .tvv .pres{font-size:.95rem}
+.tv .tvv .st{font-size:1.65rem;padding:6px 14px}
+.tv .tvres{flex:none;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-gap:30px;gap:30px;padding:26px 40px}
+.tv .tvres .mtipo{font-size:1.4rem}
+.tv .verdict{font-size:8.5rem}
+.tv .placar{grid-gap:14px;gap:14px}
+.tv .placar div{padding:14px}
+.tv .placar small{font-size:1.1rem}
+.tv .placar b{font-size:5rem}
+.tv .splash{flex:1;min-height:0;gap:0}
+.tv .splash > * + *{margin-top:22px}
+.tv .splash img.seal{width:230px;height:230px}
+.tv .splash h2{font-size:5.6rem}
+.tv .splash p{font-size:2.3rem}
+.tv .tvfoot{font-size:1.1rem;gap:0;flex-wrap:nowrap}
+.tv .tvfoot .row{gap:0}
+.tv .tvfoot .row > * + *{margin-left:12px}
+.tv .tvfoot button{font-size:1rem;padding:6px 14px}
+
+/* ===================== TABLETS DOS VEREADORES ===================== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overscroll-behavior-y:contain}                 /* puxar a tela não recarrega a página no meio da votação */
+button,a,.vb,.namebtn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#verBody{display:grid;grid-gap:16px;gap:16px}
+.vb{min-height:150px;min-height:clamp(150px,26vh,280px)}
+@media (max-width:640px){.vb{min-height:110px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* mensagens e arquivos para todas as telas */
 .field textarea{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:10px 12px;min-height:84px;width:100%;resize:vertical;font:inherit;color:inherit}
@@ -414,7 +472,7 @@ const VOTO_LABEL = {sim:'APROVAR', nao:'REPROVAR', abs:'ABSTER'};
 const VOTO_CURTO = {sim:'SIM', nao:'NÃO', abs:'ABST.'};
 
 const $ = s => document.querySelector(s);
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ini = n => n.split(' ').filter(Boolean).map(p=>p[0]).slice(0,2).join('').toUpperCase();
 const vName = id => (VEREADORES.find(v=>v.id===id)||{}).nome || '—';
 const ls = {
@@ -454,7 +512,7 @@ const Local = {
   async del(p){ try{ localStorage.removeItem('vp:'+p) }catch(e){} this.ch && this.ch.postMessage(1); this.fire(); },
   async setIfAbsent(p,d){ if(this.read(p)) return false; await this.set(p,d); return true; },
   watchDoc(p,cb){ const f=()=>cb(this.read(p)); this.subs.push(f); setTimeout(f,0); },
-  watchCol(c,cb){ const f=()=>cb(this.keys().filter(k=>{const s=k.split('/');return s.length===2&&s[0]===c}).map(k=>({id:k.split('/')[1], ...this.read(k)}))); this.subs.push(f); setTimeout(f,0); },
+  watchCol(c,cb){ const f=()=>cb(this.keys().filter(k=>{const s=k.split('/');return s.length===2&&s[0]===c}).map(k=>Object.assign({id:k.split('/')[1]}, this.read(k)))); this.subs.push(f); setTimeout(f,0); },
   fire(){ this.subs.forEach(f=>f()) }
 };
 /* tablet: só fica na Votação enquanto o operador (notebook) estiver com ela aberta */
@@ -496,7 +554,7 @@ const Store = {
   },
   watchCol(c,cb){
     if(!this.db) return Local.watchCol(c,cb);
-    this.ref(c).on('value', s => { const v = s.val() || {}; cb(Object.keys(v).map(id => ({id, ...v[id]}))); }, onDbError);
+    this.ref(c).on('value', s => { const v = s.val() || {}; cb(Object.keys(v).map(id => Object.assign({id:id}, v[id]))); }, onDbError);
   },
   async get(p){ if(!this.db) return Local.get(p); const s = await this.ref(p).once('value'); return s.val(); },
   async set(p,d){ if(!this.db) return Local.set(p,d); return this.ref(p).set(d); },
@@ -539,8 +597,8 @@ function write(path, data){
 /* ===================== estado em memória ===================== */
 const S = { estado:null, login:{}, presenca:{}, pauta:[], votos:[], loaded:false };
 const defEstado = () => ({aberta:false, abertaEm:null, chamada:false, presidente:'', pautaId:null, votacao:'livre', inicioVotacao:null, resultado:null});
-const E = () => ({...defEstado(), ...(S.estado||{})});
-function setEstado(patch){ const novo = {...E(), ...patch}; S.estado = novo; render(); return write('sessao/atual', novo); }
+const E = () => Object.assign(defEstado(), S.estado || {});
+function setEstado(patch){ const novo = Object.assign({}, E(), patch); S.estado = novo; render(); return write('sessao/atual', novo); }
 const presentes = () => VEREADORES.filter(v => S.presenca[v.id] && S.presenca[v.id].presente);
 const pautaAtual = () => S.pauta.find(p => p.id === E().pautaId) || null;
 const votosDe = pid => S.votos.filter(v => v.pid === pid);
@@ -568,11 +626,24 @@ function route(){
   document.body.style.background = view === 'v-telao' ? '#070b16' : '';
   current = view;
   if(view === 'v-vereador') tabletOnline();
+  if(view === 'v-telao') ajustarTV();
   render();
 }
 let current = 'v-inicio';
 addEventListener('hashchange', route);
 document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => location.hash = b.dataset.go));
+
+/* ---------- telão: ajusta a tela fixa 1920×1080 ao tamanho de qualquer TV ---------- */
+function ajustarTV(){
+  const w = document.querySelector('#v-telao .tvwrap'); if(!w) return;
+  const W = window.innerWidth || document.documentElement.clientWidth || 1920;
+  const H = window.innerHeight || document.documentElement.clientHeight || 1080;
+  const k = Math.min(W/1920, H/1080), x = Math.max(0, (W - 1920*k)/2), y = Math.max(0, (H - 1080*k)/2);
+  const t = 'translate(' + x + 'px,' + y + 'px) scale(' + k + ')';
+  w.style.webkitTransform = t; w.style.transform = t;
+}
+addEventListener('resize', ajustarTV);
+addEventListener('orientationchange', () => setTimeout(ajustarTV, 300));
 
 /* ===================== render ===================== */
 function render(){
@@ -694,7 +765,7 @@ $('#chamadaList').addEventListener('click', ev => {
 $('#selPres').addEventListener('change', ev => setEstado({presidente:ev.target.value}));
 $('#btnFecharSessao').addEventListener('click', () => confirmBox({
   titulo:'Encerrar a sessão?', texto:'A presença será zerada e os tablets voltarão para a tela de espera.', ok:'Encerrar sessão', cls:'stop',
-  onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:false,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado({...defEstado(), presidente:E().presidente}); toast('Sessão encerrada.'); }
+  onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:false,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado(Object.assign(defEstado(), {presidente:E().presidente})); toast('Sessão encerrada.'); }
 }));
 $('#opCurrent').addEventListener('click', ev => {
   const id = ev.target.id, m = pautaAtual();
@@ -713,17 +784,18 @@ async function encerrar(m){
   let vs = votosDe(m.id);
   try{
     const todos = await Store.get('votos');
-    if(todos) vs = Object.keys(todos).map(id => ({id, ...todos[id]})).filter(v => v.pid === m.id);
+    if(todos) vs = Object.keys(todos).map(id => Object.assign({id:id}, todos[id])).filter(v => v.pid === m.id);
   }catch(e){}
   const sim = vs.filter(v=>v.voto==='sim').length, nao = vs.filter(v=>v.voto==='nao').length, abs = vs.filter(v=>v.voto==='abs').length;
   const naoVotou = Math.max(0, presentes().length - vs.length);
   const veredito = sim > nao ? 'APROVADO' : 'REPROVADO';
   const resultado = {sim, nao, abs, naoVotou, veredito, em:agora()};
   await setEstado({votacao:'encerrada', resultado});
-  write('pauta/'+m.id, {...stripId(m), status:'votado', resultado});
+  write('pauta/'+m.id, Object.assign(stripId(m), {status:'votado', resultado:resultado}));
   toast(`Resultado: ${veredito}`);
 }
-const stripId = o => { const {id, ...r} = o; return r; };
+const porId = list => { const o = {}; list.forEach(x => { o[x.id] = x; }); return o; };
+const stripId = o => { const r = Object.assign({}, o); delete r.id; return r; };
 $('#pautaList').addEventListener('click', ev => {
   const s = ev.target.closest('[data-sel]'), d = ev.target.closest('[data-del]');
   if(s){ if(E().votacao === 'aberta') return; setEstado({pautaId:s.dataset.sel, votacao:'livre', resultado:null}); }
@@ -819,7 +891,7 @@ async function votar(voto){
     let gravou = false;
     try{ gravou = await Store.setIfAbsent(path, doc); }catch(e){ toast('Não foi possível gravar o voto. Tente de novo.'); return; }
     if(!gravou){ toast('Seu voto já foi registrado.'); return; }
-    S.votos = [...S.votos.filter(x=>x.id!==m.id+'__'+vid), {id:m.id+'__'+vid, ...doc}]; render();
+    S.votos = [...S.votos.filter(x=>x.id!==m.id+'__'+vid), Object.assign({id:m.id+'__'+vid}, doc)]; render();
     toast('Voto registrado.');
   } finally { voting = false; }
 }
@@ -870,7 +942,7 @@ const TV_VISTOS = new Set(); let TV_PRONTO = false;
 function tickElapsed(){
   const e = E();
   const t = e.votacao==='aberta' && e.inicioVotacao ? Math.max(0, Math.floor((agora()-e.inicioVotacao)/1000)) : 0;
-  const s = String(Math.floor(t/60)).padStart(2,'0') + ':' + String(t%60).padStart(2,'0');
+  const d2 = n => (n < 10 ? '0' : '') + n, s = d2(Math.floor(t/60)) + ':' + d2(t%60);
   document.querySelectorAll('[data-elapsed]').forEach(el => el.textContent = s);
 }
 setInterval(() => {
@@ -1010,8 +1082,8 @@ const Mensagens = (() => {
   await Store.init();
   render();
   Store.watchDoc('sessao/atual', d => { S.estado = d; render(); if(EH_TABLET && !TELA_OK) voltarAoDashboard(); });
-  Store.watchCol('login', list => { S.login = Object.fromEntries(list.map(x => [x.id, x])); render(); });
-  Store.watchCol('presenca', list => { S.presenca = Object.fromEntries(list.map(x => [x.id, x])); render(); });
+  Store.watchCol('login', list => { S.login = porId(list); render(); });
+  Store.watchCol('presenca', list => { S.presenca = porId(list); render(); });
   Store.watchCol('votos', list => { S.votos = list; render(); });
   Store.watchCol('pauta', list => { S.pauta = list; render(); });
   Mensagens.init();
