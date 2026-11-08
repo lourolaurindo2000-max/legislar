@@ -860,6 +860,7 @@ function route(){
   else if(h === 'telao') view = 'v-telao';
   VIEWS.forEach(id => $('#'+id).hidden = id !== view);
   $('#topbar').hidden = view === 'v-telao';
+  const home = document.getElementById('homeLink'); if(home) home.hidden = view === 'v-inicio';   /* na própria tela de início o botão não faz nada */
   document.body.style.background = view === 'v-telao' ? '#070b16' : '';
   current = view;
   if(view === 'v-inicio') OP_OK = false;
