@@ -512,8 +512,12 @@ const pautaOrdenada = () => [...S.pauta].sort((a,b) => (a.ordem||0) - (b.ordem||
 
 /* ===================== roteamento ===================== */
 const VIEWS = ['v-inicio','v-op-login','v-operador','v-ver-login','v-vereador','v-telao'];
+/* Tablet / celular (tela de toque sem mouse ou touchpad): o modo Operador não aparece, só no notebook */
+const EH_TABLET = (() => { try{ return navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches; }catch(e){ return false; } })();
+if(EH_TABLET){ const b = document.querySelector('.role[data-go="operador"]'); if(b) b.remove(); ls.del('vp_op'); }
 function route(){
-  const h = (location.hash || '#inicio').slice(1);
+  let h = (location.hash || '#inicio').slice(1);
+  if(EH_TABLET && h === 'operador'){ h = 'inicio'; history.replaceState(null, '', '#inicio'); }
   let view = 'v-inicio';
   if(h === 'operador') view = ls.get('vp_op') === '1' ? 'v-operador' : 'v-op-login';
   else if(h === 'vereador') view = ls.get('vp_vid') ? 'v-vereador' : 'v-ver-login';
