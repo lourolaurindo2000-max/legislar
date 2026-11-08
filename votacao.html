@@ -797,6 +797,8 @@ let ENSAIO = false;
 const vinculoOutro = vid => !ENSAIO && !!(S.aparelhos[vid] && S.aparelhos[vid].dev !== DEV);
 const defEstado = () => ({aberta:false, abertaEm:null, chamada:false, presidente:'', pautaId:null, votacao:'livre', inicioVotacao:null, resultado:null, apuracao:null, pautaConcluida:false});
 const PRESIDENTE_PADRAO = 'v6';   // Aparelho 6 — Presidente da Mesa (desempata)
+/* "Sessão encerrada" só aparece logo depois do encerramento (até 2 h); depois volta a ser "ainda não começou" */
+const encerradaRecente = e => !!(e.sessaoEncerrada && e.encerradaEm && (agora() - e.encerradaEm < 2*3600*1000));
 const E = () => { const e = Object.assign(defEstado(), S.estado || {}); if(!e.presidente) e.presidente = PRESIDENTE_PADRAO; return e; };
 function setEstado(patch){ const novo = Object.assign({}, E(), patch); S.estado = novo; render(); return write('sessao/atual', novo); }
 /* votação em curso = aberta ou aguardando o desempate do Presidente */
@@ -1296,7 +1298,7 @@ function renderVereador(){
       <button class="vb abs" data-voto="abs" ${dis?'disabled':''}><span class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 12h12"/></svg></span>ABSTER<small>Abstenção</small></button></div>`;
 
   const placarHtml = a => `<div class="row" style="justify-content:center"><span class="chip sim">SIM ${a.sim||0}</span><span class="chip nao">NÃO ${a.nao||0}</span><span class="chip abs">ABST. ${a.abs||0}</span></div>`;
-  if(!e.aberta){ sTxt = e.sessaoEncerrada ? 'Sessão encerrada.' : 'Aguardando a Mesa abrir a sessão.'; html = btns(true); }
+  if(!e.aberta){ sTxt = encerradaRecente(e) ? 'Sessão encerrada.' : 'Aguardando a Mesa abrir a sessão.'; html = btns(true); }
   else if(e.votacao === 'desempate' && m){
     const a = e.apuracao || {};
     if(e.presidente === vid){
@@ -1374,13 +1376,13 @@ async function votar(voto){
 function renderTelao(){
   const e = E(), m = pautaAtual(), stEl = $('#tvState');
   stEl.className = 'tvstate' + (e.votacao==='aberta' ? ' live' : e.votacao==='desempate' ? ' emp' : '');
-  stEl.textContent = !e.aberta ? (e.sessaoEncerrada ? 'Sessão encerrada' : 'Sessão fechada') : e.votacao==='aberta' ? 'Votação aberta' : e.votacao==='desempate' ? 'Empate' : e.votacao==='encerrada' ? 'Votação encerrada' : !e.chamada ? 'Sessão aberta' : 'Aguardando pauta';
+  stEl.textContent = !e.aberta ? (encerradaRecente(e) ? 'Sessão encerrada' : 'Sessão fechada') : e.votacao==='aberta' ? 'Votação aberta' : e.votacao==='desempate' ? 'Empate' : e.votacao==='encerrada' ? 'Votação encerrada' : !e.chamada ? 'Sessão aberta' : 'Aguardando pauta';
   const pres = presentes().length;
   $('#tvFootL').textContent = (ENSAIO ? 'ENSAIO · ' : '') + (e.aberta ? `Quórum: ${pres} presentes de 9 · mínimo ${QUORUM}${e.presidente?' · Presidente: '+vName(e.presidente):''}` : 'Câmara Municipal de Almadina — Bahia');
   const body = $('#tvBody');
   if(!e.aberta){
     body.innerHTML = `<div class="splash"><img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>A votação ainda não começou.</p></div>`;
-    if(e.sessaoEncerrada) body.innerHTML = `<div class="splash"><img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina"><h2 class="sessenc">SESSÃO ENCERRADA</h2><p>Plenário Jonas Plínio${e.encerradaEm ? ' · ' + new Date(e.encerradaEm).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : ''}</p></div>`;
+    if(encerradaRecente(e)) body.innerHTML = `<div class="splash"><img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina"><h2 class="sessenc">SESSÃO ENCERRADA</h2><p>Plenário Jonas Plínio${e.encerradaEm ? ' · ' + new Date(e.encerradaEm).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : ''}</p></div>`;
     return;
   }
   /* Pauta concluída com 2 ou mais matérias: resumo final com o nome e o resultado de cada uma */

@@ -778,6 +778,13 @@
                                 return Object.assign({}, cur, { inicio: t });
                             }).catch(function () {});
                         }
+                        if (arq === 'votacao.html') {
+                            // Votação nova: tira o aviso "Sessão encerrada" da sessão anterior (o telão mostra "ainda não começou")
+                            rt.ref('legislar/votacao/sessao/atual').transaction(function (cur) {
+                                if (!cur || cur.aberta || !cur.sessaoEncerrada) return;   // sessão aberta: não mexe
+                                return Object.assign({}, cur, { sessaoEncerrada: false, encerradaEm: null });
+                            }).catch(function () {});
+                        }
                         abriuDaqui = true;
                         refTela.set({ pagina: arq, em: TS });
                     });
