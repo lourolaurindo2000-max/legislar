@@ -614,7 +614,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
       </div>
       <div id="tvBody"></div>
       <div class="tvfoot"><span id="tvFootL"></span><span class="row"><button id="tvFull">Tela cheia</button><a href="#inicio" style="color:inherit">Sair</a></span></div>
-      <div class="tvcred"><span>&copy; Todos os direitos reservados a André Almeida — Desenvolvedor do Sistema (PLD) Plenário Legislativo Digital (Lei nº 9.610/1998)<span class="pt"></span>Versão 1.0</span><button type="button" class="tvsair" id="tvSair" title="Voltar para Operador, Vereador e Telão">Sair</button></div>
+      <div class="tvcred"><span>&copy; Todos os direitos reservados a André Almeida — Desenvolvedor do Sistema (PLD) Plenário Legislativo Digital (Lei nº 9.610/1998)<span class="pt"></span>Versão 1.0</span><button type="button" class="tvsair" id="tvSair" title="Voltar para a página do Legislar">Sair</button></div>
     </div>
   </div>
 </div>
@@ -1471,7 +1471,7 @@ $('#tvFull').addEventListener('click', () => {
   if(!quadro && !tvUA && !EH_TABLET && fino) document.documentElement.classList.add('nb');
   $('#tvSair').addEventListener('click', () => {
     try{ if(document.fullscreenElement) document.exitFullscreen(); else if(document.webkitFullscreenElement) document.webkitExitFullscreen(); }catch(e){}
-    location.hash = '#inicio';
+    location.href = 'dashboard.html';   /* volta para a página do Legislar */
   });
 })();
 /* Smart TV: qualquer tecla do controle remoto ou clique no telão coloca a TV em tela cheia */
