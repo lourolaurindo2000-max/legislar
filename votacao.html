@@ -219,6 +219,9 @@ h2{font-size:1.45rem}
 .tvres.rp{border-color:var(--nao);background:linear-gradient(120deg,var(--nao-soft),var(--surface))}
 .verdict{font-family:var(--f-display);font-weight:700;font-size:clamp(3rem,8vw,7.5rem);line-height:.9;letter-spacing:.04em}
 .tvres.ap .verdict{color:var(--sim)}.tvres.rp .verdict{color:var(--nao)}
+.tvres.emp{border-color:var(--brass);background:linear-gradient(120deg,var(--abs-soft),var(--surface))}.tvres.emp .verdict{color:var(--brass)}
+.tvsub{color:var(--brass);font-family:var(--f-display);font-weight:600;font-size:1.6rem;margin-top:6px}
+.tvstate.emp{background:var(--brass);color:#1d1405;border-color:var(--brass)}
 .placar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .placar div{background:var(--sunk);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--line)}
 .placar small{display:block;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
@@ -372,6 +375,7 @@ html.tablet #verBody{flex:1;grid-template-rows:auto minmax(0,1fr)}
 html.tablet #verBody > .votebtns:only-child{grid-row:1/-1}
 html.tablet .votebtns{min-height:0}
 html.tablet .vb{min-height:200px;height:100%}
+.votebtns.minerva{grid-template-columns:repeat(2,1fr)}
 html.tablet #v-ver-login:not([hidden]){min-height:calc(100vh - 66px);min-height:calc(100dvh - 66px);display:flex;align-items:center;justify-content:center;padding-block:18px}
 html.tablet #v-ver-login .login{width:100%}
 html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3rem}
@@ -608,7 +612,7 @@ const Local = {
 let TELA_OK = true;
 function voltarAoDashboard(){
   if(TELA_OK) return;
-  if(E().votacao === 'aberta') return;            // não tira o vereador no meio de uma votação
+  if(emCurso(E())) return;            // não tira o vereador no meio de uma votação (nem no desempate)
   if(document.querySelector('#modalRoot .modal')) return;   // nem durante a confirmação do voto
   location.href = 'dashboard.html';
 }
@@ -692,9 +696,12 @@ const S = { estado:null, login:{}, presenca:{}, pauta:[], votos:[], aparelhos:{}
 const DEV = (() => { let d = ls.get('vp_dev'); if(!d){ d = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); ls.set('vp_dev', d); } return d; })();
 const donoDoTablet = () => Object.keys(S.aparelhos).find(vid => S.aparelhos[vid] && S.aparelhos[vid].dev === DEV) || null;
 const vinculoOutro = vid => !!(S.aparelhos[vid] && S.aparelhos[vid].dev !== DEV);
-const defEstado = () => ({aberta:false, abertaEm:null, chamada:false, presidente:'', pautaId:null, votacao:'livre', inicioVotacao:null, resultado:null});
-const E = () => Object.assign(defEstado(), S.estado || {});
+const defEstado = () => ({aberta:false, abertaEm:null, chamada:false, presidente:'', pautaId:null, votacao:'livre', inicioVotacao:null, resultado:null, apuracao:null});
+const PRESIDENTE_PADRAO = 'v6';   // Aparelho 6 — Presidente da Mesa (desempata)
+const E = () => { const e = Object.assign(defEstado(), S.estado || {}); if(!e.presidente) e.presidente = PRESIDENTE_PADRAO; return e; };
 function setEstado(patch){ const novo = Object.assign({}, E(), patch); S.estado = novo; render(); return write('sessao/atual', novo); }
+/* votação em curso = aberta ou aguardando o desempate do Presidente */
+const emCurso = e => e.votacao === 'aberta' || e.votacao === 'desempate';
 const presentes = () => VEREADORES.filter(v => S.presenca[v.id] && S.presenca[v.id].presente);
 const pautaAtual = () => S.pauta.find(p => p.id === E().pautaId) || null;
 const votosDe = pid => S.votos.filter(v => v.pid === pid);
@@ -772,15 +779,15 @@ function renderOperador(){
     ['Sessão aberta', e.aberta, !e.aberta],
     ['Chamada feita', e.chamada, e.aberta && !e.chamada],
     ['Quórum', e.chamada && okQ, e.chamada && !okQ],
-    ['Votação', e.votacao === 'encerrada', e.votacao === 'aberta'],
+    ['Votação', e.votacao === 'encerrada', emCurso(e)],
   ];
   $('#opStage').innerHTML = st.map(([t,ok,now]) => `<span class="${ok?'ok':now?'now':''}">${t}</span>`).join('');
   $('#sessChip').textContent = e.aberta ? 'Aberta' : 'Fechada';
   $('#sessChip').className = 'chip' + (e.aberta ? ' v' : '');
   $('#btnAbrir').disabled = e.aberta;
-  $('#btnChamada').disabled = !e.aberta || e.votacao === 'aberta';
+  $('#btnChamada').disabled = !e.aberta || emCurso(e);
   $('#btnChamada').textContent = e.chamada ? 'Refazer chamada' : 'Fazer chamada';
-  $('#btnFecharSessao').disabled = !e.aberta || e.votacao === 'aberta';
+  $('#btnFecharSessao').disabled = !e.aberta || emCurso(e);
   $('#qPres').textContent = pres;
   const bar = $('#qBar'); bar.style.width = (pres/9*100)+'%'; bar.className = okQ ? 'ok' : '';
   $('#qMark').style.left = (QUORUM/9*100)+'%';
@@ -797,7 +804,7 @@ function renderOperador(){
     const pr = S.presenca[v.id] && S.presenca[v.id].presente;
     return `<div class="vrow"><div class="av">${ini(v.nome)}</div>
       <div class="nm">${esc(v.nome)}${e.presidente===v.id?' · <b style="color:var(--brass)">Presidente</b>':''}<small><span class="dot ${lg?'on':''}"></span>${lg?'Tablet conectado':'Tablet desconectado'} · Aparelho ${v.ap}${S.aparelhos[v.id]?` · <button type="button" class="linkbtn" data-liberar="${v.id}" style="font-size:.76rem;padding:0">Liberar tablet</button>`:''}</small></div>
-      <button class="tog ${pr?'on':''}" data-pres="${v.id}" ${(!e.aberta||e.votacao==='aberta')?'disabled':''}>${pr?'Presente':'Ausente'}</button></div>`;
+      <button class="tog ${pr?'on':''}" data-pres="${v.id}" ${(!e.aberta||emCurso(e))?'disabled':''}>${pr?'Presente':'Ausente'}</button></div>`;
   }).join('');
 
   /* votação atual */
@@ -806,7 +813,7 @@ function renderOperador(){
   if(!m){
     html = `<div class="current"><p class="muted" style="margin:0">Selecione uma matéria da pauta abaixo para liberar a votação.</p></div>`;
   } else {
-    const vs = votosDe(m.id), cls = e.votacao==='aberta'?'live':e.votacao==='encerrada'?'done':'';
+    const vs = votosDe(m.id), cls = e.votacao==='aberta'?'live':e.votacao==='encerrada'?'done':e.votacao==='desempate'?'done':'';
     html = `<div class="current ${cls}">
       <span class="mtipo">${esc(m.tipo)} Nº ${esc(m.numero)}</span>
       <p class="ementa">${esc(m.ementa)}</p>
@@ -821,10 +828,18 @@ function renderOperador(){
       html += `<div class="row" style="justify-content:space-between"><b style="color:var(--sim)">VOTAÇÃO ABERTA · <span class="big-num" data-elapsed></span></b><span><span class="big-num">${vs.length}</span> de ${ps.length} votaram</span></div>
         <div class="votedline">${ps.map(v => { const x = vs.find(y=>y.vid===v.id); return `<span class="chip ${x?x.voto:''}">${esc(v.nome.split(' ')[0])}${x?' · '+VOTO_CURTO[x.voto]:''}</span>`; }).join('')}</div>
         <div class="row"><button class="btn stop" id="btnEncerrar">Encerrar votação</button></div>`;
+    } else if(e.votacao === 'desempate'){
+      const a = e.apuracao || {};
+      html += `<div class="row" style="justify-content:space-between"><span class="res" style="font-size:2rem;color:var(--brass)">EMPATE</span>
+        <span class="row"><span class="chip sim">SIM ${a.sim||0}</span><span class="chip nao">NÃO ${a.nao||0}</span><span class="chip abs">ABST. ${a.abs||0}</span></span></div>
+        <p style="margin:0"><b>${e.presidente ? 'Aguardando o voto de desempate do Presidente ' + esc(vName(e.presidente)) + ' no tablet.' : 'Selecione o Presidente da Mesa (na Sessão e quórum) para desempatar.'}</b></p>
+        <small class="muted">Se o Presidente estiver sem tablet, registre aqui a decisão dele:</small>
+        <div class="row"><button class="btn go" data-minerva="sim">Presidente: APROVAR</button><button class="btn stop" data-minerva="nao">Presidente: REPROVAR</button></div>`;
     } else {
       const r = e.resultado || {};
       html += `<div class="row" style="justify-content:space-between"><span class="res ${r.veredito==='APROVADO'?'ap':'rp'}" style="font-size:2rem">${esc(r.veredito||'')}</span>
         <span class="row"><span class="chip sim">SIM ${r.sim||0}</span><span class="chip nao">NÃO ${r.nao||0}</span><span class="chip abs">ABST. ${r.abs||0}</span><span class="chip">Não votou ${r.naoVotou||0}</span></span></div>
+        ${r.desempate ? `<small style="color:var(--brass);font-weight:700">Empate decidido pelo voto do Presidente${r.presidente ? ' ' + esc(vName(r.presidente)) : ''}: ${VOTO_LABEL[r.desempate]}</small>` : ''}
         <div class="row"><button class="btn primary" id="btnProxima">Próxima matéria</button></div>`;
     }
     html += `</div>`;
@@ -838,7 +853,7 @@ function renderOperador(){
     const r = p.resultado;
     const right = p.status === 'votado'
       ? `<span class="res ${r&&r.veredito==='APROVADO'?'ap':'rp'}">${esc(r?r.veredito:'')}</span>`
-      : `<span class="row"><button class="btn" data-sel="${p.id}" ${(e.votacao==='aberta'||sel)?'disabled':''}>${sel?'Selecionada':'Selecionar'}</button><button class="linkbtn" data-del="${p.id}" ${e.votacao==='aberta'&&sel?'disabled':''} aria-label="Remover">Remover</button></span>`;
+      : `<span class="row"><button class="btn" data-sel="${p.id}" ${(emCurso(e)||sel)?'disabled':''}>${sel?'Selecionada':'Selecionar'}</button><button class="linkbtn" data-del="${p.id}" ${emCurso(e)&&sel?'disabled':''} aria-label="Remover">Remover</button></span>`;
     return `<div class="pitem ${sel?'sel':''}"><span class="n">${i+1}</span><div style="min-width:0"><small class="mtipo">${esc(p.tipo)} Nº ${esc(p.numero)}</small><p>${esc(p.ementa)}</p><small>${esc(p.autor||'')}</small></div>${right}</div>`;
   }).join('') : `<p class="muted" style="margin:0">Nenhuma matéria na pauta. Adicione a primeira no formulário abaixo.</p>`;
   tickElapsed();
@@ -882,6 +897,8 @@ $('#btnFecharSessao').addEventListener('click', () => confirmBox({
   onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:false,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado(Object.assign(defEstado(), {presidente:E().presidente})); toast('Sessão encerrada.'); }
 }));
 $('#opCurrent').addEventListener('click', ev => {
+  const mb = ev.target.closest('[data-minerva]');
+  if(mb){ const voto = mb.dataset.minerva; return confirmBox({titulo:'Voto de desempate do Presidente', big:VOTO_LABEL[voto], bigColor:`var(--${voto})`, texto:'Registrar a decisão do Presidente da Mesa para esta matéria?', ok:'Registrar', cls: voto==='sim'?'go':'stop', onOk: () => desempatar(voto)}); }
   const id = ev.target.id, m = pautaAtual();
   if(id === 'btnIniciar' && m){
     if(presentes().length < QUORUM) return toast('Sem quórum para iniciar.');
@@ -902,17 +919,42 @@ async function encerrar(m){
   }catch(e){}
   const sim = vs.filter(v=>v.voto==='sim').length, nao = vs.filter(v=>v.voto==='nao').length, abs = vs.filter(v=>v.voto==='abs').length;
   const naoVotou = Math.max(0, presentes().length - vs.length);
-  const veredito = sim > nao ? 'APROVADO' : 'REPROVADO';
-  const resultado = {sim, nao, abs, naoVotou, veredito, em:agora()};
-  await setEstado({votacao:'encerrada', resultado});
+  const apuracao = {sim:sim, nao:nao, abs:abs, naoVotou:naoVotou};
+  if(sim === nao){
+    // EMPATE: o Presidente da Mesa desempata
+    await setEstado({votacao:'desempate', apuracao:apuracao});
+    toast(E().presidente ? 'Empate! Aguardando o voto de desempate do Presidente.' : 'Empate! Selecione o Presidente da Mesa para desempatar.');
+    return;
+  }
+  await finalizar(m, apuracao, null);
+}
+/* grava o resultado final (minerva = voto de desempate do Presidente, quando houve empate) */
+async function finalizar(m, ap, minerva){
+  const veredito = minerva ? (minerva === 'sim' ? 'APROVADO' : 'REPROVADO') : (ap.sim > ap.nao ? 'APROVADO' : 'REPROVADO');
+  const resultado = Object.assign({}, ap, {veredito:veredito, em:agora()});
+  if(minerva){ resultado.desempate = minerva; resultado.presidente = E().presidente || ''; }
+  await setEstado({votacao:'encerrada', resultado:resultado, apuracao:null});
   write('pauta/'+m.id, Object.assign(stripId(m), {status:'votado', resultado:resultado}));
-  toast(`Resultado: ${veredito}`);
+  toast(`Resultado: ${veredito}${minerva ? ' (desempate do Presidente)' : ''}`);
+}
+/* voto de desempate: vale só uma vez por matéria */
+let desempatando = false;
+async function desempatar(voto){
+  if(desempatando) return; desempatando = true;
+  try{
+    const m = pautaAtual(), atual = await Store.get('sessao/atual');
+    if(!m || !atual || atual.votacao !== 'desempate' || atual.pautaId !== m.id) return toast('Não há desempate pendente.');
+    const ok = await Store.setIfAbsent('desempate/' + m.id, {voto:voto, presidente:atual.presidente || '', ts:agora()});
+    if(!ok) return toast('O desempate já foi registrado.');
+    await finalizar(m, atual.apuracao || E().apuracao || {sim:0, nao:0, abs:0, naoVotou:0}, voto);
+  }catch(e){ toast('Não foi possível registrar o desempate. Tente de novo.'); }
+  finally{ desempatando = false; }
 }
 const porId = list => { const o = {}; list.forEach(x => { o[x.id] = x; }); return o; };
 const stripId = o => { const r = Object.assign({}, o); delete r.id; return r; };
 $('#pautaList').addEventListener('click', ev => {
   const s = ev.target.closest('[data-sel]'), d = ev.target.closest('[data-del]');
-  if(s){ if(E().votacao === 'aberta') return; setEstado({pautaId:s.dataset.sel, votacao:'livre', resultado:null}); }
+  if(s){ if(emCurso(E())) return; setEstado({pautaId:s.dataset.sel, votacao:'livre', resultado:null}); }
   if(d){ const p = S.pauta.find(x=>x.id===d.dataset.del); if(!p) return;
     confirmBox({titulo:'Remover da pauta?', texto:`${p.tipo} Nº ${p.numero}`, ok:'Remover', cls:'stop', onOk:() => { Store.del('pauta/'+p.id); if(E().pautaId===p.id) setEstado({pautaId:null}); }}); }
 });
@@ -988,7 +1030,21 @@ function renderVereador(){
       <button class="vb nao" data-voto="nao" ${dis?'disabled':''}><span class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>REPROVAR<small>Voto NÃO</small></button>
       <button class="vb abs" data-voto="abs" ${dis?'disabled':''}><span class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 12h12"/></svg></span>ABSTER<small>Abstenção</small></button></div>`;
 
+  const placarHtml = a => `<div class="row" style="justify-content:center"><span class="chip sim">SIM ${a.sim||0}</span><span class="chip nao">NÃO ${a.nao||0}</span><span class="chip abs">ABST. ${a.abs||0}</span></div>`;
   if(!e.aberta){ sTxt = 'Aguardando a Mesa abrir a sessão.'; html = btns(true); }
+  else if(e.votacao === 'desempate' && m){
+    const a = e.apuracao || {};
+    if(e.presidente === vid){
+      sCls = 'live'; sTxt = 'EMPATE. Como Presidente da Mesa, dê o voto de desempate.';
+      html = matHtml + `<div class="votebtns minerva">
+        <button class="vb sim" data-minerva="sim"><span class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>APROVAR<small>Desempate: SIM ${a.sim||0} × NÃO ${a.nao||0}</small></button>
+        <button class="vb nao" data-minerva="nao"><span class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>REPROVAR<small>Desempate: SIM ${a.sim||0} × NÃO ${a.nao||0}</small></button></div>`;
+    } else {
+      sCls = 'lock'; sTxt = 'Empate. Aguardando o voto de desempate do Presidente.';
+      html = matHtml + `<div class="panel locked"><span class="eyebrow">Apuração</span><span class="big" style="color:var(--brass)">EMPATE</span>${placarHtml(a)}
+        <span class="muted">O Presidente da Mesa vai desempatar.${meu ? ' Seu voto: ' + VOTO_LABEL[meu.voto] : ''}</span></div>`;
+    }
+  }
   else if(!pres){ sTxt = e.chamada ? 'Você não consta como presente. Fale com a Mesa.' : 'Sessão aberta. Aguardando a chamada.'; html = btns(true); }
   else if(e.votacao === 'livre' || !m){ sTxt = 'Presença confirmada. Aguardando a liberação da pauta.'; html = matHtml + btns(true); }
   else if(e.votacao === 'aberta' && !meu){ sCls='live'; sTxt = 'Votação aberta. Escolha seu voto.'; html = matHtml + btns(false); }
@@ -1002,12 +1058,21 @@ function renderVereador(){
     sCls='lock'; sTxt = 'Votação encerrada.';
     html = matHtml + `<div class="panel locked"><span class="eyebrow">Resultado</span><span class="big res ${r.veredito==='APROVADO'?'ap':'rp'}">${esc(r.veredito||'')}</span>
       <div class="row" style="justify-content:center"><span class="chip sim">SIM ${r.sim||0}</span><span class="chip nao">NÃO ${r.nao||0}</span><span class="chip abs">ABST. ${r.abs||0}</span></div>
+      ${r.desempate ? '<span style="color:var(--brass);font-weight:700">Empate decidido pelo voto do Presidente</span>' : ''}
       ${meu?`<span class="muted">Seu voto: ${VOTO_LABEL[meu.voto]}</span>`:'<span class="muted">Você não votou nesta matéria.</span>'}</div>`;
   }
   st.className = 'status ' + sCls; st.textContent = sTxt;
   body.innerHTML = html;
 }
 $('#verBody').addEventListener('click', ev => {
+  const mb = ev.target.closest('[data-minerva]');
+  if(mb){
+    const voto = mb.dataset.minerva;
+    if(E().presidente !== ls.get('vp_vid')) return toast('Só o Presidente da Mesa pode desempatar.');
+    return confirmBox({titulo:'Voto de desempate', big:VOTO_LABEL[voto], bigColor:`var(--${voto})`,
+      texto:'Como Presidente da Mesa, seu voto decide esta matéria. Depois de confirmar, não pode ser alterado.', ok:'Confirmar desempate', cls: voto==='sim'?'go':'stop',
+      onOk: () => desempatar(voto)});
+  }
   const b = ev.target.closest('[data-voto]'); if(!b || b.disabled) return;
   const voto = b.dataset.voto;
   confirmBox({
@@ -1040,8 +1105,8 @@ async function votar(voto){
 /* ---------- telão ---------- */
 function renderTelao(){
   const e = E(), m = pautaAtual(), stEl = $('#tvState');
-  stEl.className = 'tvstate' + (e.votacao==='aberta' ? ' live' : '');
-  stEl.textContent = !e.aberta ? 'Sessão fechada' : e.votacao==='aberta' ? 'Votação aberta' : e.votacao==='encerrada' ? 'Votação encerrada' : !e.chamada ? 'Sessão aberta' : 'Aguardando pauta';
+  stEl.className = 'tvstate' + (e.votacao==='aberta' ? ' live' : e.votacao==='desempate' ? ' emp' : '');
+  stEl.textContent = !e.aberta ? 'Sessão fechada' : e.votacao==='aberta' ? 'Votação aberta' : e.votacao==='desempate' ? 'Empate' : e.votacao==='encerrada' ? 'Votação encerrada' : !e.chamada ? 'Sessão aberta' : 'Aguardando pauta';
   const pres = presentes().length;
   $('#tvFootL').textContent = e.aberta ? `Quórum: ${pres} presentes de 9 · mínimo ${QUORUM}${e.presidente?' · Presidente: '+vName(e.presidente):''}` : 'Câmara Municipal de Almadina — Bahia';
   const body = $('#tvBody');
@@ -1050,7 +1115,7 @@ function renderTelao(){
     return;
   }
   const vs = m ? votosDe(m.id) : [];
-  const enc = e.votacao === 'encerrada';
+  const enc = e.votacao === 'encerrada' || e.votacao === 'desempate';
   const grid = VEREADORES.map(v => {
     const p = S.presenca[v.id] && S.presenca[v.id].presente;
     const vt = vs.find(x=>x.vid===v.id);
@@ -1069,9 +1134,14 @@ function renderTelao(){
     ? `<div><small style="color:var(--sim)">Sim</small><b style="color:var(--sim)">${vs.filter(x=>x.voto==='sim').length}</b></div><div><small style="color:var(--nao)">Não</small><b style="color:var(--nao)">${vs.filter(x=>x.voto==='nao').length}</b></div><div><small style="color:var(--abs)">Abstenção</small><b style="color:var(--abs)">${vs.filter(x=>x.voto==='abs').length}</b></div><div><small>Votaram</small><b>${vs.length}/${pres}</b></div><div><small>Tempo</small><b data-elapsed>00:00</b></div>`
     : `<div><small>Presentes</small><b>${pres}/9</b></div><div><small>Quórum mínimo</small><b>${QUORUM}</b></div><div><small>Situação</small><b style="color:${pres>=QUORUM?'var(--sim)':'var(--nao)'};font-family:var(--f-display)">${e.chamada?(pres>=QUORUM?'COM QUÓRUM':'SEM QUÓRUM'):'CHAMADA'}</b></div>`;
   let html = `<div class="tvmain"><div class="tvmat">${mat}<div class="tvq">${q}</div></div><div class="tvgrid">${grid}</div></div>`;
-  if(enc && e.resultado){
+  if(e.votacao === 'desempate'){
+    const a = e.apuracao || {};
+    html = `<div class="tvres emp"><div><span class="mtipo">${m?esc(m.tipo)+' Nº '+esc(m.numero):''}</span><div class="verdict">EMPATE</div><div class="tvsub">Aguardando o voto de desempate do Presidente${e.presidente ? ' ' + esc(vName(e.presidente)) : ''}</div></div>
+      <div class="placar"><div class="s"><small>Sim</small><b>${a.sim||0}</b></div><div class="n"><small>Não</small><b>${a.nao||0}</b></div><div class="a"><small>Abstenção</small><b>${a.abs||0}</b></div></div></div>` + html;
+  }
+  if(e.votacao === 'encerrada' && e.resultado){
     const r = e.resultado;
-    html = `<div class="tvres ${r.veredito==='APROVADO'?'ap':'rp'}"><div><span class="mtipo">${m?esc(m.tipo)+' Nº '+esc(m.numero):''}</span><div class="verdict">${esc(r.veredito)}</div></div>
+    html = `<div class="tvres ${r.veredito==='APROVADO'?'ap':'rp'}"><div><span class="mtipo">${m?esc(m.tipo)+' Nº '+esc(m.numero):''}</span><div class="verdict">${esc(r.veredito)}</div>${r.desempate ? `<div class="tvsub">Empate decidido pelo voto do Presidente${r.presidente ? ' ' + esc(vName(r.presidente)) : ''}</div>` : ''}</div>
       <div class="placar"><div class="s"><small>Sim</small><b>${r.sim}</b></div><div class="n"><small>Não</small><b>${r.nao}</b></div><div class="a"><small>Abstenção</small><b>${r.abs}</b></div></div></div>` + html;
   }
   body.innerHTML = html;
