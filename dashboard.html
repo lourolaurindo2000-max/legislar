@@ -806,6 +806,7 @@
                     todas.forEach(function (m) { if (!conhecidas[m.id]) { conhecidas[m.id] = true; novas.push(m); } });
                 }
                 // Se a TV estiver mostrando a Presença Plenária, o aviso já aparece lá dentro
+                if (tv) novas = novas.filter(function (m) { return m.origem !== 'votacao'; });   // na Smart TV, só a votação/resultado
                 if (novas.length && !(tv && atual === 'presenca_plenaria.html')) mostrar(novas);
             }, function (e) { console.error('Mensagens:', e); });
 

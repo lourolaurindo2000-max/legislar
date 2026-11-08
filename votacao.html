@@ -228,6 +228,14 @@ h2{font-size:1.45rem}
 .tvfoot button{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 10px}
 .banner{background:var(--abs-soft);color:var(--abs);border-radius:8px;padding:10px 14px;font-weight:600;font-size:.92rem}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* mensagens e arquivos para todas as telas */
+.field textarea{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:10px 12px;min-height:84px;width:100%;resize:vertical;font:inherit;color:inherit}
+.msgitem{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--sunk)}
+.msgitem p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.msgitem small{color:var(--muted)}
+.msgarq{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.msgarq span{flex:1;min-width:0;overflow-wrap:anywhere}
+.msglist{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto}
 </style>
 </head>
 <body>
@@ -320,6 +328,21 @@ h2{font-size:1.45rem}
             <div class="full"><button class="btn primary" type="submit">Adicionar à pauta</button></div>
           </form>
         </div>
+        <div class="panel stack">
+          <h2>Enviar para todos</h2>
+          <p class="muted" style="margin:0">A mensagem ou o arquivo chega na hora em todos os computadores e tablets. Não aparece na Smart TV.</p>
+          <form class="stack" id="msgForm" autocomplete="off">
+            <div class="field"><label for="msgTexto">Mensagem</label><textarea id="msgTexto" placeholder="Escreva a mensagem (opcional se anexar arquivo)"></textarea></div>
+            <div class="row">
+              <input type="file" id="msgArquivo" hidden>
+              <button class="btn" type="button" id="msgArqBtn">Anexar arquivo</button>
+              <span class="muted" id="msgArqNome">Nenhum arquivo (opcional). Até 10 MB.</span>
+              <button class="linkbtn" type="button" id="msgArqTirar" hidden>Tirar</button>
+            </div>
+            <div class="row"><button class="btn primary" type="submit" id="msgEnviar">Enviar para todos</button><span class="muted" id="msgProg"></span></div>
+          </form>
+          <div class="msglist" id="msgLista"></div>
+        </div>
       </section>
     </div>
   </main>
@@ -366,6 +389,7 @@ h2{font-size:1.45rem}
   </div>
 </div>
 <div id="modalRoot"></div>
+<div id="msgRoot"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -825,6 +849,108 @@ function confirmBox({titulo, texto, big, bigColor, ok, cls, onOk}){
   root.querySelector('[data-x="ok"]').focus();
 }
 
+/* ===================== mensagens e arquivos para todas as telas =====================
+   Usa o mesmo canal da Mesa (legislar/presenca): o dashboard e a Presença Plenária
+   de todos os computadores e tablets já recebem por ali. Marcadas com origem 'votacao',
+   NÃO aparecem na Smart TV (lá só a votação e o resultado). */
+const Mensagens = (() => {
+  const PARTE = 1000000, LIMITE = 10 * 1024 * 1024, VISTO = 'plenario.msgVisto';
+  let refMsgs = null, refArq = null, msgs = [], porId = {}, conhecidas = null, arqSel = null;
+  let emQuadro = false; try{ emQuadro = window.self !== window.top; }catch(e){ emQuadro = true; }
+  const visto = v => { if(v === undefined) return +ls.get(VISTO) || 0; ls.set(VISTO, String(v)); };
+  const pad = n => (n < 10 ? '0' : '') + n;
+  const quando = t => { const d = new Date(t); return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+' às '+pad(d.getHours())+':'+pad(d.getMinutes()); };
+  const tamanho = b => { b = +b || 0; return b >= 1048576 ? (b/1048576).toFixed(1).replace('.', ',')+' MB' : Math.max(1, Math.round(b/1024))+' KB'; };
+  const item = (m, apagar) => `<div class="msgitem">${m.texto ? `<p>${esc(m.texto)}</p>` : ''}${m.arquivo ? `<div class="msgarq"><span><b>${esc(m.arquivo.nome)}</b> <small>${tamanho(m.arquivo.tamanho)}</small></span><button class="btn" type="button" data-baixar="${esc(m.id)}">Baixar</button></div>` : ''}<div class="row" style="justify-content:space-between"><small>${esc(m.de || 'Mesa')} · ${quando(m.criadoEm)}</small>${apagar ? `<button class="linkbtn" type="button" data-apagar-msg="${esc(m.id)}">Apagar</button>` : ''}</div></div>`;
+
+  function lista(){ const el = $('#msgLista'); if(el) el.innerHTML = msgs.length ? msgs.slice(0, 10).map(m => item(m, true)).join('') : '<p class="muted" style="margin:0">Nenhuma mensagem enviada.</p>'; }
+  function aviso(novas){
+    // na Smart TV (dentro do dashboard) e no telão, só a votação aparece
+    if(emQuadro || current === 'v-telao' || !novas.length) return;
+    const root = $('#msgRoot');
+    root.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Mensagem da Mesa"><div class="box">
+      <span class="eyebrow">${novas.length > 1 ? novas.length + ' novas mensagens da Mesa' : 'Nova mensagem da Mesa'}</span>
+      <div class="msglist">${novas.map(m => item(m, false)).join('')}</div>
+      <div class="row"><button class="btn primary" data-x="ok">Fechar</button></div></div></div>`;
+    const close = () => root.innerHTML = '';
+    root.querySelector('[data-x="ok"]').onclick = close;
+    root.querySelector('.modal').onclick = ev => { if(ev.target.classList.contains('modal')) close(); };
+    let maior = 0; novas.forEach(m => { if(m.criadoEm > maior) maior = m.criadoEm; });
+    if(maior > visto()) visto(maior);
+  }
+  function baixar(id, b){
+    const m = porId[id]; if(!m || !m.arquivo || !refArq) return;
+    b.disabled = true; toast('Baixando ' + m.arquivo.nome + '…');
+    refArq.child(id).once('value').then(s => {
+      const v = s.val() || {}; let d = '';
+      for(let i = 0; i < (m.arquivo.partes || 0); i++) d += (v[i] || v[String(i)] || '');
+      if(!d) throw new Error('vazio');
+      const k = d.indexOf(','), bin = atob(d.slice(k+1)), arr = new Uint8Array(bin.length);
+      for(let j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
+      const u = URL.createObjectURL(new Blob([arr], {type: m.arquivo.tipo || 'application/octet-stream'})), a = document.createElement('a');
+      a.href = u; a.download = m.arquivo.nome || 'arquivo'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 10000);
+    }).catch(() => toast('Não foi possível baixar o arquivo.')).then(() => { b.disabled = false; });
+  }
+  function limparArq(){ arqSel = null; $('#msgArqNome').textContent = 'Nenhum arquivo (opcional). Até 10 MB.'; $('#msgArqTirar').hidden = true; }
+  const lerArquivo = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error('leitura')); r.readAsDataURL(f); });
+
+  function init(){
+    if(!(window.firebase && firebase.apps.length)){ lista(); return; }
+    const rt = firebase.database();
+    refMsgs = rt.ref('legislar/presenca/mensagens'); refArq = rt.ref('legislar/presenca/arquivos');
+    refMsgs.orderByChild('criadoEm').limitToLast(30).on('value', s => {
+      const todas = [], novas = [];
+      s.forEach(c => { const v = c.val() || {}; v.id = c.key; if(v.criadoEm) todas.push(v); });
+      todas.sort((a, b) => b.criadoEm - a.criadoEm);
+      msgs = todas; porId = {}; todas.forEach(m => porId[m.id] = m);
+      if(conhecidas === null){
+        conhecidas = {}; const v0 = visto(), limite = Date.now() - 2*3600*1000;
+        todas.forEach(m => { conhecidas[m.id] = true; if(m.criadoEm > v0 && m.criadoEm > limite) novas.push(m); });
+      } else todas.forEach(m => { if(!conhecidas[m.id]){ conhecidas[m.id] = true; novas.push(m); } });
+      lista(); aviso(novas);
+    }, onDbError);
+  }
+
+  document.addEventListener('click', ev => {
+    const b = ev.target.closest && ev.target.closest('[data-baixar]'); if(b) return baixar(b.getAttribute('data-baixar'), b);
+    const a = ev.target.closest && ev.target.closest('[data-apagar-msg]'); if(!a || !refMsgs) return;
+    const id = a.getAttribute('data-apagar-msg');
+    confirmBox({titulo:'Apagar mensagem', texto:'Apagar esta mensagem de todas as telas?', ok:'Apagar', cls:'stop', onOk: () =>
+      Promise.all([refMsgs.child(id).remove(), refArq.child(id).remove()]).then(() => toast('Mensagem apagada.')).catch(() => toast('Não foi possível apagar. Verifique a internet.'))});
+  });
+  $('#msgArqBtn').addEventListener('click', () => $('#msgArquivo').click());
+  $('#msgArqTirar').addEventListener('click', limparArq);
+  $('#msgArquivo').addEventListener('change', function(){
+    const f = this.files && this.files[0]; this.value = ''; if(!f) return;
+    if(f.size > LIMITE) return toast('O arquivo tem mais de 10 MB. Escolha um menor.');
+    arqSel = f; $('#msgArqNome').textContent = f.name + ' · ' + tamanho(f.size); $('#msgArqTirar').hidden = false;
+  });
+  $('#msgForm').addEventListener('submit', ev => {
+    ev.preventDefault();
+    if(!refMsgs) return toast('Sem conexão com o Firebase.');
+    const texto = $('#msgTexto').value.trim(), f = arqSel;
+    if(!texto && !f) return toast('Escreva uma mensagem ou anexe um arquivo.');
+    const id = refMsgs.push().key;
+    if(conhecidas) conhecidas[id] = true;   // não mostra o aviso na tela de quem enviou
+    $('#msgEnviar').disabled = true; $('#msgProg').textContent = f ? 'Enviando arquivo… 0%' : 'Enviando…';
+    const envio = f ? lerArquivo(f).then(dataUrl => {
+      const total = Math.ceil(dataUrl.length / PARTE); let feitas = 0; const partes = [];
+      for(let i = 0; i < total; i++) partes.push(refArq.child(id).child(String(i)).set(dataUrl.slice(i*PARTE, (i+1)*PARTE)).then(() => {
+        feitas++; $('#msgProg').textContent = 'Enviando arquivo… ' + Math.round(feitas/total*100) + '%'; }));
+      return Promise.all(partes).then(() => total);
+    }) : Promise.resolve(0);
+    envio.then(total => {
+      const dados = {texto, de:'Mesa · Votação Plenária', origem:'votacao', criadoEm: firebase.database.ServerValue.TIMESTAMP};
+      if(f) dados.arquivo = {nome:f.name, tipo:f.type || '', tamanho:f.size, partes:total};
+      return refMsgs.child(id).set(dados);
+    }).then(() => { toast('Enviado para todos os computadores e tablets.'); $('#msgTexto').value = ''; limparArq(); })
+      .catch(e => { refArq.child(id).remove(); toast('Não foi possível enviar (' + ((e && (e.code || e.message)) || 'erro') + '). Verifique a internet.'); })
+      .then(() => { $('#msgEnviar').disabled = false; $('#msgProg').textContent = ''; });
+  });
+  return {init};
+})();
+
 /* ===================== início ===================== */
 (async function start(){
   route();
@@ -835,6 +961,7 @@ function confirmBox({titulo, texto, big, bigColor, ok, cls, onOk}){
   Store.watchCol('presenca', list => { S.presenca = Object.fromEntries(list.map(x => [x.id, x])); render(); });
   Store.watchCol('votos', list => { S.votos = list; render(); });
   Store.watchCol('pauta', list => { S.pauta = list; render(); });
+  Mensagens.init();
   if(Store.mode === 'local' && !ls.get('vp_seed')){
     ls.set('vp_seed','1');
     if(!Local.keys().some(k => k.startsWith('pauta/'))){

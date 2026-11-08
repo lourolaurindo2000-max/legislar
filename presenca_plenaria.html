@@ -1873,6 +1873,7 @@ function sha256(ascii){
     }
     renderContador(); renderMesa();
     if ($("#msgOv").hasClass("open") && $("#msgOv").data("modo") === "todas") mostrar(msgs.slice(0, 10), "todas");
+    if (document.body.classList.contains("tv")) novas = novas.filter(function(m){ return m.origem !== "votacao"; });   // Smart TV: mensagens da Votação não aparecem
     if (novas.length) { if (bloqueada()) pendente = novas; else mostrar(novas, "novas"); }
   }, function(e){ console.error("Mensagens:", e); });
 
