@@ -578,6 +578,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 <div id="modalRoot"></div>
 <div id="msgRoot"></div>
 
+<script src="visualizar.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
@@ -1355,7 +1356,7 @@ const Mensagens = (() => {
   const pad = n => (n < 10 ? '0' : '') + n;
   const quando = t => { const d = new Date(t); return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+' às '+pad(d.getHours())+':'+pad(d.getMinutes()); };
   const tamanho = b => { b = +b || 0; return b >= 1048576 ? (b/1048576).toFixed(1).replace('.', ',')+' MB' : Math.max(1, Math.round(b/1024))+' KB'; };
-  const item = (m, apagar) => `<div class="msgitem">${m.texto ? `<p>${esc(m.texto)}</p>` : ''}${m.arquivo ? `<div class="msgarq"><span><b>${esc(m.arquivo.nome)}</b> <small>${tamanho(m.arquivo.tamanho)}</small></span><button class="btn" type="button" data-baixar="${esc(m.id)}">Baixar</button></div>` : ''}<div class="row" style="justify-content:space-between"><small>${esc(m.de || 'Mesa')} · ${quando(m.criadoEm)}</small>${apagar ? `<button class="linkbtn" type="button" data-apagar-msg="${esc(m.id)}">Apagar</button>` : ''}</div></div>`;
+  const item = (m, apagar) => `<div class="msgitem">${m.texto ? `<p>${esc(m.texto)}</p>` : ''}${m.arquivo ? `<div class="msgarq"><span><b>${esc(m.arquivo.nome)}</b> <small>${tamanho(m.arquivo.tamanho)}</small></span><button class="btn" type="button" data-baixar="${esc(m.id)}" aria-label="Ver documento"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Ver</button></div>` : ''}<div class="row" style="justify-content:space-between"><small>${esc(m.de || 'Mesa')} · ${quando(m.criadoEm)}</small>${apagar ? `<button class="linkbtn" type="button" data-apagar-msg="${esc(m.id)}">Apagar</button>` : ''}</div></div>`;
 
   function lista(){ const el = $('#msgLista'); if(el) el.innerHTML = msgs.length ? msgs.slice(0, 10).map(m => item(m, true)).join('') : '<p class="muted" style="margin:0">Nenhuma mensagem enviada.</p>'; }
   function aviso(novas){
@@ -1374,17 +1375,13 @@ const Mensagens = (() => {
   }
   function baixar(id, b){
     const m = porId[id]; if(!m || !m.arquivo || !refArq) return;
-    b.disabled = true; toast('Baixando ' + m.arquivo.nome + '…');
+    b.disabled = true; toast('Abrindo ' + m.arquivo.nome + '…');
     refArq.child(id).once('value').then(s => {
       const v = s.val() || {}; let d = '';
       for(let i = 0; i < (m.arquivo.partes || 0); i++) d += (v[i] || v[String(i)] || '');
       if(!d) throw new Error('vazio');
-      const k = d.indexOf(','), bin = atob(d.slice(k+1)), arr = new Uint8Array(bin.length);
-      for(let j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
-      const u = URL.createObjectURL(new Blob([arr], {type: m.arquivo.tipo || 'application/octet-stream'})), a = document.createElement('a');
-      a.href = u; a.download = m.arquivo.nome || 'arquivo'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(u), 10000);
-    }).catch(() => toast('Não foi possível baixar o arquivo.')).then(() => { b.disabled = false; });
+      VerDoc.abrir(d, m.arquivo.nome, m.arquivo.tipo);   // abre para leitura, sem baixar
+    }).catch(() => toast('Não foi possível abrir o arquivo.')).then(() => { b.disabled = false; });
   }
   function limparArq(){ arqSel = null; $('#msgArqNome').textContent = 'Nenhum arquivo (opcional). Até 10 MB.'; $('#msgArqTirar').hidden = true; }
   const lerArquivo = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error('leitura')); r.readAsDataURL(f); });

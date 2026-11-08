@@ -796,7 +796,7 @@
                 return '<div class="av-item">' +
                     (m.texto ? '<p>' + esc(m.texto) + '</p>' : '') +
                     (a ? '<div class="av-arq"><i class="fas fa-file-alt"></i><span><b>' + esc(a.nome) + '</b><small>' + tamanho(a.tamanho) + '</small></span>' +
-                         '<button class="av-baixar" type="button" data-baixar="' + esc(m.id) + '"><i class="fas fa-download"></i> Baixar</button></div>' : '') +
+                         '<button class="av-baixar" type="button" data-baixar="' + esc(m.id) + '" aria-label="Ver documento"><i class="fas fa-eye"></i> Ver</button></div>' : '') +
                     '<small>' + esc(m.de || 'Mesa') + ' · ' + quando(m.criadoEm) + '</small></div>';
             }
             function mostrar(novas) {
@@ -832,31 +832,26 @@
                 if (novas.length && !(tv && atual === 'presenca_plenaria.html')) mostrar(novas);
             }, function (e) { console.error('Mensagens:', e); });
 
-            // Baixar o arquivo anexado
+            // Ver o arquivo anexado (somente leitura, sem baixar)
             lista.addEventListener('click', function (e) {
                 var b = e.target.closest ? e.target.closest('[data-baixar]') : null;
                 if (!b) return;
                 var m = porId[b.getAttribute('data-baixar')];
                 if (!m || !m.arquivo) return;
-                b.disabled = true; b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Baixando…';
+                b.disabled = true; b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Abrindo…';
                 refArq.child(m.id).once('value').then(function (s) {
                     var v = s.val() || {}, d = '';
                     for (var i = 0; i < (m.arquivo.partes || 0); i++) d += (v[i] || v[String(i)] || '');
                     if (!d) throw new Error('vazio');
-                    var k = d.indexOf(','), bin = atob(d.slice(k + 1)), arr = new Uint8Array(bin.length);
-                    for (var j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
-                    var blob = new Blob([arr], { type: m.arquivo.tipo || 'application/octet-stream' });
-                    var u = URL.createObjectURL(blob), a = document.createElement('a');
-                    a.href = u; a.download = m.arquivo.nome || 'arquivo'; a.rel = 'noopener';
-                    document.body.appendChild(a); a.click(); a.remove();
-                    setTimeout(function () { URL.revokeObjectURL(u); }, 10000);
-                    b.innerHTML = '<i class="fas fa-check"></i> Baixado';
+                    VerDoc.abrir(d, m.arquivo.nome, m.arquivo.tipo);
+                    b.innerHTML = '<i class="fas fa-eye"></i> Ver';
                 }).catch(function () {
-                    b.innerHTML = '<i class="fas fa-download"></i> Tentar de novo';
+                    b.innerHTML = '<i class="fas fa-eye"></i> Tentar de novo';
                 }).then(function () { b.disabled = false; });
             });
         })();
     </script>
 
+<script src="visualizar.js"></script>
 </body>
 </html>

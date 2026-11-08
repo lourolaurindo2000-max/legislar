@@ -1890,7 +1890,7 @@ function sha256(ascii){
     return '<div class="msg-item">' +
       (m.texto ? '<p>' + esc(m.texto) + '</p>' : '') +
       (a ? '<div class="msg-arq"><svg width="18" height="18"><use href="#i-doc"/></svg><span><b>' + esc(a.nome) + '</b><small>' + tamanho(a.tamanho) + '</small></span>' +
-           '<button class="btn btn-blue" type="button" data-baixar="' + esc(m.id) + '">Baixar</button></div>' : '') +
+           '<button class="btn btn-blue" type="button" data-baixar="' + esc(m.id) + '" aria-label="Ver documento"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Ver</button></div>' : '') +
       '<div class="msg-rod"><small>' + esc(m.de || "Mesa") + ' · ' + quando(m.criadoEm) + '</small>' +
       (comApagar ? '<button class="edit-btn" type="button" data-apagar="' + esc(m.id) + '">Apagar</button>' : '') + '</div></div>';
   }
@@ -1926,13 +1926,13 @@ function sha256(ascii){
   }
   $(document).on("click", "[data-baixar]", function(){
     var m = porId[$(this).data("baixar")], b = this; if (!m || !m.arquivo) return;
-    b.disabled = true; toast("Baixando " + m.arquivo.nome + "…");
+    b.disabled = true; toast("Abrindo " + m.arquivo.nome + "…");
     refArq.child(m.id).once("value").then(function(s){
       var v = s.val() || {}, d = "";
       for (var i = 0; i < (m.arquivo.partes || 0); i++) d += (v[i] || v[String(i)] || "");
       if (!d) throw new Error("vazio");
-      salvar(paraBlob(d, m.arquivo.tipo), m.arquivo.nome);
-    }).catch(function(){ toast("Não foi possível baixar o arquivo.", "err"); })
+      VerDoc.abrir(d, m.arquivo.nome, m.arquivo.tipo);   // somente leitura, sem baixar
+    }).catch(function(){ toast("Não foi possível abrir o arquivo.", "err"); })
       .then(function(){ b.disabled = false; });
   });
 
@@ -1991,4 +1991,5 @@ function sha256(ascii){
 })();
 </script>
 
+<script src="visualizar.js"></script>
 </body></html>
