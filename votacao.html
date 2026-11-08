@@ -221,6 +221,36 @@ h2{font-size:1.45rem}
 .tvres.ap .verdict{color:var(--sim)}.tvres.rp .verdict{color:var(--nao)}
 .tvres.emp{border-color:var(--brass);background:linear-gradient(120deg,var(--abs-soft),var(--surface))}.tvres.emp .verdict{color:var(--brass)}
 .tvsub{color:var(--brass);font-family:var(--f-display);font-weight:600;font-size:1.6rem;margin-top:6px}
+/* resumo final da pauta no telão */
+.tvsum{flex:1;min-height:0;display:flex;flex-direction:column}
+.tvsum-top{margin-bottom:18px}
+.tvsum-top .mtipo{font-size:1.5rem}
+.tvsum-top h2{font-size:3rem;margin-top:6px}
+.tvsum-lista{flex:1;min-height:0;display:flex;flex-direction:column}
+.tvsum-item{flex:1 1 0;min-height:0;max-height:190px;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;column-gap:30px;padding:10px 30px;border-radius:14px;border:2px solid var(--line);background:var(--surface);overflow:hidden}
+.tvsum-item + .tvsum-item{margin-top:12px}
+.tvsum-item.ap{border-color:var(--sim);background:linear-gradient(120deg,var(--sim-soft),var(--surface) 70%)}
+.tvsum-item.rp{border-color:var(--nao);background:linear-gradient(120deg,var(--nao-soft),var(--surface) 70%)}
+.tvsum-nome{min-width:0;display:flex;flex-direction:column}
+.tvsum-nome b{font-family:var(--f-display);font-weight:700;font-size:2.6rem;line-height:1.1}
+.tvsum-nome span{color:var(--muted);font-size:1.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tvsum-placar{font-family:var(--f-mono);font-size:1.4rem;color:var(--muted);text-align:right;display:flex;flex-direction:column}
+.tvsum-placar em{font-style:normal;color:var(--brass);font-family:var(--f-display);font-size:1.3rem}
+.tvsum-res{font-family:var(--f-display);font-weight:700;font-size:4.6rem;letter-spacing:.05em;line-height:1;min-width:430px;text-align:right}
+.tvsum-item.ap .tvsum-res{color:var(--sim)}.tvsum-item.rp .tvsum-res{color:var(--nao)}
+.tvsum.compact .tvsum-nome span{display:none}
+.tvsum.compact .tvsum-nome b{font-size:2.1rem}
+.tvsum.compact .tvsum-item{padding:4px 26px}
+.tvsum.compact .tvsum-item + .tvsum-item{margin-top:8px}
+.tvsum.compact .tvsum-placar{font-size:1.2rem}
+.tvsum.compact .tvsum-placar em{font-size:1.05rem}
+.tvsum.compact .tvsum-res{font-size:3.1rem;min-width:300px}
+.tvsum.cols .tvsum-lista{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-auto-rows:minmax(0,1fr);grid-gap:8px 16px;gap:8px 16px}
+.tvsum.cols .tvsum-item + .tvsum-item{margin-top:0}
+.tvsum.cols .tvsum-item{max-height:none;padding:4px 18px;column-gap:16px}
+.tvsum.cols .tvsum-nome b{font-size:1.6rem}
+.tvsum.cols .tvsum-placar{font-size:1rem}
+.tvsum.cols .tvsum-res{font-size:2.3rem;min-width:0}
 .tvstate.emp{background:var(--brass);color:#1d1405;border-color:var(--brass)}
 .placar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .placar div{background:var(--sunk);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--line)}
@@ -1315,6 +1345,24 @@ function renderTelao(){
   if(!e.aberta){
     body.innerHTML = `<div class="splash"><img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>A votação ainda não começou.</p></div>`;
     return;
+  }
+  /* Pauta concluída com 2 ou mais matérias: resumo final com o nome e o resultado de cada uma */
+  if(e.pautaConcluida){
+    const desde = e.abertaEm || 0;
+    const votadas = pautaOrdenada().filter(p => p.status === 'votado' && p.resultado && (p.resultado.em || 0) >= desde)
+      .sort((a, b) => a.resultado.em - b.resultado.em);
+    if(votadas.length >= 2){
+      stEl.className = 'tvstate'; stEl.textContent = 'Pauta concluída';
+      const aprov = votadas.filter(p => p.resultado.veredito === 'APROVADO').length;
+      const tam = votadas.length > 10 ? ' compact cols' : votadas.length > 5 ? ' compact' : '';
+      body.innerHTML = `<div class="tvsum${tam}">
+        <div class="tvsum-top"><span class="mtipo">Resultado final da pauta</span><h2>${votadas.length} matérias votadas · ${aprov} aprovada${aprov===1?'':'s'} · ${votadas.length-aprov} reprovada${votadas.length-aprov===1?'':'s'}</h2></div>
+        <div class="tvsum-lista">${votadas.map(p => { const r = p.resultado, ap = r.veredito === 'APROVADO';
+          return `<div class="tvsum-item ${ap?'ap':'rp'}"><div class="tvsum-nome"><b>${esc(p.tipo)} Nº ${esc(p.numero)}</b><span>${esc(p.ementa)}</span></div>
+            <div class="tvsum-placar">SIM ${r.sim||0} · NÃO ${r.nao||0} · ABST. ${r.abs||0}${r.desempate?'<em>Desempate do Presidente</em>':''}</div>
+            <div class="tvsum-res">${esc(r.veredito)}</div></div>`; }).join('')}</div></div>`;
+      return;
+    }
   }
   const vs = m ? votosDe(m.id) : [];
   const enc = e.votacao === 'encerrada' || e.votacao === 'desempate';
