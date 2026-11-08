@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Votação Plenária — Câmara de Almadina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: uma barra institucional + três telas (Mesa/Operador, Tablet do Vereador, Telão) com o mesmo vocabulário de cores de voto */
+:root{
+  --bg:#eef0f5; --surface:#ffffff; --sunk:#e3e7ef; --ink:#121a2c; --muted:#59627a; --line:#d4d9e4;
+  --navy:#1b2c57; --brass:#9b7019; --brass-soft:#f3e7cb;
+  --sim:#1c8448; --sim-soft:#dcf1e4; --nao:#bb3326; --nao-soft:#f8dfdb; --abs:#b87b0c; --abs-soft:#f6ead0;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1120; --surface:#151c2f; --sunk:#10172a; --ink:#e7eaf2; --muted:#9aa3b8; --line:#273149;
+  --navy:#9bb1e8; --brass:#d8a845; --brass-soft:#3a2f17;
+  --sim:#3cc277; --sim-soft:#173726; --nao:#ee6453; --nao-soft:#3e1d1a; --abs:#e7ad3c; --abs-soft:#3b2e14; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1120; --surface:#151c2f; --sunk:#10172a; --ink:#e7eaf2; --muted:#9aa3b8; --line:#273149;
+  --navy:#9bb1e8; --brass:#d8a845; --brass-soft:#3a2f17;
+  --sim:#3cc277; --sim-soft:#173726; --nao:#ee6453; --nao-soft:#3e1d1a; --abs:#e7ad3c; --abs-soft:#3b2e14; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* barra */
+.topbar{background:var(--navy);color:#fff}
+:root:not([data-theme="light"]) .topbar{}
+.topbar .wrap{display:flex;align-items:center;gap:14px;padding-block:12px;flex-wrap:wrap}
+.seal{width:38px;height:38px;border-radius:50%;border:2px solid var(--brass);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;color:var(--brass);background:rgba(255,255,255,.06);flex:none}
+.brand{display:flex;flex-direction:column;line-height:1.1;min-width:0}
+.brand small{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+.brand b{font-family:var(--f-display);font-size:1.45rem;font-weight:600;letter-spacing:.02em}
+.topbar .sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.12);color:#fff}
+.pill i{width:8px;height:8px;border-radius:50%;background:#9aa3b8}
+.pill.on i{background:#4ade80}.pill.loc i{background:#fbbf24}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .topbar{background:#111a33}}
+:root[data-theme="dark"] .topbar{background:#111a33}
+.topbar a,.linkbtn{color:inherit;background:none;border:0;text-decoration:underline;text-underline-offset:3px;font-size:.9rem;padding:4px}
+
+main{padding-block:24px 48px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:.01em;text-wrap:balance;margin:0}
+h1{font-size:2.1rem}
+h2{font-size:1.45rem}
+.eyebrow{font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.muted{color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.btn{border:1px solid var(--line);background:var(--surface);padding:10px 16px;border-radius:8px;font-weight:600;min-height:44px}
+.btn:hover:not(:disabled){border-color:var(--ink)}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:var(--surface)}
+.btn.go{background:var(--sim);border-color:var(--sim);color:#fff}
+.btn.stop{background:var(--nao);border-color:var(--nao);color:#fff}
+.btn.brass{background:var(--brass);border-color:var(--brass);color:#fff}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:.82rem;font-weight:700;color:var(--muted)}
+.field input,.field select{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:10px 12px;min-height:44px;width:100%}
+.err{color:var(--nao);font-weight:600;min-height:1.4em;font-size:.92rem}
+
+/* início */
+.hero{display:grid;gap:8px;margin-bottom:22px}
+.hero p{max-width:62ch;margin:0}
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.role{display:flex;flex-direction:column;gap:10px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;transition:border-color .15s,transform .15s}
+.role:hover{border-color:var(--brass);transform:translateY(-2px)}
+.role b{font-family:var(--f-display);font-size:1.6rem;font-weight:600}
+.role span{color:var(--muted)}
+.role em{font-style:normal;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--brass);font-weight:700}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:22px}
+.step{border-top:3px solid var(--line);padding-top:10px}
+.step b{display:block;font-family:var(--f-display);font-size:1.15rem}
+.step p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+
+/* login */
+.login{max-width:560px;margin:0 auto}
+.namegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.namebtn{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:10px 8px;text-align:left;min-height:56px;display:flex;flex-direction:column;justify-content:center}
+.namebtn small{font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+.namebtn[aria-pressed="true"]{border-color:var(--brass);background:var(--brass-soft);box-shadow:inset 0 0 0 1px var(--brass)}
+@media (max-width:460px){.namegrid{grid-template-columns:repeat(2,1fr)}}
+
+/* operador */
+.opgrid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;align-items:start}
+@media (max-width:900px){.opgrid{grid-template-columns:1fr}}
+.stage{display:flex;gap:6px;flex-wrap:wrap}
+.stage span{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:99px;background:var(--sunk);color:var(--muted)}
+.stage span.ok{background:var(--sim-soft);color:var(--sim)}
+.stage span.now{background:var(--brass-soft);color:var(--brass)}
+.chamada{display:grid;grid-template-columns:1fr;gap:6px}
+.vrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--sunk)}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;background:var(--surface);border:1px solid var(--line);flex:none;font-size:.95rem}
+.vrow .nm{flex:1;min-width:0;line-height:1.15}
+.vrow .nm small{display:block;font-size:.76rem;color:var(--muted)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--line);margin-right:5px;vertical-align:middle}
+.dot.on{background:var(--sim)}
+.tog{border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:.82rem;font-weight:700;background:var(--surface);min-height:36px}
+.tog.on{background:var(--sim);border-color:var(--sim);color:#fff}
+.quorum{display:flex;flex-direction:column;gap:8px}
+.meter{position:relative;height:14px;border-radius:99px;background:var(--sunk);border:1px solid var(--line);overflow:hidden}
+.meter i{position:absolute;inset:0 auto 0 0;background:var(--nao);transition:width .3s}
+.meter i.ok{background:var(--sim)}
+.meter b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
+.qtxt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.92rem}
+.big-num{font-family:var(--f-mono);font-weight:600;font-variant-numeric:tabular-nums}
+.current{border:2px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.current.live{border-color:var(--sim)}
+.current.done{border-color:var(--brass)}
+.mtipo{font-family:var(--f-mono);font-size:.82rem;color:var(--brass);font-weight:600;letter-spacing:.04em}
+.ementa{font-size:1.08rem;margin:0}
+.votedline{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.78rem;font-weight:700;padding:4px 9px;border-radius:99px;background:var(--sunk);color:var(--muted);border:1px solid var(--line)}
+.chip.v{background:var(--sim-soft);color:var(--sim);border-color:transparent}
+.chip.sim{background:var(--sim-soft);color:var(--sim);border-color:transparent}
+.chip.nao{background:var(--nao-soft);color:var(--nao);border-color:transparent}
+.chip.abs{background:var(--abs-soft);color:var(--abs);border-color:transparent}
+.pauta{display:flex;flex-direction:column;gap:6px}
+.pitem{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:8px}
+.pitem.sel{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+.pitem .n{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);width:2ch;text-align:right}
+.pitem p{margin:0;font-size:.95rem}
+.pitem small{color:var(--muted)}
+.res{font-family:var(--f-display);font-weight:700;letter-spacing:.04em}
+.res.ap{color:var(--sim)}.res.rp{color:var(--nao)}
+.addform{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.addform .full{grid-column:1/-1}
+@media (max-width:520px){.addform{grid-template-columns:1fr}}
+.oprow{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:16px}
+
+/* vereador */
+.ver{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.verhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.verhead .av{width:52px;height:52px;font-size:1.3rem;background:var(--brass-soft);border-color:var(--brass);color:var(--brass)}
+.verhead .sp{flex:1}
+.status{border-radius:10px;padding:14px 16px;font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:10px;background:var(--sunk);border:1px solid var(--line)}
+.status.live{background:var(--sim-soft);color:var(--sim);border-color:transparent}
+.status.lock{background:var(--brass-soft);color:var(--brass);border-color:transparent}
+.matcard{padding:22px}
+.matcard h2{font-size:1.9rem;margin-top:6px}
+.votebtns{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:640px){.votebtns{grid-template-columns:1fr}}
+.vb{border:0;border-radius:14px;padding:26px 16px;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;font-family:var(--f-display);font-weight:700;font-size:2.2rem;letter-spacing:.04em;transition:transform .12s,filter .12s}
+.vb small{font-family:var(--f-body);font-size:.95rem;font-weight:600;letter-spacing:0;opacity:.9}
+.vb.sim{background:var(--sim)}.vb.nao{background:var(--nao)}.vb.abs{background:var(--abs)}
+.vb:active:not(:disabled){transform:scale(.97)}
+.vb:disabled{filter:grayscale(1);opacity:.32;cursor:not-allowed}
+@media (max-width:640px){.vb{min-height:96px;flex-direction:row;font-size:1.8rem}}
+.locked{text-align:center;padding:34px 18px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.locked .big{font-family:var(--f-display);font-size:3rem;font-weight:700;line-height:1}
+.lockico{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--brass-soft);color:var(--brass)}
+
+/* modal / toast */
+.modal{position:fixed;inset:0;background:rgba(8,12,24,.62);display:grid;place-items:center;z-index:50;padding:16px}
+.modal .box{background:var(--surface);border-radius:14px;padding:24px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:14px;border:1px solid var(--line)}
+.modal .box .big{font-family:var(--f-display);font-size:2.6rem;font-weight:700;line-height:1}
+.modal .row .btn{flex:1;min-height:56px;font-size:1.05rem}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:10px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
+
+/* telão — sempre escuro */
+.tv{--bg:#070b16;--surface:#0f1628;--sunk:#0b1120;--ink:#f1f3f8;--muted:#8f99b2;--line:#222c45;--brass:#e0b04f;--brass-soft:#3a2f17;--sim:#34d17c;--sim-soft:#11331f;--nao:#ff5a48;--nao-soft:#3d1713;--abs:#f2b33b;--abs-soft:#3a2b10;
+  background:radial-gradient(1200px 500px at 50% -10%,#18244a 0%,var(--bg) 60%);color:var(--ink);min-height:100vh;color-scheme:dark}
+.tvwrap{padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-block:20px 28px;display:flex;flex-direction:column;gap:18px;max-width:1800px;margin:0 auto}
+.tvtop{display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px}
+.tvtop .seal{width:54px;height:54px;font-size:1.3rem}
+.tvtop .brand small{font-size:.85rem}
+.tvtop .brand b{font-size:clamp(1.4rem,2.4vw,2.4rem)}
+.tvtop .sp{flex:1}
+.clock{font-family:var(--f-mono);font-size:clamp(1.3rem,2.2vw,2.2rem);font-weight:600;font-variant-numeric:tabular-nums}
+.tvstate{font-family:var(--f-display);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:clamp(1rem,1.6vw,1.5rem);padding:6px 14px;border-radius:8px;background:var(--sunk);border:1px solid var(--line)}
+.tvstate.live{background:var(--sim);color:#04160c;border-color:var(--sim);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(52,209,124,.12)}}
+.tvmain{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:stretch}
+@media (max-width:980px){.tvmain{grid-template-columns:1fr}}
+.tvmat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(16px,2vw,28px);display:flex;flex-direction:column;gap:10px}
+.tvmat .mtipo{font-size:clamp(.9rem,1.3vw,1.3rem)}
+.tvmat h2{font-size:clamp(1.6rem,3.2vw,3.2rem);line-height:1.08}
+.tvmat .autor{color:var(--muted);font-size:clamp(.95rem,1.3vw,1.3rem)}
+.tvq{display:flex;gap:18px;flex-wrap:wrap;margin-top:auto;padding-top:12px;border-top:1px solid var(--line)}
+.tvq div{display:flex;flex-direction:column}
+.tvq small{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.tvq b{font-family:var(--f-mono);font-size:clamp(1.4rem,2.4vw,2.4rem);font-variant-numeric:tabular-nums}
+.tvgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:560px){.tvgrid{grid-template-columns:repeat(2,1fr)}}
+.tvv{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.tvv .nm{font-family:var(--f-display);font-weight:600;font-size:clamp(1.05rem,1.6vw,1.6rem);line-height:1.05;overflow-wrap:anywhere}
+.tvv .pres{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--brass);font-weight:700}
+.tvv .st{font-family:var(--f-display);font-weight:700;letter-spacing:.08em;font-size:clamp(.95rem,1.4vw,1.4rem);padding:4px 10px;border-radius:6px;align-self:flex-start;background:var(--sunk);color:var(--muted)}
+.tvv.aus{opacity:.45}
+.tvv.voted{border-width:2px}
+.tvv.v-sim{border-color:var(--sim);background:linear-gradient(160deg,var(--sim-soft),var(--surface))}
+.tvv.v-nao{border-color:var(--nao);background:linear-gradient(160deg,var(--nao-soft),var(--surface))}
+.tvv.v-abs{border-color:var(--abs);background:linear-gradient(160deg,var(--abs-soft),var(--surface))}
+.tvv.flash{animation:votoNovo 1.4s ease-out}
+@keyframes votoNovo{0%{transform:scale(1.08);box-shadow:0 0 0 10px rgba(255,255,255,.18)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+.tvv .st.voted{background:var(--sim);color:#04160c}
+.tvv .st.wait{background:var(--sunk);color:var(--ink)}
+.tvv .st.sim{background:var(--sim);color:#04160c}
+.tvv .st.nao{background:var(--nao);color:#1d0503}
+.tvv .st.abs{background:var(--abs);color:#1d1203}
+.tvres{border-radius:14px;padding:clamp(16px,2.4vw,30px);display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:center;border:2px solid var(--line);background:var(--surface)}
+@media (max-width:760px){.tvres{grid-template-columns:1fr}}
+.tvres.ap{border-color:var(--sim);background:linear-gradient(120deg,var(--sim-soft),var(--surface))}
+.tvres.rp{border-color:var(--nao);background:linear-gradient(120deg,var(--nao-soft),var(--surface))}
+.verdict{font-family:var(--f-display);font-weight:700;font-size:clamp(3rem,8vw,7.5rem);line-height:.9;letter-spacing:.04em}
+.tvres.ap .verdict{color:var(--sim)}.tvres.rp .verdict{color:var(--nao)}
+.placar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.placar div{background:var(--sunk);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--line)}
+.placar small{display:block;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.placar b{font-family:var(--f-mono);font-size:clamp(2rem,4.4vw,4.4rem);font-variant-numeric:tabular-nums;line-height:1.1}
+.placar .s small,.placar .s b{color:var(--sim)}.placar .n small,.placar .n b{color:var(--nao)}.placar .a small,.placar .a b{color:var(--abs)}
+.splash{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+.splash .seal{width:110px;height:110px;font-size:2.6rem;border-width:3px}
+.splash h2{font-size:clamp(2rem,5vw,4.6rem)}
+.splash p{color:var(--muted);font-size:clamp(1rem,1.8vw,1.6rem);margin:0}
+.tvfoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.85rem}
+.tvfoot button{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 10px}
+.banner{background:var(--abs-soft);color:var(--abs);border-radius:8px;padding:10px 14px;font-weight:600;font-size:.92rem}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="topbar" id="topbar">
+    <div class="wrap">
+      <div class="seal" aria-hidden="true">A</div>
+      <div class="brand"><small>Câmara Municipal de Almadina</small><b>Votação Plenária</b></div>
+      <div class="sp"></div>
+      <span class="pill" id="modePill"><i></i><span>Conectando</span></span>
+      <a href="#inicio" id="homeLink">Início</a>
+    </div>
+  </header>
+
+  <!-- INÍCIO -->
+  <main class="wrap" id="v-inicio" hidden>
+    <div class="hero">
+      <span class="eyebrow">Plenário Jonas Plínio</span>
+      <h1>Escolha como este aparelho vai participar</h1>
+      <p class="muted">Abra esta mesma página no computador da Mesa, em cada tablet dos vereadores e na Smart TV. Tudo se atualiza ao mesmo tempo.</p>
+    </div>
+    <div class="roles">
+      <button class="role" data-go="operador"><em>Computador da Mesa</em><b>Operador</b><span>Abre a sessão, faz a chamada, libera a pauta e encerra a votação.</span></button>
+      <button class="role" data-go="vereador"><em>Tablet</em><b>Vereador</b><span>Entra com o nome e vota Aprovar, Reprovar ou Abster quando a votação for liberada.</span></button>
+      <button class="role" data-go="telao"><em>Smart TV</em><b>Telão</b><span>Mostra quórum, quem já votou e o resultado final para o plenário.</span></button>
+    </div>
+    <div class="steps">
+      <div class="step"><b>Abertura e quórum</b><p>A Mesa abre a sessão e faz a chamada. Só com maioria absoluta (5 de 9) a votação pode começar.</p></div>
+      <div class="step"><b>Liberação da pauta</b><p>O operador escolhe a matéria e clica em Iniciar votação. Os botões aparecem nos tablets.</p></div>
+      <div class="step"><b>Registro único</b><p>Cada voto fica gravado com o vereador e a matéria. O tablet trava e o telão mostra VOTOU.</p></div>
+      <div class="step"><b>Encerramento e placar</b><p>O operador encerra. O sistema soma os votos e o telão exibe APROVADO ou REPROVADO.</p></div>
+    </div>
+  </main>
+
+  <!-- LOGIN OPERADOR -->
+  <main class="wrap" id="v-op-login" hidden>
+    <form class="panel login stack" id="opLoginForm" autocomplete="off">
+      <span class="eyebrow">Mesa Diretora</span>
+      <h1>Acesso do operador</h1>
+      <div class="field"><label for="opUser">Usuário</label><input id="opUser" value="operador" autocomplete="off"></div>
+      <div class="field"><label for="opPass">Senha</label><input id="opPass" type="password" autocomplete="off"></div>
+      <div class="err" id="opErr"></div>
+      <button class="btn primary" type="submit">Entrar</button>
+    </form>
+  </main>
+
+  <!-- OPERADOR -->
+  <main class="wrap" id="v-operador" hidden>
+    <div class="oprow">
+      <div class="stack" style="gap:6px">
+        <span class="eyebrow">Painel da Mesa</span>
+        <div class="stage" id="opStage"></div>
+      </div>
+      <div class="row">
+        <a class="btn" href="#telao" target="_self">Ver telão</a>
+        <button class="btn" id="opLogout">Sair</button>
+      </div>
+    </div>
+    <div class="banner" id="localBanner" hidden>Modo local: o Firebase ainda não foi configurado neste arquivo. A sincronização funciona só entre abas deste navegador.</div>
+    <div class="opgrid" style="margin-top:12px">
+      <section class="panel stack">
+        <div class="row" style="justify-content:space-between"><h2>Sessão e quórum</h2><span class="chip" id="sessChip">Fechada</span></div>
+        <div class="row">
+          <button class="btn primary" id="btnAbrir">Abrir sessão</button>
+          <button class="btn brass" id="btnChamada">Fazer chamada</button>
+        </div>
+        <div class="quorum">
+          <div class="meter" aria-hidden="true"><i id="qBar"></i><b id="qMark"></b></div>
+          <div class="qtxt"><span><span class="big-num" id="qPres">0</span> de 9 presentes</span><span id="qMsg" class="muted">Mínimo: 5 (maioria absoluta)</span></div>
+        </div>
+        <div class="field"><label for="selPres">Presidente da Mesa</label><select id="selPres"></select></div>
+        <div class="chamada" id="chamadaList"></div>
+        <button class="btn stop" id="btnFecharSessao">Encerrar sessão</button>
+      </section>
+
+      <section class="stack">
+        <div class="panel stack">
+          <h2>Votação</h2>
+          <div id="opCurrent"></div>
+        </div>
+        <div class="panel stack">
+          <div class="row" style="justify-content:space-between"><h2>Pauta</h2><span class="muted" id="pautaCount"></span></div>
+          <div class="pauta" id="pautaList"></div>
+          <form class="addform" id="addForm" autocomplete="off">
+            <div class="field"><label for="fTipo">Tipo</label><select id="fTipo"><option>Projeto de Lei</option><option>Requerimento</option><option>Indicação</option><option>Moção</option><option>Projeto de Resolução</option><option>Projeto de Decreto Legislativo</option></select></div>
+            <div class="field"><label for="fNum">Número</label><input id="fNum" placeholder="012/2026"></div>
+            <div class="field full"><label for="fEmenta">Ementa</label><input id="fEmenta" placeholder="Dispõe sobre…"></div>
+            <div class="field full"><label for="fAutor">Autor</label><input id="fAutor" placeholder="Vereador(a) ou Poder Executivo"></div>
+            <div class="full"><button class="btn primary" type="submit">Adicionar à pauta</button></div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- LOGIN VEREADOR -->
+  <main class="wrap" id="v-ver-login" hidden>
+    <form class="panel login stack" id="verLoginForm" autocomplete="off">
+      <span class="eyebrow">Tablet do vereador</span>
+      <h1>Toque no seu nome</h1>
+      <div class="namegrid" id="nameGrid"></div>
+      <div class="field"><label for="verPass">Senha</label><input id="verPass" type="password" autocomplete="off"></div>
+      <div class="err" id="verErr"></div>
+      <button class="btn primary" type="submit" style="min-height:52px">Entrar</button>
+    </form>
+  </main>
+
+  <!-- VEREADOR -->
+  <main class="wrap" id="v-vereador" hidden>
+    <div class="ver">
+      <div class="verhead">
+        <div class="av" id="verAv"></div>
+        <div><span class="eyebrow" id="verRole">Vereador</span><h1 id="verName" style="font-size:1.8rem"></h1></div>
+        <div class="sp"></div>
+        <button class="btn" id="verLogout">Sair</button>
+      </div>
+      <div class="status" id="verStatus"></div>
+      <div id="verBody"></div>
+    </div>
+  </main>
+
+  <!-- TELÃO -->
+  <div class="tv" id="v-telao" hidden>
+    <div class="tvwrap">
+      <div class="tvtop">
+        <div class="seal" aria-hidden="true">A</div>
+        <div class="brand"><small>Câmara Municipal de Almadina · Plenário Jonas Plínio</small><b>Votação Plenária</b></div>
+        <div class="sp"></div>
+        <span class="tvstate" id="tvState">Sessão fechada</span>
+        <span class="clock" id="tvClock">--:--</span>
+      </div>
+      <div id="tvBody"></div>
+      <div class="tvfoot"><span id="tvFootL"></span><span class="row"><button id="tvFull">Tela cheia</button><a href="#inicio" style="color:inherit">Sair</a></span></div>
+    </div>
+  </div>
+</div>
+<div id="modalRoot"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/* ===================== dados fixos ===================== */
+const VEREADORES = [
+  {id:'v1', nome:'Jackson Costa',     ap:1},
+  {id:'v2', nome:'Dilson Junior',     ap:2},
+  {id:'v3', nome:'Lucas Cavalcante',  ap:3},
+  {id:'v4', nome:'Marilene Santos',   ap:4},
+  {id:'v5', nome:'Nilza Damasceno',   ap:5},
+  {id:'v6', nome:'Rogério Gotado',    ap:6},
+  {id:'v7', nome:'Sylas Souza',       ap:7},
+  {id:'v8', nome:'José Lindomar',     ap:8},
+  {id:'v9', nome:'Wilson Freitas',    ap:9},
+];
+const QUORUM = 5;               // maioria absoluta de 9
+const SENHA_VEREADOR = 'legislar@';
+const OPERADOR = {user:'operador', senha:'mesa@almadina'};
+const VOTO_LABEL = {sim:'APROVAR', nao:'REPROVAR', abs:'ABSTER'};
+const VOTO_CURTO = {sim:'SIM', nao:'NÃO', abs:'ABST.'};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ini = n => n.split(' ').filter(Boolean).map(p=>p[0]).slice(0,2).join('').toUpperCase();
+const vName = id => (VEREADORES.find(v=>v.id===id)||{}).nome || '—';
+const ls = {
+  get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k) }catch(e){} }
+};
+
+/* ===================== FIREBASE — COLE AQUI A CONFIGURAÇÃO =====================
+   Firebase Console > Configurações do projeto > Seus apps > Configuração do SDK.
+   Pode usar o mesmo projeto das outras páginas do plenário (presença, controle de fala).
+   Precisa ter o "Realtime Database" criado (o databaseURL aparece lá). */
+const FIREBASE_CONFIG = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+const RAIZ = 'votacao_plenaria';   // pasta no banco, para não misturar com as outras páginas
+
+/* ===================== armazenamento ===================== */
+/* Online: Firebase Realtime Database (tempo real entre tablets, computador e TV).
+   Local: localStorage + BroadcastChannel (só abas do mesmo navegador, para teste). */
+const Local = {
+  subs:[], ch:null,
+  init(){
+    try{ this.ch = new BroadcastChannel('votacao-plenaria-almadina'); this.ch.onmessage = () => this.fire(); }catch(e){}
+    addEventListener('storage', e => { if(!e.key || e.key.startsWith('vp:')) this.fire(); });
+  },
+  read(p){ try{ const v = localStorage.getItem('vp:'+p); return v ? JSON.parse(v) : null }catch(e){ return null } },
+  keys(){ const out=[]; try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.startsWith('vp:')) out.push(k.slice(3)); } }catch(e){} return out },
+  async get(p){ return this.read(p) },
+  async set(p,d){ try{ localStorage.setItem('vp:'+p, JSON.stringify(d)) }catch(e){} this.ch && this.ch.postMessage(1); this.fire(); },
+  async del(p){ try{ localStorage.removeItem('vp:'+p) }catch(e){} this.ch && this.ch.postMessage(1); this.fire(); },
+  async setIfAbsent(p,d){ if(this.read(p)) return false; await this.set(p,d); return true; },
+  watchDoc(p,cb){ const f=()=>cb(this.read(p)); this.subs.push(f); setTimeout(f,0); },
+  watchCol(c,cb){ const f=()=>cb(this.keys().filter(k=>{const s=k.split('/');return s.length===2&&s[0]===c}).map(k=>({id:k.split('/')[1], ...this.read(k)}))); this.subs.push(f); setTimeout(f,0); },
+  fire(){ this.subs.forEach(f=>f()) }
+};
+const Store = {
+  db:null, mode:'conectando',
+  ref(p){ return this.db.ref(RAIZ + '/' + p); },
+  async init(){
+    try{
+      if(window.firebase && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.databaseURL){
+        if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        this.db = firebase.database();
+        this.mode = 'online';
+        this.db.ref('.info/connected').on('value', s => { this.mode = s.val() ? 'online' : 'conectando'; render(); });
+        return;
+      }
+    }catch(e){ console.error(e); }
+    this.mode = 'local'; Local.init();
+  },
+  watchDoc(p,cb){
+    if(!this.db) return Local.watchDoc(p,cb);
+    this.ref(p).on('value', s => cb(s.val()), onDbError);
+  },
+  watchCol(c,cb){
+    if(!this.db) return Local.watchCol(c,cb);
+    this.ref(c).on('value', s => { const v = s.val() || {}; cb(Object.keys(v).map(id => ({id, ...v[id]}))); }, onDbError);
+  },
+  async get(p){ if(!this.db) return Local.get(p); const s = await this.ref(p).once('value'); return s.val(); },
+  async set(p,d){ if(!this.db) return Local.set(p,d); return this.ref(p).set(d); },
+  async del(p){ if(!this.db) return Local.del(p); return this.ref(p).remove(); },
+  /* grava só se ainda não existir (registro único do voto) */
+  async setIfAbsent(p,d){
+    if(!this.db) return Local.setIfAbsent(p,d);
+    const r = await this.ref(p).transaction(cur => cur ? undefined : d);
+    return r.committed;
+  }
+};
+function onDbError(e){ console.error(e); toast(e && /permission/i.test(e.code||e.message||'') ? 'O Firebase recusou o acesso. Confira as regras do Realtime Database.' : 'Falha de conexão com o banco. Verifique a internet.'); }
+
+/* fila de escrita: uma gravação por vez por documento */
+const queues = {};
+function write(path, data){
+  const prev = queues[path] || Promise.resolve();
+  const next = prev.catch(()=>{}).then(() => Store.set(path, data));
+  queues[path] = next;
+  return next.catch(e => { toast('Não foi possível gravar. Tente de novo.'); throw e; });
+}
+
+/* ===================== estado em memória ===================== */
+const S = { estado:null, login:{}, presenca:{}, pauta:[], votos:[], loaded:false };
+const defEstado = () => ({aberta:false, abertaEm:null, chamada:false, presidente:'', pautaId:null, votacao:'livre', inicioVotacao:null, resultado:null});
+const E = () => ({...defEstado(), ...(S.estado||{})});
+function setEstado(patch){ const novo = {...E(), ...patch}; S.estado = novo; render(); return write('sessao/atual', novo); }
+const presentes = () => VEREADORES.filter(v => S.presenca[v.id] && S.presenca[v.id].presente);
+const pautaAtual = () => S.pauta.find(p => p.id === E().pautaId) || null;
+const votosDe = pid => S.votos.filter(v => v.pid === pid);
+const pautaOrdenada = () => [...S.pauta].sort((a,b) => (a.ordem||0) - (b.ordem||0));
+
+/* ===================== roteamento ===================== */
+const VIEWS = ['v-inicio','v-op-login','v-operador','v-ver-login','v-vereador','v-telao'];
+function route(){
+  const h = (location.hash || '#inicio').slice(1);
+  let view = 'v-inicio';
+  if(h === 'operador') view = ls.get('vp_op') === '1' ? 'v-operador' : 'v-op-login';
+  else if(h === 'vereador') view = ls.get('vp_vid') ? 'v-vereador' : 'v-ver-login';
+  else if(h === 'telao') view = 'v-telao';
+  VIEWS.forEach(id => $('#'+id).hidden = id !== view);
+  $('#topbar').hidden = view === 'v-telao';
+  document.body.style.background = view === 'v-telao' ? '#070b16' : '';
+  current = view;
+  render();
+}
+let current = 'v-inicio';
+addEventListener('hashchange', route);
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => location.hash = b.dataset.go));
+
+/* ===================== render ===================== */
+function render(){
+  const pill = $('#modePill');
+  pill.className = 'pill ' + (Store.mode === 'online' ? 'on' : Store.mode === 'local' ? 'loc' : '');
+  pill.querySelector('span').textContent = Store.mode === 'online' ? 'Ao vivo' : Store.mode === 'local' ? 'Modo local' : 'Conectando';
+  $('#localBanner').hidden = Store.mode !== 'local';
+  if(current === 'v-operador') renderOperador();
+  if(current === 'v-vereador') renderVereador();
+  if(current === 'v-telao') renderTelao();
+  if(current === 'v-ver-login') renderNameGrid();
+}
+
+/* ---------- operador ---------- */
+function renderOperador(){
+  const e = E(), pres = presentes().length, okQ = pres >= QUORUM;
+  const st = [
+    ['Sessão aberta', e.aberta, !e.aberta],
+    ['Chamada feita', e.chamada, e.aberta && !e.chamada],
+    ['Quórum', e.chamada && okQ, e.chamada && !okQ],
+    ['Votação', e.votacao === 'encerrada', e.votacao === 'aberta'],
+  ];
+  $('#opStage').innerHTML = st.map(([t,ok,now]) => `<span class="${ok?'ok':now?'now':''}">${t}</span>`).join('');
+  $('#sessChip').textContent = e.aberta ? 'Aberta' : 'Fechada';
+  $('#sessChip').className = 'chip' + (e.aberta ? ' v' : '');
+  $('#btnAbrir').disabled = e.aberta;
+  $('#btnChamada').disabled = !e.aberta || e.votacao === 'aberta';
+  $('#btnChamada').textContent = e.chamada ? 'Refazer chamada' : 'Fazer chamada';
+  $('#btnFecharSessao').disabled = !e.aberta || e.votacao === 'aberta';
+  $('#qPres').textContent = pres;
+  const bar = $('#qBar'); bar.style.width = (pres/9*100)+'%'; bar.className = okQ ? 'ok' : '';
+  $('#qMark').style.left = (QUORUM/9*100)+'%';
+  $('#qMsg').textContent = !e.chamada ? 'Mínimo: 5 (maioria absoluta)' : okQ ? 'Quórum atingido' : `Faltam ${QUORUM-pres} para o quórum`;
+  $('#qMsg').style.color = e.chamada ? (okQ ? 'var(--sim)' : 'var(--nao)') : '';
+
+  const sel = $('#selPres');
+  if(document.activeElement !== sel){
+    sel.innerHTML = '<option value="">— selecionar —</option>' + VEREADORES.map(v => `<option value="${v.id}" ${e.presidente===v.id?'selected':''}>${esc(v.nome)}</option>`).join('');
+  }
+
+  $('#chamadaList').innerHTML = VEREADORES.map(v => {
+    const lg = S.login[v.id] && S.login[v.id].logado;
+    const pr = S.presenca[v.id] && S.presenca[v.id].presente;
+    return `<div class="vrow"><div class="av">${ini(v.nome)}</div>
+      <div class="nm">${esc(v.nome)}${e.presidente===v.id?' · <b style="color:var(--brass)">Presidente</b>':''}<small><span class="dot ${lg?'on':''}"></span>${lg?'Tablet conectado':'Tablet desconectado'} · Aparelho ${v.ap}</small></div>
+      <button class="tog ${pr?'on':''}" data-pres="${v.id}" ${(!e.aberta||e.votacao==='aberta')?'disabled':''}>${pr?'Presente':'Ausente'}</button></div>`;
+  }).join('');
+
+  /* votação atual */
+  const m = pautaAtual();
+  let html = '';
+  if(!m){
+    html = `<div class="current"><p class="muted" style="margin:0">Selecione uma matéria da pauta abaixo para liberar a votação.</p></div>`;
+  } else {
+    const vs = votosDe(m.id), cls = e.votacao==='aberta'?'live':e.votacao==='encerrada'?'done':'';
+    html = `<div class="current ${cls}">
+      <span class="mtipo">${esc(m.tipo)} Nº ${esc(m.numero)}</span>
+      <p class="ementa">${esc(m.ementa)}</p>
+      <small class="muted">Autor: ${esc(m.autor||'—')}</small>`;
+    if(e.votacao === 'livre'){
+      const pode = e.aberta && e.chamada && presentes().length >= QUORUM;
+      html += `<div class="row"><button class="btn go" id="btnIniciar" ${pode?'':'disabled'}>Iniciar votação</button>
+        <button class="btn" id="btnDesmarcar">Trocar matéria</button></div>
+        ${pode?'':`<small class="muted">${!e.aberta?'Abra a sessão primeiro.':!e.chamada?'Faça a chamada primeiro.':'Sem quórum para votar.'}</small>`}`;
+    } else if(e.votacao === 'aberta'){
+      const ps = presentes();
+      html += `<div class="row" style="justify-content:space-between"><b style="color:var(--sim)">VOTAÇÃO ABERTA · <span class="big-num" data-elapsed></span></b><span><span class="big-num">${vs.length}</span> de ${ps.length} votaram</span></div>
+        <div class="votedline">${ps.map(v => { const x = vs.find(y=>y.vid===v.id); return `<span class="chip ${x?x.voto:''}">${esc(v.nome.split(' ')[0])}${x?' · '+VOTO_CURTO[x.voto]:''}</span>`; }).join('')}</div>
+        <div class="row"><button class="btn stop" id="btnEncerrar">Encerrar votação</button></div>`;
+    } else {
+      const r = e.resultado || {};
+      html += `<div class="row" style="justify-content:space-between"><span class="res ${r.veredito==='APROVADO'?'ap':'rp'}" style="font-size:2rem">${esc(r.veredito||'')}</span>
+        <span class="row"><span class="chip sim">SIM ${r.sim||0}</span><span class="chip nao">NÃO ${r.nao||0}</span><span class="chip abs">ABST. ${r.abs||0}</span><span class="chip">Não votou ${r.naoVotou||0}</span></span></div>
+        <div class="row"><button class="btn primary" id="btnProxima">Próxima matéria</button></div>`;
+    }
+    html += `</div>`;
+  }
+  $('#opCurrent').innerHTML = html;
+
+  const lista = pautaOrdenada();
+  $('#pautaCount').textContent = `${lista.filter(p=>p.status!=='votado').length} pendente(s)`;
+  $('#pautaList').innerHTML = lista.length ? lista.map((p,i) => {
+    const sel = p.id === e.pautaId;
+    const r = p.resultado;
+    const right = p.status === 'votado'
+      ? `<span class="res ${r&&r.veredito==='APROVADO'?'ap':'rp'}">${esc(r?r.veredito:'')}</span>`
+      : `<span class="row"><button class="btn" data-sel="${p.id}" ${(e.votacao==='aberta'||sel)?'disabled':''}>${sel?'Selecionada':'Selecionar'}</button><button class="linkbtn" data-del="${p.id}" ${e.votacao==='aberta'&&sel?'disabled':''} aria-label="Remover">Remover</button></span>`;
+    return `<div class="pitem ${sel?'sel':''}"><span class="n">${i+1}</span><div style="min-width:0"><small class="mtipo">${esc(p.tipo)} Nº ${esc(p.numero)}</small><p>${esc(p.ementa)}</p><small>${esc(p.autor||'')}</small></div>${right}</div>`;
+  }).join('') : `<p class="muted" style="margin:0">Nenhuma matéria na pauta. Adicione a primeira no formulário abaixo.</p>`;
+  tickElapsed();
+}
+
+/* ações do operador */
+$('#opLoginForm').addEventListener('submit', ev => {
+  ev.preventDefault();
+  if($('#opUser').value.trim().toLowerCase() === OPERADOR.user && $('#opPass').value === OPERADOR.senha){
+    ls.set('vp_op','1'); $('#opPass').value=''; $('#opErr').textContent=''; route();
+  } else $('#opErr').textContent = 'Usuário ou senha incorretos.';
+});
+$('#opLogout').addEventListener('click', () => { ls.del('vp_op'); route(); });
+$('#btnAbrir').addEventListener('click', () => { setEstado({aberta:true, abertaEm:Date.now(), chamada:false, votacao:'livre', pautaId:null, resultado:null}); toast('Sessão aberta. Faça a chamada.'); });
+$('#btnChamada').addEventListener('click', async () => {
+  for(const v of VEREADORES){
+    const lg = !!(S.login[v.id] && S.login[v.id].logado);
+    S.presenca[v.id] = {presente:lg, ts:Date.now()};
+    write('presenca/'+v.id, S.presenca[v.id]);
+  }
+  await setEstado({chamada:true});
+  const n = presentes().length;
+  toast(n >= QUORUM ? `Chamada feita: ${n} presentes. Quórum atingido.` : `Chamada feita: ${n} presentes. Sem quórum.`);
+});
+$('#chamadaList').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-pres]'); if(!b) return;
+  const id = b.dataset.pres, now = !(S.presenca[id] && S.presenca[id].presente);
+  S.presenca[id] = {presente:now, ts:Date.now()}; render();
+  write('presenca/'+id, S.presenca[id]);
+  if(!E().chamada) setEstado({chamada:true});
+});
+$('#selPres').addEventListener('change', ev => setEstado({presidente:ev.target.value}));
+$('#btnFecharSessao').addEventListener('click', () => confirmBox({
+  titulo:'Encerrar a sessão?', texto:'A presença será zerada e os tablets voltarão para a tela de espera.', ok:'Encerrar sessão', cls:'stop',
+  onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:false,ts:Date.now()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado({...defEstado(), presidente:E().presidente}); toast('Sessão encerrada.'); }
+}));
+$('#opCurrent').addEventListener('click', ev => {
+  const id = ev.target.id, m = pautaAtual();
+  if(id === 'btnIniciar' && m){
+    if(presentes().length < QUORUM) return toast('Sem quórum para iniciar.');
+    setEstado({votacao:'aberta', inicioVotacao:Date.now(), resultado:null}); toast('Votação liberada nos tablets.');
+  }
+  if(id === 'btnDesmarcar') setEstado({pautaId:null});
+  if(id === 'btnEncerrar' && m) confirmBox({
+    titulo:'Encerrar a votação?', texto:`${votosDe(m.id).length} de ${presentes().length} presentes votaram. Quem não votou será contado como "não votou".`, ok:'Encerrar e apurar', cls:'stop',
+    onOk: () => encerrar(m)
+  });
+  if(id === 'btnProxima') setEstado({votacao:'livre', pautaId:null, resultado:null, inicioVotacao:null});
+});
+async function encerrar(m){
+  const vs = votosDe(m.id);
+  const sim = vs.filter(v=>v.voto==='sim').length, nao = vs.filter(v=>v.voto==='nao').length, abs = vs.filter(v=>v.voto==='abs').length;
+  const naoVotou = Math.max(0, presentes().length - vs.length);
+  const veredito = sim > nao ? 'APROVADO' : 'REPROVADO';
+  const resultado = {sim, nao, abs, naoVotou, veredito, em:Date.now()};
+  await setEstado({votacao:'encerrada', resultado});
+  write('pauta/'+m.id, {...stripId(m), status:'votado', resultado});
+  toast(`Resultado: ${veredito}`);
+}
+const stripId = o => { const {id, ...r} = o; return r; };
+$('#pautaList').addEventListener('click', ev => {
+  const s = ev.target.closest('[data-sel]'), d = ev.target.closest('[data-del]');
+  if(s){ if(E().votacao === 'aberta') return; setEstado({pautaId:s.dataset.sel, votacao:'livre', resultado:null}); }
+  if(d){ const p = S.pauta.find(x=>x.id===d.dataset.del); if(!p) return;
+    confirmBox({titulo:'Remover da pauta?', texto:`${p.tipo} Nº ${p.numero}`, ok:'Remover', cls:'stop', onOk:() => { Store.del('pauta/'+p.id); if(E().pautaId===p.id) setEstado({pautaId:null}); }}); }
+});
+$('#addForm').addEventListener('submit', ev => {
+  ev.preventDefault();
+  const ementa = $('#fEmenta').value.trim(), numero = $('#fNum').value.trim();
+  if(!ementa || !numero) return toast('Preencha número e ementa.');
+  const ordem = Math.max(0, ...S.pauta.map(p=>p.ordem||0)) + 1;
+  const id = 'm' + Date.now().toString(36);
+  write('pauta/'+id, {ordem, tipo:$('#fTipo').value, numero, ementa, autor:$('#fAutor').value.trim(), status:'pendente', resultado:null});
+  $('#fEmenta').value=''; $('#fNum').value=''; $('#fAutor').value='';
+  toast('Matéria adicionada à pauta.');
+});
+
+/* ---------- vereador ---------- */
+let selVid = null;
+function renderNameGrid(){
+  $('#nameGrid').innerHTML = VEREADORES.map(v => `<button type="button" class="namebtn" data-vid="${v.id}" aria-pressed="${selVid===v.id}"><b>${esc(v.nome)}</b><small>Aparelho ${v.ap}</small></button>`).join('');
+}
+$('#nameGrid').addEventListener('click', ev => { const b = ev.target.closest('[data-vid]'); if(!b) return; selVid = b.dataset.vid; renderNameGrid(); $('#verPass').focus(); });
+$('#verLoginForm').addEventListener('submit', ev => {
+  ev.preventDefault();
+  if(!selVid) return $('#verErr').textContent = 'Toque no seu nome primeiro.';
+  if($('#verPass').value !== SENHA_VEREADOR) return $('#verErr').textContent = 'Senha incorreta.';
+  ls.set('vp_vid', selVid); $('#verPass').value=''; $('#verErr').textContent='';
+  write('login/'+selVid, {logado:true, ts:Date.now()});
+  route();
+});
+$('#verLogout').addEventListener('click', () => {
+  const vid = ls.get('vp_vid'); if(vid) write('login/'+vid, {logado:false, ts:Date.now()});
+  ls.del('vp_vid'); selVid = null; route();
+});
+let voting = false;
+function renderVereador(){
+  const vid = ls.get('vp_vid'), v = VEREADORES.find(x=>x.id===vid);
+  if(!v){ ls.del('vp_vid'); return route(); }
+  const e = E(), m = pautaAtual();
+  $('#verAv').textContent = ini(v.nome);
+  $('#verName').textContent = v.nome;
+  $('#verRole').textContent = e.presidente === v.id ? 'Presidente da Mesa' : `Vereador · Aparelho ${v.ap}`;
+  const pres = !!(S.presenca[vid] && S.presenca[vid].presente);
+  const meu = m ? S.votos.find(x => x.pid===m.id && x.vid===vid) : null;
+  const st = $('#verStatus'), body = $('#verBody');
+  let sCls = '', sTxt = '', html = '';
+  const matHtml = m ? `<div class="panel matcard"><span class="mtipo">${esc(m.tipo)} Nº ${esc(m.numero)}</span><h2>${esc(m.ementa)}</h2><p class="muted" style="margin:6px 0 0">Autor: ${esc(m.autor||'—')}</p></div>` : '';
+  const btns = dis => `<div class="votebtns">
+      <button class="vb sim" data-voto="sim" ${dis?'disabled':''}>APROVAR<small>Voto SIM</small></button>
+      <button class="vb nao" data-voto="nao" ${dis?'disabled':''}>REPROVAR<small>Voto NÃO</small></button>
+      <button class="vb abs" data-voto="abs" ${dis?'disabled':''}>ABSTER<small>Abstenção</small></button></div>`;
+
+  if(!e.aberta){ sTxt = 'Aguardando a Mesa abrir a sessão.'; html = btns(true); }
+  else if(!pres){ sTxt = e.chamada ? 'Você não consta como presente. Fale com a Mesa.' : 'Sessão aberta. Aguardando a chamada.'; html = btns(true); }
+  else if(e.votacao === 'livre' || !m){ sTxt = 'Presença confirmada. Aguardando a liberação da pauta.'; html = matHtml + btns(true); }
+  else if(e.votacao === 'aberta' && !meu){ sCls='live'; sTxt = 'Votação aberta. Escolha seu voto.'; html = matHtml + btns(false); }
+  else if(e.votacao === 'aberta' && meu){
+    sCls='lock'; sTxt = 'Voto registrado. Tela bloqueada até o encerramento.';
+    html = matHtml + `<div class="panel locked"><div class="lockico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+      <span class="eyebrow">Seu voto</span><span class="big" style="color:var(--${meu.voto})">${VOTO_LABEL[meu.voto]}</span><span class="muted">Não é possível votar de novo nesta matéria.</span></div>`;
+  }
+  else if(e.votacao === 'encerrada'){
+    const r = e.resultado || {};
+    sCls='lock'; sTxt = 'Votação encerrada.';
+    html = matHtml + `<div class="panel locked"><span class="eyebrow">Resultado</span><span class="big res ${r.veredito==='APROVADO'?'ap':'rp'}">${esc(r.veredito||'')}</span>
+      <div class="row" style="justify-content:center"><span class="chip sim">SIM ${r.sim||0}</span><span class="chip nao">NÃO ${r.nao||0}</span><span class="chip abs">ABST. ${r.abs||0}</span></div>
+      ${meu?`<span class="muted">Seu voto: ${VOTO_LABEL[meu.voto]}</span>`:'<span class="muted">Você não votou nesta matéria.</span>'}</div>`;
+  }
+  st.className = 'status ' + sCls; st.textContent = sTxt;
+  body.innerHTML = html;
+}
+$('#verBody').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-voto]'); if(!b || b.disabled) return;
+  const voto = b.dataset.voto;
+  confirmBox({
+    titulo:'Confirmar voto', big:VOTO_LABEL[voto], bigColor:`var(--${voto})`,
+    texto:'Depois de confirmar, o voto aparece no telão e não pode ser alterado.', ok:'Confirmar voto', cls: voto==='sim'?'go':voto==='nao'?'stop':'brass',
+    onOk: () => votar(voto)
+  });
+});
+async function votar(voto){
+  if(voting) return; voting = true;
+  try{
+    const vid = ls.get('vp_vid'), e = E(), m = pautaAtual();
+    if(!vid || !m || e.votacao !== 'aberta') return toast('A votação não está aberta.');
+    if(!(S.presenca[vid] && S.presenca[vid].presente)) return toast('Você não consta como presente.');
+    const path = 'votos/' + m.id + '__' + vid;
+    const doc = {pid:m.id, vid, voto, ts:Date.now()};
+    let gravou = false;
+    try{ gravou = await Store.setIfAbsent(path, doc); }catch(e){ toast('Não foi possível gravar o voto. Tente de novo.'); return; }
+    if(!gravou){ toast('Seu voto já foi registrado.'); return; }
+    S.votos = [...S.votos.filter(x=>x.id!==m.id+'__'+vid), {id:m.id+'__'+vid, ...doc}]; render();
+    toast('Voto registrado.');
+  } finally { voting = false; }
+}
+
+/* ---------- telão ---------- */
+function renderTelao(){
+  const e = E(), m = pautaAtual(), stEl = $('#tvState');
+  stEl.className = 'tvstate' + (e.votacao==='aberta' ? ' live' : '');
+  stEl.textContent = !e.aberta ? 'Sessão fechada' : e.votacao==='aberta' ? 'Votação aberta' : e.votacao==='encerrada' ? 'Votação encerrada' : !e.chamada ? 'Sessão aberta' : 'Aguardando pauta';
+  const pres = presentes().length;
+  $('#tvFootL').textContent = e.aberta ? `Quórum: ${pres} presentes de 9 · mínimo ${QUORUM}${e.presidente?' · Presidente: '+vName(e.presidente):''}` : 'Câmara Municipal de Almadina — Bahia';
+  const body = $('#tvBody');
+  if(!e.aberta){
+    body.innerHTML = `<div class="splash"><div class="seal">A</div><h2>Plenário Jonas Plínio</h2><p>A sessão ainda não foi aberta.</p></div>`;
+    return;
+  }
+  const vs = m ? votosDe(m.id) : [];
+  const enc = e.votacao === 'encerrada';
+  const grid = VEREADORES.map(v => {
+    const p = S.presenca[v.id] && S.presenca[v.id].presente;
+    const vt = vs.find(x=>x.vid===v.id);
+    let st = 'AUSENTE', cls = '';
+    if(p){
+      if(e.votacao==='aberta'){ st = vt ? VOTO_TV[vt.voto] : 'AGUARDANDO'; cls = vt ? vt.voto : 'wait'; }
+      else if(enc){ st = vt ? VOTO_CURTO[vt.voto] : 'NÃO VOTOU'; cls = vt ? vt.voto : ''; }
+      else { st = 'PRESENTE'; cls = 'wait'; }
+    }
+    const novo = vt && !TV_VISTOS.has(vt.id); if(vt) TV_VISTOS.add(vt.id);
+    return `<div class="tvv ${!p?'aus':''} ${vt?'voted v-'+vt.voto:''} ${novo&&TV_PRONTO?'flash':''}">${e.presidente===v.id?'<span class="pres">Presidente</span>':''}<span class="nm">${esc(v.nome)}</span><span class="st ${cls}">${st}</span></div>`;
+  }).join('');
+  const mat = m ? `<span class="mtipo">${esc(m.tipo)} Nº ${esc(m.numero)}</span><h2>${esc(m.ementa)}</h2><span class="autor">Autor: ${esc(m.autor||'—')}</span>`
+                : `<span class="mtipo">ORDEM DO DIA</span><h2>${e.chamada ? 'Aguardando a próxima matéria' : 'Chamada em andamento'}</h2>`;
+  const q = e.votacao==='aberta'
+    ? `<div><small style="color:var(--sim)">Sim</small><b style="color:var(--sim)">${vs.filter(x=>x.voto==='sim').length}</b></div><div><small style="color:var(--nao)">Não</small><b style="color:var(--nao)">${vs.filter(x=>x.voto==='nao').length}</b></div><div><small style="color:var(--abs)">Abstenção</small><b style="color:var(--abs)">${vs.filter(x=>x.voto==='abs').length}</b></div><div><small>Votaram</small><b>${vs.length}/${pres}</b></div><div><small>Tempo</small><b data-elapsed>00:00</b></div>`
+    : `<div><small>Presentes</small><b>${pres}/9</b></div><div><small>Quórum mínimo</small><b>${QUORUM}</b></div><div><small>Situação</small><b style="color:${pres>=QUORUM?'var(--sim)':'var(--nao)'};font-family:var(--f-display)">${e.chamada?(pres>=QUORUM?'COM QUÓRUM':'SEM QUÓRUM'):'CHAMADA'}</b></div>`;
+  let html = `<div class="tvmain"><div class="tvmat">${mat}<div class="tvq">${q}</div></div><div class="tvgrid">${grid}</div></div>`;
+  if(enc && e.resultado){
+    const r = e.resultado;
+    html = `<div class="tvres ${r.veredito==='APROVADO'?'ap':'rp'}"><div><span class="mtipo">${m?esc(m.tipo)+' Nº '+esc(m.numero):''}</span><div class="verdict">${esc(r.veredito)}</div></div>
+      <div class="placar"><div class="s"><small>Sim</small><b>${r.sim}</b></div><div class="n"><small>Não</small><b>${r.nao}</b></div><div class="a"><small>Abstenção</small><b>${r.abs}</b></div></div></div>` + html;
+  }
+  body.innerHTML = html;
+  TV_PRONTO = true;
+  tickElapsed();
+}
+const VOTO_TV = {sim:'SIM', nao:'NÃO', abs:'ABSTENÇÃO'};
+const TV_VISTOS = new Set(); let TV_PRONTO = false;
+function tickElapsed(){
+  const e = E();
+  const t = e.votacao==='aberta' && e.inicioVotacao ? Math.max(0, Math.floor((Date.now()-e.inicioVotacao)/1000)) : 0;
+  const s = String(Math.floor(t/60)).padStart(2,'0') + ':' + String(t%60).padStart(2,'0');
+  document.querySelectorAll('[data-elapsed]').forEach(el => el.textContent = s);
+}
+setInterval(() => {
+  const d = new Date();
+  $('#tvClock').textContent = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  tickElapsed();
+}, 1000);
+$('#tvFull').addEventListener('click', () => {
+  const el = document.documentElement;
+  try{ (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen()).catch(()=>{}); }catch(e){}
+});
+
+/* ---------- utilidades de interface ---------- */
+let toastT;
+function toast(msg){
+  let t = $('.toast'); if(!t){ t = document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); document.body.appendChild(t); }
+  t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3200);
+}
+function confirmBox({titulo, texto, big, bigColor, ok, cls, onOk}){
+  const root = $('#modalRoot');
+  root.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(titulo)}"><div class="box">
+    <span class="eyebrow">${esc(titulo)}</span>${big?`<span class="big" style="color:${bigColor}">${esc(big)}</span>`:''}
+    <p style="margin:0">${esc(texto||'')}</p>
+    <div class="row"><button class="btn" data-x="no">Voltar</button><button class="btn ${cls||'primary'}" data-x="ok">${esc(ok||'Confirmar')}</button></div></div></div>`;
+  const close = () => root.innerHTML = '';
+  root.querySelector('[data-x="no"]').onclick = close;
+  root.querySelector('.modal').onclick = ev => { if(ev.target.classList.contains('modal')) close(); };
+  root.querySelector('[data-x="ok"]').onclick = () => { close(); onOk && onOk(); };
+  root.querySelector('[data-x="ok"]').focus();
+}
+
+/* ===================== início ===================== */
+(async function start(){
+  route();
+  await Store.init();
+  render();
+  Store.watchDoc('sessao/atual', d => { S.estado = d; render(); });
+  Store.watchCol('login', list => { S.login = Object.fromEntries(list.map(x => [x.id, x])); render(); });
+  Store.watchCol('presenca', list => { S.presenca = Object.fromEntries(list.map(x => [x.id, x])); render(); });
+  Store.watchCol('votos', list => { S.votos = list; render(); });
+  Store.watchCol('pauta', list => { S.pauta = list; render(); });
+  if(Store.mode === 'local' && !ls.get('vp_seed')){
+    ls.set('vp_seed','1');
+    if(!Local.keys().some(k => k.startsWith('pauta/'))){
+      [['Projeto de Lei','021/2026','Dispõe sobre a criação do programa municipal de hortas comunitárias nas escolas de Almadina.','Exemplo'],
+       ['Requerimento','045/2026','Solicita ao Poder Executivo a recuperação da iluminação pública da Rua Principal.','Exemplo'],
+       ['Indicação','017/2026','Indica a instalação de redutores de velocidade em frente ao Posto de Saúde.','Exemplo']]
+      .forEach((x,i) => Local.set('pauta/ex'+(i+1), {ordem:i+1, tipo:x[0], numero:x[1], ementa:x[2], autor:x[3], status:'pendente', resultado:null}));
+    }
+  }
+})();
+</script>
+</body>
+</html>
