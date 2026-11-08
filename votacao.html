@@ -383,6 +383,11 @@ html.tablet #v-ver-login:not([hidden]){min-height:calc(100vh - 66px);min-height:
 html.tablet #v-ver-login .login{width:100%}
 html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3rem}
 @media (max-width:640px){html.tablet .vb{height:110px}}
+.ensaio-bar{background:repeating-linear-gradient(135deg,#e6b955 0 18px,#d6a640 18px 36px);color:#1d1405;font-weight:800;text-align:center;padding:8px 14px;font-size:.95rem;letter-spacing:.02em;position:relative;z-index:30}
+.ensaio-chave{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px dashed var(--brass);border-radius:10px;background:var(--brass-soft);cursor:pointer}
+.ensaio-chave input{width:22px;height:22px;margin-top:2px;accent-color:#c9952f;flex:none}
+.ensaio-chave span{display:flex;flex-direction:column}
+.ensaio-chave small{color:var(--muted);font-size:.82rem}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* mensagens e arquivos para todas as telas */
 .field textarea{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:10px 12px;min-height:84px;width:100%;resize:vertical;font:inherit;color:inherit}
@@ -397,6 +402,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 <body>
 
 <div id="app">
+  <div class="ensaio-bar" id="ensaioBar" hidden>MODO DE ENSAIO — votos de teste. Qualquer nome entra em qualquer tablet. A Mesa deve desligar antes da sessão.</div>
   <header class="topbar" id="topbar">
     <div class="wrap">
       <img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina">
@@ -464,6 +470,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
           <div class="qtxt"><span><span class="big-num" id="qPres">0</span> de 9 presentes</span><span id="qMsg" class="muted">Mínimo: 5 (maioria absoluta)</span></div>
         </div>
         <div class="field"><label for="selPres">Presidente da Mesa</label><select id="selPres"></select></div>
+        <label class="ensaio-chave"><input type="checkbox" id="chkEnsaio"><span><b>Modo de ensaio</b><small>Ligado: qualquer nome entra em qualquer tablet (para testar). Desligue antes da sessão real.</small></span></label>
         <div class="chamada" id="chamadaList"></div>
         <button class="btn stop" id="btnFecharSessao">Encerrar sessão</button>
       </section>
@@ -711,8 +718,10 @@ const S = { estado:null, login:{}, presenca:{}, pauta:[], votos:[], aparelhos:{}
    (aparelhos/{vereador} = {dev}). Depois, o tablet só mostra o nome do dono, e esse vereador não entra em
    outro tablet. Para trocar de tablet, o Operador usa "Liberar tablet" no painel da Mesa. */
 const DEV = (() => { let d = ls.get('vp_dev'); if(!d){ d = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); ls.set('vp_dev', d); } return d; })();
-const donoDoTablet = () => Object.keys(S.aparelhos).find(vid => S.aparelhos[vid] && S.aparelhos[vid].dev === DEV) || null;
-const vinculoOutro = vid => !!(S.aparelhos[vid] && S.aparelhos[vid].dev !== DEV);
+const donoDoTablet = () => ENSAIO ? null : Object.keys(S.aparelhos).find(vid => S.aparelhos[vid] && S.aparelhos[vid].dev === DEV) || null;
+/* MODO DE ENSAIO (ligado pelo Operador): os tablets não ficam presos a um vereador — igual a antes do vínculo */
+let ENSAIO = false;
+const vinculoOutro = vid => !ENSAIO && !!(S.aparelhos[vid] && S.aparelhos[vid].dev !== DEV);
 const defEstado = () => ({aberta:false, abertaEm:null, chamada:false, presidente:'', pautaId:null, votacao:'livre', inicioVotacao:null, resultado:null, apuracao:null});
 const PRESIDENTE_PADRAO = 'v6';   // Aparelho 6 — Presidente da Mesa (desempata)
 const E = () => { const e = Object.assign(defEstado(), S.estado || {}); if(!e.presidente) e.presidente = PRESIDENTE_PADRAO; return e; };
@@ -783,6 +792,8 @@ function render(){
   pill.className = 'pill ' + (Store.mode === 'online' ? 'on' : Store.mode === 'local' ? 'loc' : '');
   pill.querySelector('span').textContent = Store.mode === 'online' ? 'Ao vivo' : Store.mode === 'local' ? 'Modo local' : 'Conectando';
   $('#localBanner').hidden = Store.mode !== 'local';
+  $('#ensaioBar').hidden = !ENSAIO || current === 'v-telao';
+  const chk = $('#chkEnsaio'); if(chk && document.activeElement !== chk) chk.checked = ENSAIO;
   if(current === 'v-operador') renderOperador();
   if(current === 'v-vereador') renderVereador();
   if(current === 'v-telao') renderTelao();
@@ -912,6 +923,12 @@ $('#chamadaList').addEventListener('click', ev => {
   if(!E().chamada) setEstado({chamada:true});
 });
 $('#selPres').addEventListener('change', ev => setEstado({presidente:ev.target.value}));
+$('#chkEnsaio').addEventListener('change', ev => {
+  const ligar = ev.target.checked;
+  ENSAIO = ligar; render();
+  write('config/ensaio', {ligado:ligar, em:agora()});
+  toast(ligar ? 'Modo de ensaio LIGADO: os tablets não ficam presos a um vereador.' : 'Modo de ensaio desligado: cada tablet volta a ser de um só vereador.');
+});
 $('#btnFecharSessao').addEventListener('click', () => confirmBox({
   titulo:'Encerrar a sessão?', texto:'A presença será zerada e os tablets voltarão para a tela de espera.', ok:'Encerrar sessão', cls:'stop',
   onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:false,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado(Object.assign(defEstado(), {presidente:E().presidente})); toast('Sessão encerrada.'); }
@@ -952,6 +969,7 @@ async function encerrar(m){
 async function finalizar(m, ap, minerva){
   const veredito = minerva ? (minerva === 'sim' ? 'APROVADO' : 'REPROVADO') : (ap.sim > ap.nao ? 'APROVADO' : 'REPROVADO');
   const resultado = Object.assign({}, ap, {veredito:veredito, em:agora()});
+  if(ENSAIO) resultado.ensaio = true;
   if(minerva){ resultado.desempate = minerva; resultado.presidente = E().presidente || ''; }
   await setEstado({votacao:'encerrada', resultado:resultado, apuracao:null});
   write('pauta/'+m.id, Object.assign(stripId(m), {status:'votado', resultado:resultado}));
@@ -1011,7 +1029,7 @@ function gerarRelatorio(){
       return `<tr><td>${v.ap}</td><td>${esc(v.nome)}${r.presidente === v.id || (!r.presidente && E().presidente === v.id) ? ' <em>(Presidente)</em>' : ''}</td><td class="v ${cls}">${voto}</td></tr>`;
     }).join('');
     return `<section class="mat">
-      <h2>${i+1}. ${esc(m.tipo)} Nº ${esc(m.numero)}</h2>
+      <h2>${i+1}. ${esc(m.tipo)} Nº ${esc(m.numero)}${r.ensaio ? ' <span class="ens">(ENSAIO — votação de teste)</span>' : ''}</h2>
       <p class="ementa">${esc(m.ementa)}</p>
       <p class="autor">Autor: ${esc(m.autor || '—')} · Votação encerrada às ${horaBR(r.em)}</p>
       <div class="res ${r.veredito === 'APROVADO' ? 'ap' : 'rp'}"><b>${esc(r.veredito)}</b>
@@ -1038,6 +1056,7 @@ header p{margin:2px 0 0;color:#444}
 .res{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-radius:6px;padding:8px 12px;margin-bottom:8px}
 .res b{font-size:15pt;letter-spacing:.04em}
 .res.ap{background:#e2f4e9;color:#14683a}.res.rp{background:#fbe4e1;color:#9a2a1f}
+.ens{color:#9a2a1f;font-size:10.5pt}
 .desemp{margin:0 0 8px;color:#7a5a12;font-size:11pt}
 table{width:100%;border-collapse:collapse;font-size:11pt}
 th,td{border:1px solid #d4d9e4;padding:5px 8px;text-align:left}
@@ -1091,7 +1110,7 @@ $('#verLoginForm').addEventListener('submit', async ev => {
   entrando = true;
   try{
     // vincula este tablet ao vereador (só se ainda não tiver vínculo)
-    if(!S.aparelhos[selVid]){
+    if(!ENSAIO && !S.aparelhos[selVid]){
       const ok = await Store.setIfAbsent('aparelhos/' + selVid, {dev:DEV, em:agora()});
       if(!ok){
         const cur = await Store.get('aparelhos/' + selVid);
@@ -1113,7 +1132,7 @@ let voting = false;
 function renderVereador(){
   const vid = ls.get('vp_vid'), v = VEREADORES.find(x=>x.id===vid);
   if(!v){ ls.del('vp_vid'); return route(); }
-  if(S.apLoaded && (!S.aparelhos[vid] || S.aparelhos[vid].dev !== DEV)){ ls.del('vp_vid'); selVid = null; return route(); }
+  if(!ENSAIO && S.apLoaded && (!S.aparelhos[vid] || S.aparelhos[vid].dev !== DEV)){ ls.del('vp_vid'); selVid = null; return route(); }
   const e = E(), m = pautaAtual();
   $('#verAv').textContent = ini(v.nome);
   $('#verName').textContent = v.nome;
@@ -1185,7 +1204,7 @@ async function votar(voto){
     const vid = ls.get('vp_vid'), e = E(), m = pautaAtual();
     if(!vid || !m || e.votacao !== 'aberta') return toast('A votação não está aberta.');
     if(!(S.presenca[vid] && S.presenca[vid].presente)) return toast('Você não consta como presente.');
-    if(!S.aparelhos[vid] || S.aparelhos[vid].dev !== DEV) return toast('Este tablet não é o aparelho deste vereador.');
+    if(!ENSAIO && (!S.aparelhos[vid] || S.aparelhos[vid].dev !== DEV)) return toast('Este tablet não é o aparelho deste vereador.');
     try{
       const atual = await Store.get('sessao/atual');
       if(!atual || atual.votacao !== 'aberta' || atual.pautaId !== m.id) return toast('A votação desta matéria já foi encerrada.');
@@ -1206,7 +1225,7 @@ function renderTelao(){
   stEl.className = 'tvstate' + (e.votacao==='aberta' ? ' live' : e.votacao==='desempate' ? ' emp' : '');
   stEl.textContent = !e.aberta ? 'Sessão fechada' : e.votacao==='aberta' ? 'Votação aberta' : e.votacao==='desempate' ? 'Empate' : e.votacao==='encerrada' ? 'Votação encerrada' : !e.chamada ? 'Sessão aberta' : 'Aguardando pauta';
   const pres = presentes().length;
-  $('#tvFootL').textContent = e.aberta ? `Quórum: ${pres} presentes de 9 · mínimo ${QUORUM}${e.presidente?' · Presidente: '+vName(e.presidente):''}` : 'Câmara Municipal de Almadina — Bahia';
+  $('#tvFootL').textContent = (ENSAIO ? 'ENSAIO · ' : '') + (e.aberta ? `Quórum: ${pres} presentes de 9 · mínimo ${QUORUM}${e.presidente?' · Presidente: '+vName(e.presidente):''}` : 'Câmara Municipal de Almadina — Bahia');
   const body = $('#tvBody');
   if(!e.aberta){
     body.innerHTML = `<div class="splash"><img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>A votação ainda não começou.</p></div>`;
@@ -1395,6 +1414,7 @@ const Mensagens = (() => {
   Store.watchCol('presenca', list => { S.presenca = porId(list); render(); });
   Store.watchCol('votos', list => { S.votos = list; render(); });
   Store.watchCol('aparelhos', list => { S.aparelhos = porId(list); S.apLoaded = true; render(); });
+  Store.watchDoc('config/ensaio', v => { ENSAIO = !!(v && v.ligado); render(); });
   Store.watchCol('pauta', list => { S.pauta = list; render(); });
   Mensagens.init();
   if(Store.mode === 'local' && !ls.get('vp_seed')){
