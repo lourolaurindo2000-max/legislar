@@ -319,7 +319,9 @@ img.seal{border:0;border-radius:0;background:none;object-fit:contain;padding:0}
 .tv .tvfoot button{font-size:1rem;padding:6px 14px}
 .tv .tvfoot{display:none}
 .tv .tvcred{flex:none;overflow:hidden;white-space:nowrap;border-top:1px solid var(--line);padding-top:12px;color:var(--brass);font-size:1.25rem;letter-spacing:.02em}
-.tv .tvcred marquee{display:block}
+.tv .tvcred > span{display:inline-block;padding-left:100%;-webkit-animation:vp-cred 30s linear infinite;animation:vp-cred 30s linear infinite}
+@-webkit-keyframes vp-cred{from{-webkit-transform:translateX(0)}to{-webkit-transform:translateX(-100%)}}
+@keyframes vp-cred{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 .tv .tvcred .pt{display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;vertical-align:middle;margin:0 14px}
 
 /* ===================== TABLETS DOS VEREADORES ===================== */
@@ -607,7 +609,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
       </div>
       <div id="tvBody"></div>
       <div class="tvfoot"><span id="tvFootL"></span><span class="row"><button id="tvFull">Tela cheia</button><a href="#inicio" style="color:inherit">Sair</a></span></div>
-      <div class="tvcred"><marquee behavior="scroll" direction="left" scrollamount="5">&copy; Todos os direitos reservados a André Almeida — Desenvolvedor do Sistema (PLD) Plenário Legislativo Digital (Lei nº 9.610/1998)<span class="pt"></span>Versão 1.0</marquee></div>
+      <div class="tvcred"><span>&copy; Todos os direitos reservados a André Almeida — Desenvolvedor do Sistema (PLD) Plenário Legislativo Digital (Lei nº 9.610/1998)<span class="pt"></span>Versão 1.0</span></div>
     </div>
   </div>
 </div>
