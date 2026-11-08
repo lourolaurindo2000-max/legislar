@@ -533,12 +533,17 @@ const pautaOrdenada = () => [...S.pauta].sort((a,b) => (a.ordem||0) - (b.ordem||
 
 /* ===================== roteamento ===================== */
 const VIEWS = ['v-inicio','v-op-login','v-operador','v-ver-login','v-vereador','v-telao'];
-/* Tablet / celular (tela de toque sem mouse ou touchpad): o modo Operador não aparece, só no notebook */
+/* Tablet / celular (tela de toque sem mouse ou touchpad): só a parte do vereador (Aprovar, Reprovar, Abster).
+   O Operador é só o notebook; o Telão é só a Smart TV. */
 const EH_TABLET = (() => { try{ return navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches; }catch(e){ return false; } })();
-if(EH_TABLET){ const b = document.querySelector('.role[data-go="operador"]'); if(b) b.remove(); ls.del('vp_op'); }
+if(EH_TABLET){
+  document.querySelectorAll('.role[data-go="operador"], .role[data-go="telao"]').forEach(b => b.remove());
+  const home = document.getElementById('homeLink'); if(home) home.remove();
+  ls.del('vp_op');
+}
 function route(){
   let h = (location.hash || '#inicio').slice(1);
-  if(EH_TABLET && h === 'operador'){ h = 'inicio'; history.replaceState(null, '', '#inicio'); }
+  if(EH_TABLET && h !== 'vereador'){ h = 'vereador'; history.replaceState(null, '', '#vereador'); }
   let view = 'v-inicio';
   if(h === 'operador') view = ls.get('vp_op') === '1' ? 'v-operador' : 'v-op-login';
   else if(h === 'vereador') view = ls.get('vp_vid') ? 'v-vereador' : 'v-ver-login';
