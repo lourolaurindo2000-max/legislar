@@ -355,7 +355,6 @@ img.seal{border:0;border-radius:0;background:none;object-fit:contain;padding:0}
       <span class="eyebrow">Tablet do vereador</span>
       <h1>Toque no seu nome</h1>
       <div class="namegrid" id="nameGrid"></div>
-      <div class="field"><label for="verPass">Senha</label><input id="verPass" type="password" autocomplete="off"></div>
       <div class="err" id="verErr"></div>
       <button class="btn primary" type="submit" style="min-height:52px">Entrar</button>
     </form>
@@ -409,7 +408,7 @@ const VEREADORES = [
   {id:'v9', nome:'Wilson Freitas',    ap:9},
 ];
 const QUORUM = 5;               // maioria absoluta de 9
-const SENHA_VEREADOR = 'legislar@';
+// vereador entra só tocando no nome (sem senha)
 const OPERADOR = {user:'operador', senha:'mesa@almadina'};
 const VOTO_LABEL = {sim:'APROVAR', nao:'REPROVAR', abs:'ABSTER'};
 const VOTO_CURTO = {sim:'SIM', nao:'NÃO', abs:'ABST.'};
@@ -747,12 +746,11 @@ let selVid = null;
 function renderNameGrid(){
   $('#nameGrid').innerHTML = VEREADORES.map(v => `<button type="button" class="namebtn" data-vid="${v.id}" aria-pressed="${selVid===v.id}"><b>${esc(v.nome)}</b><small>Aparelho ${v.ap}</small></button>`).join('');
 }
-$('#nameGrid').addEventListener('click', ev => { const b = ev.target.closest('[data-vid]'); if(!b) return; selVid = b.dataset.vid; renderNameGrid(); $('#verPass').focus(); });
+$('#nameGrid').addEventListener('click', ev => { const b = ev.target.closest('[data-vid]'); if(!b) return; selVid = b.dataset.vid; renderNameGrid(); $('#verErr').textContent=''; });
 $('#verLoginForm').addEventListener('submit', ev => {
   ev.preventDefault();
   if(!selVid) return $('#verErr').textContent = 'Toque no seu nome primeiro.';
-  if($('#verPass').value !== SENHA_VEREADOR) return $('#verErr').textContent = 'Senha incorreta.';
-  ls.set('vp_vid', selVid); $('#verPass').value=''; $('#verErr').textContent='';
+  ls.set('vp_vid', selVid); $('#verErr').textContent='';
   write('login/'+selVid, {logado:true, ts:agora()});
   route();
 });
