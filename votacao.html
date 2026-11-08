@@ -402,7 +402,6 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 <body>
 
 <div id="app">
-  <div class="ensaio-bar" id="ensaioBar" hidden>MODO DE ENSAIO — votos de teste. Qualquer nome entra em qualquer tablet. A Mesa deve desligar antes da sessão.</div>
   <header class="topbar" id="topbar">
     <div class="wrap">
       <img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina">
@@ -792,7 +791,6 @@ function render(){
   pill.className = 'pill ' + (Store.mode === 'online' ? 'on' : Store.mode === 'local' ? 'loc' : '');
   pill.querySelector('span').textContent = Store.mode === 'online' ? 'Ao vivo' : Store.mode === 'local' ? 'Modo local' : 'Conectando';
   $('#localBanner').hidden = Store.mode !== 'local';
-  $('#ensaioBar').hidden = !ENSAIO || current === 'v-telao';
   const chk = $('#chkEnsaio'); if(chk && document.activeElement !== chk) chk.checked = ENSAIO;
   if(current === 'v-operador') renderOperador();
   if(current === 'v-vereador') renderVereador();
