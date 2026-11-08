@@ -401,6 +401,10 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 .tv .tvv .pres{margin-bottom:4px}
 .tv .tvv .st{grid-column:1 / -1;margin-top:12px;justify-self:start;font-size:1.5rem;white-space:nowrap}
 .tv .tvv.aus .tvfoto{filter:grayscale(1)}
+.btn-tela{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-weight:700;font-size:.85rem;margin-right:8px}
+.btn-tela[hidden]{display:none}
+.btn-tela:active{transform:scale(.97)}
+@media (max-width:520px){.btn-tela span{display:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* mensagens e arquivos para todas as telas */
 .field textarea{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:10px 12px;min-height:84px;width:100%;resize:vertical;font:inherit;color:inherit}
@@ -420,6 +424,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
       <img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina">
       <div class="brand"><small>Câmara Municipal de Almadina</small><b>Votação Plenária</b></div>
       <div class="sp"></div>
+      <button type="button" class="btn-tela" id="btnTela" hidden aria-label="Sair da tela cheia"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span>Sair da tela cheia</span></button>
       <span class="pill" id="modePill"><i></i><span>Conectando</span></span>
       <a href="#inicio" id="homeLink">Início</a>
     </div>
@@ -751,15 +756,39 @@ const VIEWS = ['v-inicio','v-op-login','v-operador','v-ver-login','v-vereador','
 /* Tablet / celular (tela de toque sem mouse ou touchpad): só a parte do vereador (Aprovar, Reprovar, Abster).
    O Operador é só o notebook; o Telão é só a Smart TV. */
 const EH_TABLET = (() => { try{ return navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches; }catch(e){ return false; } })();
-function telaCheia(){
+let semTelaCheia = false;   // o vereador saiu da tela cheia pelo botão: não volta sozinha
+const emTelaCheia = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+function telaCheia(ev){
   const d = document, el = d.documentElement;
-  if(d.fullscreenElement || d.webkitFullscreenElement) return;
+  if(semTelaCheia || (ev && ev.target && ev.target.closest && ev.target.closest('#btnTela'))) return;
+  if(emTelaCheia()) return;
   const f = el.requestFullscreen || el.webkitRequestFullscreen;
   if(!f) return;
   try{ const r = f.call(el); if(r && r.catch) r.catch(()=>{}); }catch(e){}
 }
 if(EH_TABLET){
   document.documentElement.classList.add('tablet');
+  // botãozinho de sair / entrar na tela cheia
+  const bt = document.getElementById('btnTela');
+  const atualizaBtn = () => {
+    const on = emTelaCheia();
+    bt.querySelector('span').textContent = on ? 'Sair da tela cheia' : 'Tela cheia';
+    bt.setAttribute('aria-label', on ? 'Sair da tela cheia' : 'Entrar em tela cheia');
+    bt.querySelector('path').setAttribute('d', on ? 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5' : 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5');
+  };
+  bt.hidden = false;
+  bt.addEventListener('click', () => {
+    if(emTelaCheia()){
+      semTelaCheia = true;
+      const x = document.exitFullscreen || document.webkitExitFullscreen;
+      try{ const r = x && x.call(document); if(r && r.catch) r.catch(()=>{}); }catch(e){}
+    } else {
+      semTelaCheia = false; telaCheia();
+    }
+  });
+  document.addEventListener('fullscreenchange', atualizaBtn);
+  document.addEventListener('webkitfullscreenchange', atualizaBtn);
+  atualizaBtn();
   // tela cheia no primeiro toque (e de novo se o tablet sair dela)
   document.addEventListener('click', telaCheia, true);
   document.addEventListener('touchend', telaCheia, true);
