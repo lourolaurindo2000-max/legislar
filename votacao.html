@@ -726,6 +726,8 @@ const Store = {
         this.db = firebase.database();
         this.mode = 'online';
         this.db.ref('.info/serverTimeOffset').on('value', s => { OFFSET = s.val() || 0; });
+        /* quando a Votação foi aberta pela última vez no notebook (para o telão não mostrar "Sessão encerrada" antiga) */
+        this.db.ref('legislar/painel/tela').on('value', s => { const v = s.val() || {}; ABERTA_EM = v.pagina === 'votacao.html' && v.em ? v.em : 0; render(); });
         if(EH_TABLET) this.db.ref('legislar/painel/tela').on('value', s => {
           const v = s.val() || {}, aberta = v.pagina === 'votacao.html' && v.em && (agora() - v.em < 4*3600*1000);
           TELA_OK = aberta === true;
@@ -798,7 +800,9 @@ const vinculoOutro = vid => !ENSAIO && !!(S.aparelhos[vid] && S.aparelhos[vid].d
 const defEstado = () => ({aberta:false, abertaEm:null, chamada:false, presidente:'', pautaId:null, votacao:'livre', inicioVotacao:null, resultado:null, apuracao:null, pautaConcluida:false});
 const PRESIDENTE_PADRAO = 'v6';   // Aparelho 6 — Presidente da Mesa (desempata)
 /* "Sessão encerrada" só aparece logo depois do encerramento (até 2 h); depois volta a ser "ainda não começou" */
-const encerradaRecente = e => !!(e.sessaoEncerrada && e.encerradaEm && (agora() - e.encerradaEm < 2*3600*1000));
+/* e só se foi encerrada DEPOIS da última abertura da Votação: abriu o sistema de novo → "Plenário Jonas Plínio" */
+let ABERTA_EM = 0;
+const encerradaRecente = e => !!(e.sessaoEncerrada && e.encerradaEm && (agora() - e.encerradaEm < 2*3600*1000) && e.encerradaEm > ABERTA_EM);
 const E = () => { const e = Object.assign(defEstado(), S.estado || {}); if(!e.presidente) e.presidente = PRESIDENTE_PADRAO; return e; };
 function setEstado(patch){ const novo = Object.assign({}, E(), patch); S.estado = novo; render(); return write('sessao/atual', novo); }
 /* votação em curso = aberta ou aguardando o desempate do Presidente */
