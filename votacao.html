@@ -655,6 +655,9 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp
 const ini = n => n.split(' ').filter(Boolean).map(p=>p[0]).slice(0,2).join('').toUpperCase();
 const avInner = v => `${ini(v.nome)}${v.foto ? `<img class="avfoto" src="${v.foto}" alt="" loading="lazy" onerror="this.remove()">` : ''}`;
 const vName = id => (VEREADORES.find(v=>v.id===id)||{}).nome || '—';
+/* login do Operador só vale enquanto a página está aberta: pede a senha toda vez que abrir */
+let OP_OK = false;
+try{ localStorage.removeItem('vp_op'); }catch(e){}
 const ls = {
   get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
   set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} },
@@ -846,19 +849,20 @@ if(EH_TABLET){
   document.addEventListener('touchend', telaCheia, true);
   document.querySelectorAll('.role[data-go="operador"], .role[data-go="telao"]').forEach(b => b.remove());
   const home = document.getElementById('homeLink'); if(home) home.remove();
-  ls.del('vp_op');
+  OP_OK = false;
 }
 function route(){
   let h = (location.hash || '#inicio').slice(1);
   if(EH_TABLET && h !== 'vereador'){ h = 'vereador'; history.replaceState(null, '', '#vereador'); }
   let view = 'v-inicio';
-  if(h === 'operador') view = ls.get('vp_op') === '1' ? 'v-operador' : 'v-op-login';
+  if(h === 'operador') view = OP_OK ? 'v-operador' : 'v-op-login';
   else if(h === 'vereador') view = ls.get('vp_vid') ? 'v-vereador' : 'v-ver-login';
   else if(h === 'telao') view = 'v-telao';
   VIEWS.forEach(id => $('#'+id).hidden = id !== view);
   $('#topbar').hidden = view === 'v-telao';
   document.body.style.background = view === 'v-telao' ? '#070b16' : '';
   current = view;
+  if(view === 'v-inicio') OP_OK = false;
   document.documentElement.classList.toggle('vz', view === 'v-vereador' || view === 'v-ver-login');
   if(view === 'v-vereador') tabletOnline();
   if(view === 'v-telao') ajustarTV();
@@ -887,7 +891,7 @@ addEventListener('orientationchange', () => setTimeout(ajustarTV, 300));
    Empate: espera o desempate do Presidente e depois segue. */
 let autoT = null, autoChave = '';
 function automacao(){
-  if(EH_TABLET || ls.get('vp_op') !== '1') return;
+  if(EH_TABLET || !OP_OK) return;
   const e = E(), m = pautaAtual();
   let chave = '', espera = 0, acao = null;
   if(e.aberta && e.votacao === 'aberta' && m){
@@ -1029,10 +1033,10 @@ $('#opLoginForm').addEventListener('submit', async ev => {
   try{ ok = $('#opUser').value.trim().toLowerCase() === OPERADOR.user && (await sha256hex('vp-operador:' + $('#opPass').value)) === OPERADOR.hash; }
   catch(e){ $('#opErr').textContent = 'Este navegador não consegue verificar a senha. Use o Chrome ou o Edge atualizado.'; return; }
   if(ok){
-    ls.set('vp_op','1'); $('#opPass').value=''; $('#opErr').textContent=''; route();
+    OP_OK = true; $('#opPass').value=''; $('#opErr').textContent=''; route();
   } else $('#opErr').textContent = 'Usuário ou senha incorretos.';
 });
-$('#opLogout').addEventListener('click', () => { ls.del('vp_op'); route(); });
+$('#opLogout').addEventListener('click', () => { OP_OK = false; route(); });
 $('#btnAbrir').addEventListener('click', () => { setEstado({aberta:true, abertaEm:agora(), chamada:false, votacao:'livre', pautaId:null, resultado:null, sessaoEncerrada:false}); toast('Sessão aberta. Faça a chamada.'); });
 $('#btnChamada').addEventListener('click', async () => {
   for(const v of VEREADORES){
