@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a1022">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Votação Plenária — Câmara de Almadina</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -287,6 +291,90 @@ button,a,.vb,.namebtn{touch-action:manipulation;-webkit-tap-highlight-color:tran
 #verBody{display:grid;grid-gap:16px;gap:16px}
 .vb{min-height:150px;min-height:clamp(150px,26vh,280px)}
 @media (max-width:640px){.vb{min-height:110px}}
+/* ===================== VISUAL MODERNO — só nas telas do vereador (nomes e voto) =====================
+   html.vz é ligado quando a tela é "Toque no seu nome" ou a tela de voto; Operador, início e Telão não mudam. */
+html.vz.vz.vz{
+  --bg:#0a1022; --surface:#141d3a; --sunk:#0e1630; --ink:#eef1f8; --muted:#9aa4bf; --line:rgba(255,255,255,.10);
+  --navy:#3a64d8; --brass:#e6b955; --brass-soft:rgba(230,185,85,.14);
+  --sim:#2fcf7f; --sim-soft:rgba(47,207,127,.15); --nao:#ff5d4d; --nao-soft:rgba(255,93,77,.15); --abs:#f4b740; --abs-soft:rgba(244,183,64,.15);
+  --card:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+  --shadow:0 14px 40px rgba(0,0,0,.35);
+  color-scheme:dark}
+html.vz body{background:#0a1022;background:radial-gradient(1100px 620px at 8% -12%,rgba(58,100,216,.32),transparent 62%),radial-gradient(900px 520px at 108% 0%,rgba(230,185,85,.13),transparent 60%),#0a1022;background-attachment:fixed;color:var(--ink)}
+html.vz .topbar{background:rgba(10,16,34,.8);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid rgba(230,185,85,.28);position:sticky;top:0;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+html.vz .topbar .seal{width:48px;height:48px}
+html.vz .topbar .brand small{color:var(--brass);opacity:1}
+html.vz .topbar .brand b{font-size:1.6rem}
+html.vz .pill{background:rgba(255,255,255,.08);border:1px solid var(--line)}
+html.vz .pill.on i{background:var(--sim);box-shadow:0 0 0 4px rgba(47,207,127,.2)}
+html.vz .eyebrow{color:var(--brass)}
+html.vz .panel{background:var(--card),var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px}
+html.vz .btn{border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink);transition:transform .12s,filter .15s,border-color .15s}
+html.vz .btn:active:not(:disabled){transform:scale(.98)}
+html.vz .btn.primary{background:linear-gradient(135deg,#4a76ec,#2a4fb3);border-color:transparent;color:#fff;box-shadow:0 8px 22px rgba(58,100,216,.35)}
+html.vz .btn.go{background:linear-gradient(135deg,#36d987,#1d9e5c);border-color:transparent;color:#04160c}
+html.vz .btn.stop{background:linear-gradient(135deg,#ff6e5f,#d63a2b);border-color:transparent;color:#fff}
+html.vz .btn.brass{background:linear-gradient(135deg,#f2cc72,#c9952f);border-color:transparent;color:#1d1405}
+html.vz .av{background:linear-gradient(135deg,#2a3a6e,#1a2550);border:1px solid rgba(230,185,85,.45);color:var(--brass)}
+html.vz .chip{background:rgba(255,255,255,.06)}
+
+/* "Toque no seu nome" */
+html.vz .login.panel{max-width:760px}
+html.vz .login h1{font-size:2.4rem}
+html.vz .namegrid{grid-template-columns:repeat(3,minmax(0,1fr));grid-gap:12px;gap:12px}
+html.vz .namebtn{flex-direction:row;align-items:center;justify-content:flex-start;min-height:78px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid var(--line);color:var(--ink);transition:transform .12s,border-color .15s,background .15s}
+html.vz .namebtn .av{width:46px;height:46px;font-size:1.1rem;margin-right:12px}
+html.vz .namebtn > span:not(.av){display:flex;flex-direction:column;min-width:0;text-align:left}
+html.vz .namebtn b{font-family:var(--f-display);font-size:1.35rem;font-weight:600;line-height:1.05}
+html.vz .namebtn small{color:var(--muted)}
+html.vz .namebtn:active{transform:scale(.98)}
+html.vz .namebtn[aria-pressed="true"]{border-color:var(--brass);background:linear-gradient(135deg,rgba(230,185,85,.24),rgba(230,185,85,.06));box-shadow:0 0 0 3px rgba(230,185,85,.2)}
+html.vz .namebtn[aria-pressed="true"] .av{background:linear-gradient(135deg,#f2cc72,#b98523);color:#1d1405;border:0}
+@media (max-width:620px){html.vz .namegrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* tela de voto */
+html.vz .verhead{background:var(--card),var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 18px;box-shadow:var(--shadow)}
+html.vz .verhead .av{width:62px;height:62px;font-size:1.5rem;background:linear-gradient(135deg,#f2cc72,#b98523);color:#1d1405;border:0}
+html.vz .verhead h1{font-size:2.1rem}
+html.vz .status{border-radius:14px;padding:14px 18px;font-size:1.15rem;background:rgba(255,255,255,.05);border:1px solid var(--line)}
+html.vz .status::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--muted);flex:none;margin-right:2px}
+html.vz .status.live{background:var(--sim-soft);color:var(--sim);border-color:rgba(47,207,127,.35)}
+html.vz .status.live::before{background:var(--sim);animation:pulsoV 1.4s ease-in-out infinite}
+html.vz .status.lock{background:var(--brass-soft);color:var(--brass);border-color:rgba(230,185,85,.35)}
+html.vz .status.lock::before{background:var(--brass)}
+@keyframes pulsoV{50%{box-shadow:0 0 0 7px rgba(47,207,127,.18)}}
+html.vz .matcard{position:relative;overflow:hidden;padding:24px 26px 24px 32px}
+html.vz .matcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:linear-gradient(180deg,var(--brass),#b98523)}
+html.vz .matcard h2{font-size:2rem;line-height:1.15}
+html.vz .vb{border-radius:22px;font-size:2.6rem;letter-spacing:.05em;box-shadow:0 14px 34px rgba(0,0,0,.35);position:relative;overflow:hidden}
+html.vz .vb::after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 45%);pointer-events:none}
+html.vz .vb.sim{background:linear-gradient(145deg,#3ae08f,#17924f);color:#04160c}
+html.vz .vb.nao{background:linear-gradient(145deg,#ff7466,#c8301f);color:#fff}
+html.vz .vb.abs{background:linear-gradient(145deg,#f8c75a,#c98a12);color:#1d1203}
+html.vz .vb .vi{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.24);margin-bottom:6px}
+html.vz .vb .vi svg{width:36px;height:36px}
+html.vz .vb small{font-size:1rem}
+html.vz .vb:disabled{filter:grayscale(1) brightness(.6);opacity:.35}
+html.vz .locked .big{font-size:3.6rem}
+html.vz .lockico{width:68px;height:68px}
+html.vz .modal{background:rgba(5,9,20,.7);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+html.vz .modal .box{background:var(--card),var(--surface);border:1px solid rgba(230,185,85,.3);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.5);padding:28px;max-width:520px}
+html.vz .modal .box .big{font-size:3.4rem}
+html.vz .toast{background:#eef1f8;color:#0a1022;border-radius:14px}
+@media (max-width:640px){html.vz .vb{flex-direction:column}}
+
+/* ---------- TABLET: tela cheia, botões de voto ocupando o resto da tela ---------- */
+html.tablet.vz .topbar .wrap{padding-block:8px}
+html.tablet #v-vereador:not([hidden]){min-height:calc(100vh - 66px);min-height:calc(100dvh - 66px);display:flex;flex-direction:column;padding-block:16px 18px}
+html.tablet #v-vereador .ver{flex:1;width:100%;max-width:1200px}
+html.tablet #verBody{flex:1;grid-template-rows:auto minmax(0,1fr)}
+html.tablet #verBody > .votebtns:only-child{grid-row:1/-1}
+html.tablet .votebtns{min-height:0}
+html.tablet .vb{min-height:200px;height:100%}
+html.tablet #v-ver-login:not([hidden]){min-height:calc(100vh - 66px);min-height:calc(100dvh - 66px);display:flex;align-items:center;justify-content:center;padding-block:18px}
+html.tablet #v-ver-login .login{width:100%}
+html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3rem}
+@media (max-width:640px){html.tablet .vb{min-height:120px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* mensagens e arquivos para todas as telas */
 .field textarea{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:10px 12px;min-height:84px;width:100%;resize:vertical;font:inherit;color:inherit}
@@ -609,7 +697,18 @@ const VIEWS = ['v-inicio','v-op-login','v-operador','v-ver-login','v-vereador','
 /* Tablet / celular (tela de toque sem mouse ou touchpad): só a parte do vereador (Aprovar, Reprovar, Abster).
    O Operador é só o notebook; o Telão é só a Smart TV. */
 const EH_TABLET = (() => { try{ return navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches; }catch(e){ return false; } })();
+function telaCheia(){
+  const d = document, el = d.documentElement;
+  if(d.fullscreenElement || d.webkitFullscreenElement) return;
+  const f = el.requestFullscreen || el.webkitRequestFullscreen;
+  if(!f) return;
+  try{ const r = f.call(el); if(r && r.catch) r.catch(()=>{}); }catch(e){}
+}
 if(EH_TABLET){
+  document.documentElement.classList.add('tablet');
+  // tela cheia no primeiro toque (e de novo se o tablet sair dela)
+  document.addEventListener('click', telaCheia, true);
+  document.addEventListener('touchend', telaCheia, true);
   document.querySelectorAll('.role[data-go="operador"], .role[data-go="telao"]').forEach(b => b.remove());
   const home = document.getElementById('homeLink'); if(home) home.remove();
   ls.del('vp_op');
@@ -625,6 +724,7 @@ function route(){
   $('#topbar').hidden = view === 'v-telao';
   document.body.style.background = view === 'v-telao' ? '#070b16' : '';
   current = view;
+  document.documentElement.classList.toggle('vz', view === 'v-vereador' || view === 'v-ver-login');
   if(view === 'v-vereador') tabletOnline();
   if(view === 'v-telao') ajustarTV();
   render();
@@ -816,7 +916,7 @@ $('#addForm').addEventListener('submit', ev => {
 /* ---------- vereador ---------- */
 let selVid = null;
 function renderNameGrid(){
-  $('#nameGrid').innerHTML = VEREADORES.map(v => `<button type="button" class="namebtn" data-vid="${v.id}" aria-pressed="${selVid===v.id}"><b>${esc(v.nome)}</b><small>Aparelho ${v.ap}</small></button>`).join('');
+  $('#nameGrid').innerHTML = VEREADORES.map(v => `<button type="button" class="namebtn" data-vid="${v.id}" aria-pressed="${selVid===v.id}"><span class="av">${ini(v.nome)}</span><span><b>${esc(v.nome)}</b><small>Aparelho ${v.ap}</small></span></button>`).join('');
 }
 $('#nameGrid').addEventListener('click', ev => { const b = ev.target.closest('[data-vid]'); if(!b) return; selVid = b.dataset.vid; renderNameGrid(); $('#verErr').textContent=''; });
 $('#verLoginForm').addEventListener('submit', ev => {
@@ -844,9 +944,9 @@ function renderVereador(){
   let sCls = '', sTxt = '', html = '';
   const matHtml = m ? `<div class="panel matcard"><span class="mtipo">${esc(m.tipo)} Nº ${esc(m.numero)}</span><h2>${esc(m.ementa)}</h2><p class="muted" style="margin:6px 0 0">Autor: ${esc(m.autor||'—')}</p></div>` : '';
   const btns = dis => `<div class="votebtns">
-      <button class="vb sim" data-voto="sim" ${dis?'disabled':''}>APROVAR<small>Voto SIM</small></button>
-      <button class="vb nao" data-voto="nao" ${dis?'disabled':''}>REPROVAR<small>Voto NÃO</small></button>
-      <button class="vb abs" data-voto="abs" ${dis?'disabled':''}>ABSTER<small>Abstenção</small></button></div>`;
+      <button class="vb sim" data-voto="sim" ${dis?'disabled':''}><span class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>APROVAR<small>Voto SIM</small></button>
+      <button class="vb nao" data-voto="nao" ${dis?'disabled':''}><span class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>REPROVAR<small>Voto NÃO</small></button>
+      <button class="vb abs" data-voto="abs" ${dis?'disabled':''}><span class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 12h12"/></svg></span>ABSTER<small>Abstenção</small></button></div>`;
 
   if(!e.aberta){ sTxt = 'Aguardando a Mesa abrir a sessão.'; html = btns(true); }
   else if(!pres){ sTxt = e.chamada ? 'Você não consta como presente. Fale com a Mesa.' : 'Sessão aberta. Aguardando a chamada.'; html = btns(true); }
