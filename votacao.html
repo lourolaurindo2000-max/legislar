@@ -388,6 +388,19 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 .ensaio-chave input{width:22px;height:22px;margin-top:2px;accent-color:#c9952f;flex:none}
 .ensaio-chave span{display:flex;flex-direction:column}
 .ensaio-chave small{color:var(--muted);font-size:.82rem}
+/* fotos dos vereadores */
+.av{position:relative;overflow:hidden}
+.av .avfoto{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.vrow .av{width:42px;height:42px}
+.tv .tvv{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:16px;align-content:center;align-items:center}
+.tv .tvv > *{margin-top:0}
+.tv .tvv .tvfoto{width:74px;height:74px;font-size:1.4rem;border:3px solid var(--line);background:#1a2550;color:var(--brass)}
+.tv .tvv.v-sim .tvfoto{border-color:var(--sim)}.tv .tvv.v-nao .tvfoto{border-color:var(--nao)}.tv .tvv.v-abs .tvfoto{border-color:var(--abs)}
+.tv .tvv .tvnm{display:flex;flex-direction:column;min-width:0}
+.tv .tvv .nm{font-size:1.75rem;overflow-wrap:normal;word-break:normal;hyphens:none}
+.tv .tvv .pres{margin-bottom:4px}
+.tv .tvv .st{grid-column:1 / -1;margin-top:12px;justify-self:start;font-size:1.5rem;white-space:nowrap}
+.tv .tvv.aus .tvfoto{filter:grayscale(1)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* mensagens e arquivos para todas as telas */
 .field textarea{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:10px 12px;min-height:84px;width:100%;resize:vertical;font:inherit;color:inherit}
@@ -565,15 +578,15 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 <script>
 /* ===================== dados fixos ===================== */
 const VEREADORES = [
-  {id:'v1', nome:'Jackson Costa',     ap:1},
-  {id:'v2', nome:'Dilson Junior',     ap:2},
-  {id:'v3', nome:'Lucas Cavalcante',  ap:3},
-  {id:'v4', nome:'Marilene Santos',   ap:4},
-  {id:'v5', nome:'Nilza Damasceno',   ap:5},
-  {id:'v6', nome:'Rogério Gotado',    ap:6},
-  {id:'v7', nome:'Sylas Souza',       ap:7},
-  {id:'v8', nome:'José Lindomar',     ap:8},
-  {id:'v9', nome:'Wilson Freitas',    ap:9},
+  {id:'v1', nome:'Jackson Costa',     ap:1, foto:'https://2.gravatar.com/userimage/277172047/8039d08ed8a294328b8f8b70bbbeb765?size=240'},
+  {id:'v2', nome:'Dilson Junior',     ap:2, foto:'https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=240'},
+  {id:'v3', nome:'Lucas Cavalcante',  ap:3, foto:'https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=240'},
+  {id:'v4', nome:'Marilene Santos',   ap:4, foto:'https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=240'},
+  {id:'v5', nome:'Nilza Damasceno',   ap:5, foto:'https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=240'},
+  {id:'v6', nome:'Rogério Gotado',    ap:6, foto:'https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=240'},
+  {id:'v7', nome:'Sylas Souza',       ap:7, foto:'https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=240'},
+  {id:'v8', nome:'José Lindomar',     ap:8, foto:'https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=240'},
+  {id:'v9', nome:'Wilson Freitas',    ap:9, foto:'https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=240'},
 ];
 const QUORUM = 5;               // maioria absoluta de 9
 // vereador entra só tocando no nome (sem senha)
@@ -590,6 +603,7 @@ const VOTO_CURTO = {sim:'SIM', nao:'NÃO', abs:'ABST.'};
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ini = n => n.split(' ').filter(Boolean).map(p=>p[0]).slice(0,2).join('').toUpperCase();
+const avInner = v => `${ini(v.nome)}${v.foto ? `<img class="avfoto" src="${v.foto}" alt="" loading="lazy" onerror="this.remove()">` : ''}`;
 const vName = id => (VEREADORES.find(v=>v.id===id)||{}).nome || '—';
 const ls = {
   get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
@@ -828,7 +842,7 @@ function renderOperador(){
   $('#chamadaList').innerHTML = VEREADORES.map(v => {
     const lg = S.login[v.id] && S.login[v.id].logado;
     const pr = S.presenca[v.id] && S.presenca[v.id].presente;
-    return `<div class="vrow"><div class="av">${ini(v.nome)}</div>
+    return `<div class="vrow"><div class="av">${avInner(v)}</div>
       <div class="nm">${esc(v.nome)}${e.presidente===v.id?' · <b style="color:var(--brass)">Presidente</b>':''}<small><span class="dot ${lg?'on':''}"></span>${lg?'Tablet conectado':'Tablet desconectado'} · Aparelho ${v.ap}${S.aparelhos[v.id]?` · <button type="button" class="linkbtn" data-liberar="${v.id}" style="font-size:.76rem;padding:0">Liberar tablet</button>`:''}</small></div>
       <button class="tog ${pr?'on':''}" data-pres="${v.id}" ${(!e.aberta||emCurso(e))?'disabled':''}>${pr?'Presente':'Ausente'}</button></div>`;
   }).join('');
@@ -1093,7 +1107,7 @@ function renderNameGrid(){
   if(dono) selVid = dono;
   $('#nameGrid').innerHTML = lista.map(v => {
     const outro = vinculoOutro(v.id);
-    return `<button type="button" class="namebtn" data-vid="${v.id}" aria-pressed="${selVid===v.id}" ${outro?'disabled':''}><span class="av">${ini(v.nome)}</span><span><b>${esc(v.nome)}</b><small>${outro?'Em outro tablet':'Aparelho '+v.ap}</small></span></button>`;
+    return `<button type="button" class="namebtn" data-vid="${v.id}" aria-pressed="${selVid===v.id}" ${outro?'disabled':''}><span class="av">${avInner(v)}</span><span><b>${esc(v.nome)}</b><small>${outro?'Em outro tablet':'Aparelho '+v.ap}</small></span></button>`;
   }).join('');
 }
 $('#nameGrid').addEventListener('click', ev => { const b = ev.target.closest('[data-vid]'); if(!b || b.disabled) return; selVid = b.dataset.vid; renderNameGrid(); $('#verErr').textContent=''; });
@@ -1132,7 +1146,7 @@ function renderVereador(){
   if(!v){ ls.del('vp_vid'); return route(); }
   if(!ENSAIO && S.apLoaded && (!S.aparelhos[vid] || S.aparelhos[vid].dev !== DEV)){ ls.del('vp_vid'); selVid = null; return route(); }
   const e = E(), m = pautaAtual();
-  $('#verAv').textContent = ini(v.nome);
+  $('#verAv').innerHTML = avInner(v);
   $('#verName').textContent = v.nome;
   $('#verRole').textContent = e.presidente === v.id ? 'Presidente da Mesa' : `Vereador · Aparelho ${v.ap}`;
   const pres = !!(S.presenca[vid] && S.presenca[vid].presente);
@@ -1241,7 +1255,7 @@ function renderTelao(){
       else { st = 'PRESENTE'; cls = 'wait'; }
     }
     const novo = vt && !TV_VISTOS.has(vt.id); if(vt) TV_VISTOS.add(vt.id);
-    return `<div class="tvv ${!p?'aus':''} ${vt?'voted v-'+vt.voto:''} ${novo&&TV_PRONTO?'flash':''}">${e.presidente===v.id?'<span class="pres">Presidente</span>':''}<span class="nm">${esc(v.nome)}</span><span class="st ${cls}">${st}</span></div>`;
+    return `<div class="tvv ${!p?'aus':''} ${vt?'voted v-'+vt.voto:''} ${novo&&TV_PRONTO?'flash':''}"><span class="av tvfoto">${avInner(v)}</span><span class="tvnm">${e.presidente===v.id?'<span class="pres">Presidente</span>':''}<span class="nm">${esc(v.nome)}</span></span><span class="st ${cls}">${st}</span></div>`;
   }).join('');
   const mat = m ? `<span class="mtipo">${esc(m.tipo)} Nº ${esc(m.numero)}</span><h2>${esc(m.ementa)}</h2><span class="autor">Autor: ${esc(m.autor||'—')}</span>`
                 : `<span class="mtipo">ORDEM DO DIA</span><h2>${e.chamada ? 'Aguardando a próxima matéria' : 'Chamada em andamento'}</h2>`;
