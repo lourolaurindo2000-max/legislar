@@ -1268,10 +1268,11 @@ $('#verLoginForm').addEventListener('submit', async ev => {
   write('login/'+selVid, {logado:true, ts:agora()});
   route();
 });
-$('#verLogout').addEventListener('click', () => {
+function sairVereador(){
   const vid = ls.get('vp_vid'); tabletOffline(vid); if(vid) write('login/'+vid, {logado:false, ts:agora()});
   ls.del('vp_vid'); selVid = null; route();
-});
+}
+$('#verLogout').addEventListener('click', sairVereador);
 let voting = false;
 function renderVereador(){
   const vid = ls.get('vp_vid'), v = VEREADORES.find(x=>x.id===vid);
@@ -1360,6 +1361,7 @@ async function votar(voto){
     if(!gravou){ toast('Seu voto já foi registrado.'); return; }
     S.votos = [...S.votos.filter(x=>x.id!==m.id+'__'+vid), Object.assign({id:m.id+'__'+vid}, doc)]; render();
     toast('Voto registrado.');
+    sairVereador();   /* depois de confirmar o voto, volta sozinho para a tela de vereadores (sem apertar Sair) */
   } finally { voting = false; }
 }
 
