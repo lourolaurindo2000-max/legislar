@@ -629,7 +629,7 @@ const QUORUM = 5;               // maioria absoluta de 9
 // vereador entra só tocando no nome (sem senha)
 /* Senha do Operador: o arquivo guarda só o código SHA-256 de ('vp-operador:' + senha), nunca a senha.
    Para trocar a senha, gere o novo código e substitua em OPERADOR.hash. */
-const OPERADOR = {user:'operador', hash:'04c1f130adda1221e8ee0f7d3b59ac9139327d011a6cb025107ec42fd0d6e929'};
+const OPERADOR = {user:'operador', hash:'e813d870d465eb0a1308926a7e5641ec31beb1f85bc67304d509c066153377b1'};
 async function sha256hex(txt){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
   return Array.prototype.map.call(new Uint8Array(buf), b => (b < 16 ? '0' : '') + b.toString(16)).join('');
