@@ -442,6 +442,15 @@
             document.addEventListener('fullscreenchange', atualizar);
             document.addEventListener('webkitfullscreenchange', atualizar);
 
+            // Smart TV: a tela cheia entra com qualquer tecla do controle remoto (OK, setas…)
+            // e também quando o sistema aberto dentro da TV (ex.: Votação) recebe um toque/tecla.
+            window.__tvTelaCheia = function () { if (suportado && !modoApp && !emTelaCheia()) entrar(); };
+            document.addEventListener('keydown', function (e) {
+                if (!document.body.classList.contains('modo-tv')) return;
+                if (e.key === 'Escape' || e.keyCode === 27) return;
+                window.__tvTelaCheia();
+            }, true);
+
             // Some com o aviso depois de alguns segundos
             setTimeout(function () { aviso.classList.add('oculto'); }, 6000);
         })();
@@ -742,11 +751,15 @@
                         }, true);
                     }
                     // Quando o notebook abre a Votação, o tablet entra sozinho na tela do vereador
-                    refTela.on('value', function (s) {
-                        var v = s.val() || {};
-                        if (v.pagina === 'votacao.html' && v.em && (agora() - v.em < VALIDADE))
+                    // (não entra se a pauta já foi toda votada — o tablet acabou de sair dela)
+                    var telaV = null, concluida = null;
+                    function avaliarVotacao() {
+                        if (telaV === null || concluida === null) return;
+                        if (telaV.pagina === 'votacao.html' && telaV.em && (agora() - telaV.em < VALIDADE) && !concluida)
                             location.href = 'votacao.html?v=' + Date.now() + '#vereador';
-                    });
+                    }
+                    refTela.on('value', function (s) { telaV = s.val() || {}; avaliarVotacao(); });
+                    rt.ref('legislar/votacao/sessao/atual').on('value', function (s) { var e = s.val() || {}; concluida = !!e.pautaConcluida; avaliarVotacao(); });
                 }
                 // ---------- Notebook / computador: ao abrir um dos 4 sistemas, a TV abre junto ----------
                 var abriuDaqui = false, voltarT = null;

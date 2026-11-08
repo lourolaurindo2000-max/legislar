@@ -653,6 +653,12 @@ const Local = {
 };
 /* tablet: só fica na Votação enquanto o operador (notebook) estiver com ela aberta */
 let TELA_OK = true;
+/* última matéria votada: o tablet sai da votação sozinho (depois de mostrar o resultado) */
+let saindo = false;
+function sairConcluido(){
+  if(saindo) return; saindo = true;
+  setTimeout(() => { const e = E(); if(e.pautaConcluida && !emCurso(e)) location.href = 'dashboard.html'; else saindo = false; }, 5000);
+}
 function voltarAoDashboard(){
   if(TELA_OK) return;
   if(emCurso(E())) return;            // não tira o vereador no meio de uma votação (nem no desempate)
@@ -741,7 +747,7 @@ const donoDoTablet = () => ENSAIO ? null : Object.keys(S.aparelhos).find(vid => 
 /* MODO DE ENSAIO (ligado pelo Operador): os tablets não ficam presos a um vereador — igual a antes do vínculo */
 let ENSAIO = false;
 const vinculoOutro = vid => !ENSAIO && !!(S.aparelhos[vid] && S.aparelhos[vid].dev !== DEV);
-const defEstado = () => ({aberta:false, abertaEm:null, chamada:false, presidente:'', pautaId:null, votacao:'livre', inicioVotacao:null, resultado:null, apuracao:null});
+const defEstado = () => ({aberta:false, abertaEm:null, chamada:false, presidente:'', pautaId:null, votacao:'livre', inicioVotacao:null, resultado:null, apuracao:null, pautaConcluida:false});
 const PRESIDENTE_PADRAO = 'v6';   // Aparelho 6 — Presidente da Mesa (desempata)
 const E = () => { const e = Object.assign(defEstado(), S.estado || {}); if(!e.presidente) e.presidente = PRESIDENTE_PADRAO; return e; };
 function setEstado(patch){ const novo = Object.assign({}, E(), patch); S.estado = novo; render(); return write('sessao/atual', novo); }
@@ -829,6 +835,41 @@ function ajustarTV(){
 addEventListener('resize', ajustarTV);
 addEventListener('orientationchange', () => setTimeout(ajustarTV, 300));
 
+/* ===================== votação automática (comandada pelo notebook do Operador) =====================
+   1) todos os presentes votaram  -> encerra sozinha (2,5 s)
+   2) resultado na tela por 8 s   -> abre a próxima matéria pendente da pauta
+   3) não há mais matérias        -> marca a pauta como concluída e os tablets saem sozinhos
+   Empate: espera o desempate do Presidente e depois segue. */
+let autoT = null, autoChave = '';
+function automacao(){
+  if(EH_TABLET || ls.get('vp_op') !== '1') return;
+  const e = E(), m = pautaAtual();
+  let chave = '', espera = 0, acao = null;
+  if(e.aberta && e.votacao === 'aberta' && m){
+    const ps = presentes(), vs = votosDe(m.id);
+    if(ps.length && ps.every(v => vs.some(x => x.vid === v.id))){
+      chave = 'enc:' + m.id; espera = 2500;
+      acao = () => { const a = E(), mm = pautaAtual(); if(a.votacao === 'aberta' && mm && mm.id === m.id) encerrar(mm); };
+    }
+  } else if(e.aberta && e.votacao === 'encerrada' && m && !e.pautaConcluida){
+    chave = 'prox:' + m.id; espera = 8000;
+    acao = () => {
+      const a = E(); if(a.votacao !== 'encerrada' || a.pautaId !== m.id) return;
+      const prox = pautaOrdenada().find(p => p.status !== 'votado' && p.id !== m.id);
+      if(prox && presentes().length >= QUORUM){
+        setEstado({pautaId:prox.id, votacao:'aberta', inicioVotacao:agora(), resultado:null, apuracao:null, pautaConcluida:false});
+        toast('Próxima matéria liberada: ' + prox.tipo + ' Nº ' + prox.numero);
+      } else if(!prox){
+        setEstado({pautaConcluida:true});
+        toast('Pauta concluída. Os tablets voltam ao início.');
+      }
+    };
+  }
+  if(chave === autoChave) return;
+  clearTimeout(autoT); autoChave = chave;
+  if(acao) autoT = setTimeout(() => { autoChave = ''; acao(); }, espera);
+}
+
 /* ===================== render ===================== */
 function render(){
   const pill = $('#modePill');
@@ -840,6 +881,7 @@ function render(){
   if(current === 'v-vereador') renderVereador();
   if(current === 'v-telao') renderTelao();
   if(current === 'v-ver-login') renderNameGrid();
+  automacao();
 }
 
 /* ---------- operador ---------- */
@@ -910,6 +952,7 @@ function renderOperador(){
       html += `<div class="row" style="justify-content:space-between"><span class="res ${r.veredito==='APROVADO'?'ap':'rp'}" style="font-size:2rem">${esc(r.veredito||'')}</span>
         <span class="row"><span class="chip sim">SIM ${r.sim||0}</span><span class="chip nao">NÃO ${r.nao||0}</span><span class="chip abs">ABST. ${r.abs||0}</span><span class="chip">Não votou ${r.naoVotou||0}</span></span></div>
         ${r.desempate ? `<small style="color:var(--brass);font-weight:700">Empate decidido pelo voto do Presidente${r.presidente ? ' ' + esc(vName(r.presidente)) : ''}: ${VOTO_LABEL[r.desempate]}</small>` : ''}
+        <small style="color:var(--brass);font-weight:700">${e.pautaConcluida ? 'Pauta concluída: os tablets voltaram ao início.' : (pautaOrdenada().some(p => p.status !== 'votado' && p.id !== m.id) && presentes().length >= QUORUM ? 'A próxima matéria abre sozinha em alguns segundos.' : 'Era a última matéria da pauta: os tablets vão sair da votação sozinhos.')}</small>
         <div class="row"><button class="btn primary" id="btnProxima">Próxima matéria</button></div>`;
     }
     html += `</div>`;
@@ -981,14 +1024,14 @@ $('#opCurrent').addEventListener('click', ev => {
   const id = ev.target.id, m = pautaAtual();
   if(id === 'btnIniciar' && m){
     if(presentes().length < QUORUM) return toast('Sem quórum para iniciar.');
-    setEstado({votacao:'aberta', inicioVotacao:agora(), resultado:null}); toast('Votação liberada nos tablets.');
+    setEstado({votacao:'aberta', inicioVotacao:agora(), resultado:null, pautaConcluida:false}); toast('Votação liberada nos tablets.');
   }
   if(id === 'btnDesmarcar') setEstado({pautaId:null});
   if(id === 'btnEncerrar' && m) confirmBox({
     titulo:'Encerrar a votação?', texto:`${votosDe(m.id).length} de ${presentes().length} presentes votaram. Quem não votou será contado como "não votou".`, ok:'Encerrar e apurar', cls:'stop',
     onOk: () => encerrar(m)
   });
-  if(id === 'btnProxima') setEstado({votacao:'livre', pautaId:null, resultado:null, inicioVotacao:null});
+  if(id === 'btnProxima') setEstado({votacao:'livre', pautaId:null, resultado:null, inicioVotacao:null, pautaConcluida:false});
 });
 async function encerrar(m){
   let vs = votosDe(m.id);
@@ -1034,7 +1077,7 @@ const porId = list => { const o = {}; list.forEach(x => { o[x.id] = x; }); retur
 const stripId = o => { const r = Object.assign({}, o); delete r.id; return r; };
 $('#pautaList').addEventListener('click', ev => {
   const s = ev.target.closest('[data-sel]'), d = ev.target.closest('[data-del]');
-  if(s){ if(emCurso(E())) return; setEstado({pautaId:s.dataset.sel, votacao:'livre', resultado:null}); }
+  if(s){ if(emCurso(E())) return; setEstado({pautaId:s.dataset.sel, votacao:'livre', resultado:null, pautaConcluida:false}); }
   if(d){ const p = S.pauta.find(x=>x.id===d.dataset.del); if(!p) return;
     confirmBox({titulo:'Remover da pauta?', texto:`${p.tipo} Nº ${p.numero}`, ok:'Remover', cls:'stop', onOk:() => { Store.del('pauta/'+p.id); if(E().pautaId===p.id) setEstado({pautaId:null}); }}); }
 });
@@ -1214,7 +1257,7 @@ function renderVereador(){
   }
   else if(e.votacao === 'encerrada'){
     const r = e.resultado || {};
-    sCls='lock'; sTxt = 'Votação encerrada.';
+    sCls='lock'; sTxt = e.pautaConcluida ? 'Votação concluída. Este tablet vai voltar ao início.' : 'Votação encerrada. A próxima matéria abre em instantes.';
     html = matHtml + `<div class="panel locked"><span class="eyebrow">Resultado</span><span class="big res ${r.veredito==='APROVADO'?'ap':'rp'}">${esc(r.veredito||'')}</span>
       <div class="row" style="justify-content:center"><span class="chip sim">SIM ${r.sim||0}</span><span class="chip nao">NÃO ${r.nao||0}</span><span class="chip abs">ABST. ${r.abs||0}</span></div>
       ${r.desempate ? '<span style="color:var(--brass);font-weight:700">Empate decidido pelo voto do Presidente</span>' : ''}
@@ -1321,9 +1364,25 @@ setInterval(() => {
   tickElapsed();
 }, 1000);
 $('#tvFull').addEventListener('click', () => {
+  // dentro da Smart TV (quadro do dashboard): a tela cheia é da TV inteira
+  try{ if(window.self !== window.top && window.top.__tvTelaCheia){ window.top.__tvTelaCheia(); return; } }catch(e){}
   const el = document.documentElement;
   try{ (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen()).catch(()=>{}); }catch(e){}
 });
+/* Smart TV: qualquer tecla do controle remoto ou clique no telão coloca a TV em tela cheia */
+(function(){
+  let emQuadro = false; try{ emQuadro = window.self !== window.top; }catch(e){ emQuadro = true; }
+  function tvCheia(ev){
+    if(ev && ev.type === 'keydown' && (ev.key === 'Escape' || ev.keyCode === 27)) return;
+    if(ev && ev.target && ev.target.closest && ev.target.closest('#tvFull')) return;
+    if(emQuadro){ try{ if(window.top.__tvTelaCheia) window.top.__tvTelaCheia(); }catch(e){} return; }
+    if(current !== 'v-telao' || document.fullscreenElement || document.webkitFullscreenElement) return;
+    const el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen;
+    try{ const r = f && f.call(el); if(r && r.catch) r.catch(()=>{}); }catch(e){}
+  }
+  document.addEventListener('keydown', tvCheia, true);
+  document.addEventListener('click', ev => { if(emQuadro || current === 'v-telao') tvCheia(ev); }, true);
+})();
 
 /* ---------- utilidades de interface ---------- */
 let toastT;
@@ -1447,7 +1506,7 @@ const Mensagens = (() => {
   route();
   await Store.init();
   render();
-  Store.watchDoc('sessao/atual', d => { S.estado = d; render(); if(EH_TABLET && !TELA_OK) voltarAoDashboard(); });
+  Store.watchDoc('sessao/atual', d => { S.estado = d; render(); if(EH_TABLET && !TELA_OK) voltarAoDashboard(); if(EH_TABLET && d && d.pautaConcluida) sairConcluido(); });
   Store.watchCol('login', list => { S.login = porId(list); render(); });
   Store.watchCol('presenca', list => { S.presenca = porId(list); render(); });
   Store.watchCol('votos', list => { S.votos = list; render(); });
