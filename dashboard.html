@@ -681,11 +681,12 @@
             rt.ref('.info/serverTimeOffset').on('value', function (s) { offset = s.val() || 0; });
             function agora() { return Date.now() + offset; }
 
-            // Os 3 sistemas que a Smart TV acompanha
+            // Os 4 sistemas que a Smart TV acompanha
             var PAGINAS = {
                 'controle_de_fala.html': 'controle_de_fala.html',
                 'sistema_sorteio.html': 'sistema_sorteio.html',
-                'presenca_plenaria.html': 'presenca_plenaria.html#tv'
+                'presenca_plenaria.html': 'presenca_plenaria.html#tv',
+                'votacao.html': 'votacao.html#telao'
             };
             var VALIDADE = 4 * 3600 * 1000;   // depois de 4 horas a TV volta para o início
 
@@ -726,7 +727,7 @@
                     mostrarPagina(valido ? v.pagina : '');
                 });
             } else {
-                // ---------- Notebook / computador: ao abrir um dos 3 sistemas, a TV abre junto ----------
+                // ---------- Notebook / computador: ao abrir um dos 4 sistemas, a TV abre junto ----------
                 var abriuDaqui = false, voltarT = null;
                 Array.prototype.forEach.call(document.querySelectorAll('.grid-menu a.card'), function (a) {
                     var arq = (a.getAttribute('href') || '').split('#')[0].split('?')[0];
