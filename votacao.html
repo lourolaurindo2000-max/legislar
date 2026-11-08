@@ -435,7 +435,7 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "788863562302",
   appId: "1:788863562302:web:2ddcfb6c2c892770de976f"
 };
-const RAIZ = 'votacao_plenaria';   // pasta no banco, para não misturar com as outras páginas
+const RAIZ = 'legislar/votacao';   // pasta no banco, junto dos outros sistemas do plenário (mesmas regras de acesso)
 
 /* ===================== armazenamento ===================== */
 /* Online: Firebase Realtime Database (tempo real entre tablets, computador e TV).
@@ -456,6 +456,9 @@ const Local = {
   watchCol(c,cb){ const f=()=>cb(this.keys().filter(k=>{const s=k.split('/');return s.length===2&&s[0]===c}).map(k=>({id:k.split('/')[1], ...this.read(k)}))); this.subs.push(f); setTimeout(f,0); },
   fire(){ this.subs.forEach(f=>f()) }
 };
+/* relógio do servidor (tablets, notebook e TV com o mesmo horário) */
+let OFFSET = 0;
+const agora = () => Date.now() + OFFSET;
 const Store = {
   db:null, mode:'conectando',
   ref(p){ return this.db.ref(RAIZ + '/' + p); },
@@ -465,7 +468,8 @@ const Store = {
         if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
         this.db = firebase.database();
         this.mode = 'online';
-        this.db.ref('.info/connected').on('value', s => { this.mode = s.val() ? 'online' : 'conectando'; render(); });
+        this.db.ref('.info/serverTimeOffset').on('value', s => { OFFSET = s.val() || 0; });
+        this.db.ref('.info/connected').on('value', s => { this.mode = s.val() ? 'online' : 'conectando'; if(s.val()) tabletOnline(); render(); });
         return;
       }
     }catch(e){ console.error(e); }
@@ -490,6 +494,23 @@ const Store = {
   }
 };
 function onDbError(e){ console.error(e); toast(e && /permission/i.test(e.code||e.message||'') ? 'O Firebase recusou o acesso. Confira as regras do Realtime Database.' : 'Falha de conexão com o banco. Verifique a internet.'); }
+
+/* ---------- tablet do vereador: conectado / desconectado em tempo real ---------- */
+let wakeLock = null;
+function tabletOnline(){
+  const vid = ls.get('vp_vid');
+  if(!Store.db || !vid || current !== 'v-vereador') return;
+  const r = Store.ref('login/' + vid);
+  r.onDisconnect().set({logado:false, ts:firebase.database.ServerValue.TIMESTAMP}).catch(()=>{});
+  r.set({logado:true, ts:firebase.database.ServerValue.TIMESTAMP}).catch(()=>{});
+  // mantém a tela do tablet acesa durante a sessão
+  try{ if(!wakeLock && navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { wakeLock = w; w.addEventListener('release', () => wakeLock = null); }).catch(()=>{}); }catch(e){}
+}
+function tabletOffline(vid){
+  if(Store.db && vid){ const r = Store.ref('login/' + vid); r.onDisconnect().cancel().catch(()=>{}); }
+  try{ if(wakeLock){ wakeLock.release(); wakeLock = null; } }catch(e){}
+}
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') tabletOnline(); });
 
 /* fila de escrita: uma gravação por vez por documento */
 const queues = {};
@@ -526,6 +547,7 @@ function route(){
   $('#topbar').hidden = view === 'v-telao';
   document.body.style.background = view === 'v-telao' ? '#070b16' : '';
   current = view;
+  if(view === 'v-vereador') tabletOnline();
   render();
 }
 let current = 'v-inicio';
@@ -631,11 +653,11 @@ $('#opLoginForm').addEventListener('submit', ev => {
   } else $('#opErr').textContent = 'Usuário ou senha incorretos.';
 });
 $('#opLogout').addEventListener('click', () => { ls.del('vp_op'); route(); });
-$('#btnAbrir').addEventListener('click', () => { setEstado({aberta:true, abertaEm:Date.now(), chamada:false, votacao:'livre', pautaId:null, resultado:null}); toast('Sessão aberta. Faça a chamada.'); });
+$('#btnAbrir').addEventListener('click', () => { setEstado({aberta:true, abertaEm:agora(), chamada:false, votacao:'livre', pautaId:null, resultado:null}); toast('Sessão aberta. Faça a chamada.'); });
 $('#btnChamada').addEventListener('click', async () => {
   for(const v of VEREADORES){
     const lg = !!(S.login[v.id] && S.login[v.id].logado);
-    S.presenca[v.id] = {presente:lg, ts:Date.now()};
+    S.presenca[v.id] = {presente:lg, ts:agora()};
     write('presenca/'+v.id, S.presenca[v.id]);
   }
   await setEstado({chamada:true});
@@ -645,20 +667,20 @@ $('#btnChamada').addEventListener('click', async () => {
 $('#chamadaList').addEventListener('click', ev => {
   const b = ev.target.closest('[data-pres]'); if(!b) return;
   const id = b.dataset.pres, now = !(S.presenca[id] && S.presenca[id].presente);
-  S.presenca[id] = {presente:now, ts:Date.now()}; render();
+  S.presenca[id] = {presente:now, ts:agora()}; render();
   write('presenca/'+id, S.presenca[id]);
   if(!E().chamada) setEstado({chamada:true});
 });
 $('#selPres').addEventListener('change', ev => setEstado({presidente:ev.target.value}));
 $('#btnFecharSessao').addEventListener('click', () => confirmBox({
   titulo:'Encerrar a sessão?', texto:'A presença será zerada e os tablets voltarão para a tela de espera.', ok:'Encerrar sessão', cls:'stop',
-  onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:false,ts:Date.now()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado({...defEstado(), presidente:E().presidente}); toast('Sessão encerrada.'); }
+  onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:false,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado({...defEstado(), presidente:E().presidente}); toast('Sessão encerrada.'); }
 }));
 $('#opCurrent').addEventListener('click', ev => {
   const id = ev.target.id, m = pautaAtual();
   if(id === 'btnIniciar' && m){
     if(presentes().length < QUORUM) return toast('Sem quórum para iniciar.');
-    setEstado({votacao:'aberta', inicioVotacao:Date.now(), resultado:null}); toast('Votação liberada nos tablets.');
+    setEstado({votacao:'aberta', inicioVotacao:agora(), resultado:null}); toast('Votação liberada nos tablets.');
   }
   if(id === 'btnDesmarcar') setEstado({pautaId:null});
   if(id === 'btnEncerrar' && m) confirmBox({
@@ -668,11 +690,15 @@ $('#opCurrent').addEventListener('click', ev => {
   if(id === 'btnProxima') setEstado({votacao:'livre', pautaId:null, resultado:null, inicioVotacao:null});
 });
 async function encerrar(m){
-  const vs = votosDe(m.id);
+  let vs = votosDe(m.id);
+  try{
+    const todos = await Store.get('votos');
+    if(todos) vs = Object.keys(todos).map(id => ({id, ...todos[id]})).filter(v => v.pid === m.id);
+  }catch(e){}
   const sim = vs.filter(v=>v.voto==='sim').length, nao = vs.filter(v=>v.voto==='nao').length, abs = vs.filter(v=>v.voto==='abs').length;
   const naoVotou = Math.max(0, presentes().length - vs.length);
   const veredito = sim > nao ? 'APROVADO' : 'REPROVADO';
-  const resultado = {sim, nao, abs, naoVotou, veredito, em:Date.now()};
+  const resultado = {sim, nao, abs, naoVotou, veredito, em:agora()};
   await setEstado({votacao:'encerrada', resultado});
   write('pauta/'+m.id, {...stripId(m), status:'votado', resultado});
   toast(`Resultado: ${veredito}`);
@@ -706,11 +732,11 @@ $('#verLoginForm').addEventListener('submit', ev => {
   if(!selVid) return $('#verErr').textContent = 'Toque no seu nome primeiro.';
   if($('#verPass').value !== SENHA_VEREADOR) return $('#verErr').textContent = 'Senha incorreta.';
   ls.set('vp_vid', selVid); $('#verPass').value=''; $('#verErr').textContent='';
-  write('login/'+selVid, {logado:true, ts:Date.now()});
+  write('login/'+selVid, {logado:true, ts:agora()});
   route();
 });
 $('#verLogout').addEventListener('click', () => {
-  const vid = ls.get('vp_vid'); if(vid) write('login/'+vid, {logado:false, ts:Date.now()});
+  const vid = ls.get('vp_vid'); tabletOffline(vid); if(vid) write('login/'+vid, {logado:false, ts:agora()});
   ls.del('vp_vid'); selVid = null; route();
 });
 let voting = false;
@@ -765,8 +791,12 @@ async function votar(voto){
     const vid = ls.get('vp_vid'), e = E(), m = pautaAtual();
     if(!vid || !m || e.votacao !== 'aberta') return toast('A votação não está aberta.');
     if(!(S.presenca[vid] && S.presenca[vid].presente)) return toast('Você não consta como presente.');
+    try{
+      const atual = await Store.get('sessao/atual');
+      if(!atual || atual.votacao !== 'aberta' || atual.pautaId !== m.id) return toast('A votação desta matéria já foi encerrada.');
+    }catch(e){ toast('Sem conexão. Verifique a internet e tente de novo.'); return; }
     const path = 'votos/' + m.id + '__' + vid;
-    const doc = {pid:m.id, vid, voto, ts:Date.now()};
+    const doc = {pid:m.id, vid, voto, ts:agora()};
     let gravou = false;
     try{ gravou = await Store.setIfAbsent(path, doc); }catch(e){ toast('Não foi possível gravar o voto. Tente de novo.'); return; }
     if(!gravou){ toast('Seu voto já foi registrado.'); return; }
@@ -820,7 +850,7 @@ const VOTO_TV = {sim:'SIM', nao:'NÃO', abs:'ABSTENÇÃO'};
 const TV_VISTOS = new Set(); let TV_PRONTO = false;
 function tickElapsed(){
   const e = E();
-  const t = e.votacao==='aberta' && e.inicioVotacao ? Math.max(0, Math.floor((Date.now()-e.inicioVotacao)/1000)) : 0;
+  const t = e.votacao==='aberta' && e.inicioVotacao ? Math.max(0, Math.floor((agora()-e.inicioVotacao)/1000)) : 0;
   const s = String(Math.floor(t/60)).padStart(2,'0') + ':' + String(t%60).padStart(2,'0');
   document.querySelectorAll('[data-elapsed]').forEach(el => el.textContent = s);
 }
