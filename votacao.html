@@ -451,7 +451,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 <div id="app">
   <header class="topbar" id="topbar">
     <div class="wrap">
-      <img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina">
+      <img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina">
       <div class="brand"><small>Câmara Municipal de Almadina</small><b>Votação Plenária</b></div>
       <div class="sp"></div>
       <button type="button" class="btn-tela" id="btnTela" hidden aria-label="Sair da tela cheia"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span>Sair da tela cheia</span></button>
@@ -594,7 +594,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
   <div class="tv" id="v-telao" hidden>
     <div class="tvwrap">
       <div class="tvtop">
-        <img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina">
+        <img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina">
         <div class="brand"><small>Câmara Municipal de Almadina · Plenário Jonas Plínio</small><b>Votação Plenária</b></div>
         <div class="sp"></div>
         <span class="tvstate" id="tvState">Sessão fechada</span>
@@ -1133,7 +1133,7 @@ function gerarRelatorio(){
   const materias = pautaOrdenada().filter(p => p.status === 'votado' && p.resultado && p.resultado.em && diaDe(p.resultado.em) === dia)
     .sort((a, b) => a.resultado.em - b.resultado.em);
   if(!materias.length) return toast('Nenhuma matéria votada em ' + dataBR(dia) + '.');
-  const logo = new URL('img/logoCamara.PNG', location.href).href;
+  const logo = new URL('img/brasao.png', location.href).href;
   const NOME_VOTO = {sim:'SIM', nao:'NÃO', abs:'ABSTENÇÃO'};
   const blocos = materias.map((m, i) => {
     const r = m.resultado, vs = votosDe(m.id);
@@ -1343,7 +1343,7 @@ function renderTelao(){
   $('#tvFootL').textContent = (ENSAIO ? 'ENSAIO · ' : '') + (e.aberta ? `Quórum: ${pres} presentes de 9 · mínimo ${QUORUM}${e.presidente?' · Presidente: '+vName(e.presidente):''}` : 'Câmara Municipal de Almadina — Bahia');
   const body = $('#tvBody');
   if(!e.aberta){
-    body.innerHTML = `<div class="splash"><img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>A votação ainda não começou.</p></div>`;
+    body.innerHTML = `<div class="splash"><img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>A votação ainda não começou.</p></div>`;
     return;
   }
   /* Pauta concluída com 2 ou mais matérias: resumo final com o nome e o resultado de cada uma */
