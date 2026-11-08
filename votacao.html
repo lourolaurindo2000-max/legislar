@@ -1268,7 +1268,9 @@ $('#verLoginForm').addEventListener('submit', async ev => {
   write('login/'+selVid, {logado:true, ts:agora()});
   route();
 });
+let saidaVotoT = null;
 function sairVereador(){
+  clearTimeout(saidaVotoT); saidaVotoT = null;
   const vid = ls.get('vp_vid'); tabletOffline(vid); if(vid) write('login/'+vid, {logado:false, ts:agora()});
   ls.del('vp_vid'); selVid = null; route();
 }
@@ -1361,7 +1363,9 @@ async function votar(voto){
     if(!gravou){ toast('Seu voto já foi registrado.'); return; }
     S.votos = [...S.votos.filter(x=>x.id!==m.id+'__'+vid), Object.assign({id:m.id+'__'+vid}, doc)]; render();
     toast('Voto registrado.');
-    sairVereador();   /* depois de confirmar o voto, volta sozinho para a tela de vereadores (sem apertar Sair) */
+    /* depois de confirmar o voto, mostra "Voto registrado" por 3 s e volta sozinho para a tela de vereadores (sem apertar Sair) */
+    clearTimeout(saidaVotoT);
+    saidaVotoT = setTimeout(() => { saidaVotoT = null; if(ls.get('vp_vid') === vid) sairVereador(); }, 3000);
   } finally { voting = false; }
 }
 
