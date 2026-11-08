@@ -458,6 +458,15 @@ const Local = {
   watchCol(c,cb){ const f=()=>cb(this.keys().filter(k=>{const s=k.split('/');return s.length===2&&s[0]===c}).map(k=>({id:k.split('/')[1], ...this.read(k)}))); this.subs.push(f); setTimeout(f,0); },
   fire(){ this.subs.forEach(f=>f()) }
 };
+/* tablet: só fica na Votação enquanto o operador (notebook) estiver com ela aberta */
+let TELA_OK = true;
+function voltarAoDashboard(){
+  if(TELA_OK) return;
+  if(E().votacao === 'aberta') return;            // não tira o vereador no meio de uma votação
+  if(document.querySelector('#modalRoot .modal')) return;   // nem durante a confirmação do voto
+  location.href = 'dashboard.html';
+}
+
 /* relógio do servidor (tablets, notebook e TV com o mesmo horário) */
 let OFFSET = 0;
 const agora = () => Date.now() + OFFSET;
@@ -471,6 +480,11 @@ const Store = {
         this.db = firebase.database();
         this.mode = 'online';
         this.db.ref('.info/serverTimeOffset').on('value', s => { OFFSET = s.val() || 0; });
+        if(EH_TABLET) this.db.ref('legislar/painel/tela').on('value', s => {
+          const v = s.val() || {}, aberta = v.pagina === 'votacao.html' && v.em && (agora() - v.em < 4*3600*1000);
+          TELA_OK = aberta === true;
+          if(!aberta) voltarAoDashboard();
+        });
         this.db.ref('.info/connected').on('value', s => { this.mode = s.val() ? 'online' : 'conectando'; if(s.val()) tabletOnline(); render(); });
         return;
       }
@@ -997,7 +1011,7 @@ const Mensagens = (() => {
   route();
   await Store.init();
   render();
-  Store.watchDoc('sessao/atual', d => { S.estado = d; render(); });
+  Store.watchDoc('sessao/atual', d => { S.estado = d; render(); if(EH_TABLET && !TELA_OK) voltarAoDashboard(); });
   Store.watchCol('login', list => { S.login = Object.fromEntries(list.map(x => [x.id, x])); render(); });
   Store.watchCol('presenca', list => { S.presenca = Object.fromEntries(list.map(x => [x.id, x])); render(); });
   Store.watchCol('votos', list => { S.votos = list; render(); });

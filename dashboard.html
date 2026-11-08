@@ -727,11 +727,33 @@
                     mostrarPagina(valido ? v.pagina : '');
                 });
             } else {
+                // ---------- Tablet: a Votação Plenária só é aberta pelo operador no notebook ----------
+                var ehTablet = false;
+                try { ehTablet = navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches; } catch (e) {}
+                if (ehTablet) {
+                    var cardVot = document.querySelector('.grid-menu a.card[href^="votacao.html"]');
+                    if (cardVot) {
+                        cardVot.style.opacity = '.45';
+                        cardVot.style.cursor = 'not-allowed';
+                        cardVot.removeAttribute('target');
+                        cardVot.addEventListener('click', function (e) {
+                            e.preventDefault(); e.stopImmediatePropagation();
+                            alert('A Votação Plenária é aberta pelo operador no notebook.\nQuando a votação for aberta, este tablet entra sozinho na tela de voto.');
+                        }, true);
+                    }
+                    // Quando o notebook abre a Votação, o tablet entra sozinho na tela do vereador
+                    refTela.on('value', function (s) {
+                        var v = s.val() || {};
+                        if (v.pagina === 'votacao.html' && v.em && (agora() - v.em < VALIDADE))
+                            location.href = 'votacao.html?v=' + Date.now() + '#vereador';
+                    });
+                }
                 // ---------- Notebook / computador: ao abrir um dos 4 sistemas, a TV abre junto ----------
                 var abriuDaqui = false, voltarT = null;
                 Array.prototype.forEach.call(document.querySelectorAll('.grid-menu a.card'), function (a) {
                     var arq = (a.getAttribute('href') || '').split('#')[0].split('?')[0];
                     if (!PAGINAS[arq]) return;
+                    if (ehTablet && arq === 'votacao.html') return;
                     a.addEventListener('click', function () {
                         a.href = arq + '?v=' + Date.now();   // sempre abre a versão mais nova do sistema
                         if (arq === 'sistema_sorteio.html') {
