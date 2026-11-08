@@ -26,7 +26,7 @@
   --sim:#3cc277; --sim-soft:#173726; --nao:#ee6453; --nao-soft:#3e1d1a; --abs:#e7ad3c; --abs-soft:#3b2e14; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{min-height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:3px solid var(--brass);outline-offset:2px}
@@ -222,6 +222,8 @@ h2{font-size:1.45rem}
 .placar .s small,.placar .s b{color:var(--sim)}.placar .n small,.placar .n b{color:var(--nao)}.placar .a small,.placar .a b{color:var(--abs)}
 .splash{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
 .splash .seal{width:110px;height:110px;font-size:2.6rem;border-width:3px}
+img.seal{border:0;border-radius:0;background:none;object-fit:contain;padding:0}
+.splash img.seal{width:120px;height:120px}
 .splash h2{font-size:clamp(2rem,5vw,4.6rem)}
 .splash p{color:var(--muted);font-size:clamp(1rem,1.8vw,1.6rem);margin:0}
 .tvfoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.85rem}
@@ -243,7 +245,7 @@ h2{font-size:1.45rem}
 <div id="app">
   <header class="topbar" id="topbar">
     <div class="wrap">
-      <div class="seal" aria-hidden="true">A</div>
+      <img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina">
       <div class="brand"><small>Câmara Municipal de Almadina</small><b>Votação Plenária</b></div>
       <div class="sp"></div>
       <span class="pill" id="modePill"><i></i><span>Conectando</span></span>
@@ -377,7 +379,7 @@ h2{font-size:1.45rem}
   <div class="tv" id="v-telao" hidden>
     <div class="tvwrap">
       <div class="tvtop">
-        <div class="seal" aria-hidden="true">A</div>
+        <img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina">
         <div class="brand"><small>Câmara Municipal de Almadina · Plenário Jonas Plínio</small><b>Votação Plenária</b></div>
         <div class="sp"></div>
         <span class="tvstate" id="tvState">Sessão fechada</span>
@@ -819,7 +821,7 @@ function renderTelao(){
   $('#tvFootL').textContent = e.aberta ? `Quórum: ${pres} presentes de 9 · mínimo ${QUORUM}${e.presidente?' · Presidente: '+vName(e.presidente):''}` : 'Câmara Municipal de Almadina — Bahia';
   const body = $('#tvBody');
   if(!e.aberta){
-    body.innerHTML = `<div class="splash"><div class="seal">A</div><h2>Plenário Jonas Plínio</h2><p>A sessão ainda não foi aberta.</p></div>`;
+    body.innerHTML = `<div class="splash"><img class="seal" src="img/logoCamara.PNG" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>A sessão ainda não foi aberta.</p></div>`;
     return;
   }
   const vs = m ? votosDe(m.id) : [];
