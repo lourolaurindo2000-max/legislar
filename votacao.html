@@ -318,10 +318,13 @@ img.seal{border:0;border-radius:0;background:none;object-fit:contain;padding:0}
 .tv .tvfoot .row > * + *{margin-left:12px}
 .tv .tvfoot button{font-size:1rem;padding:6px 14px}
 .tv .tvfoot{display:none}
-.tv .tvcred{flex:none;overflow:hidden;white-space:nowrap;border-top:1px solid var(--line);padding-top:12px;color:var(--brass);font-size:1.25rem;letter-spacing:.02em}
+.tv .tvcred{flex:none;position:relative;overflow:hidden;white-space:nowrap;border-top:1px solid var(--line);padding-top:12px;color:var(--brass);font-size:1.25rem;letter-spacing:.02em}
 .tv .tvcred > span{display:inline-block;padding-left:100%;-webkit-animation:vp-cred 30s linear infinite;animation:vp-cred 30s linear infinite}
 @-webkit-keyframes vp-cred{from{-webkit-transform:translateX(0)}to{-webkit-transform:translateX(-100%)}}
 @keyframes vp-cred{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+.tv .tvsair{display:none;position:absolute;right:0;bottom:0;top:12px;padding:0 18px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--muted);font:inherit;font-size:1.05rem;cursor:pointer}
+.tv .tvsair:hover{color:var(--ink);border-color:var(--brass)}
+html.nb .tv .tvsair{display:block}
 .tv .tvcred .pt{display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;vertical-align:middle;margin:0 14px}
 
 /* ===================== TABLETS DOS VEREADORES ===================== */
@@ -609,7 +612,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
       </div>
       <div id="tvBody"></div>
       <div class="tvfoot"><span id="tvFootL"></span><span class="row"><button id="tvFull">Tela cheia</button><a href="#inicio" style="color:inherit">Sair</a></span></div>
-      <div class="tvcred"><span>&copy; Todos os direitos reservados a André Almeida — Desenvolvedor do Sistema (PLD) Plenário Legislativo Digital (Lei nº 9.610/1998)<span class="pt"></span>Versão 1.0</span></div>
+      <div class="tvcred"><span>&copy; Todos os direitos reservados a André Almeida — Desenvolvedor do Sistema (PLD) Plenário Legislativo Digital (Lei nº 9.610/1998)<span class="pt"></span>Versão 1.0</span><button type="button" class="tvsair" id="tvSair" title="Voltar para Operador, Vereador e Telão">Sair</button></div>
     </div>
   </div>
 </div>
@@ -1426,12 +1429,23 @@ $('#tvFull').addEventListener('click', () => {
   const el = document.documentElement;
   try{ (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen()).catch(()=>{}); }catch(e){}
 });
+/* Notebook (fora do quadro da TV, sem navegador de TV, com mouse/touchpad): mostra o botão Sair no telão */
+(function(){
+  let quadro = false; try{ quadro = window.self !== window.top; }catch(e){ quadro = true; }
+  const tvUA = /SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|AFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent);
+  let fino = false; try{ fino = matchMedia('(any-pointer: fine)').matches; }catch(e){}
+  if(!quadro && !tvUA && !EH_TABLET && fino) document.documentElement.classList.add('nb');
+  $('#tvSair').addEventListener('click', () => {
+    try{ if(document.fullscreenElement) document.exitFullscreen(); else if(document.webkitFullscreenElement) document.webkitExitFullscreen(); }catch(e){}
+    location.hash = '#inicio';
+  });
+})();
 /* Smart TV: qualquer tecla do controle remoto ou clique no telão coloca a TV em tela cheia */
 (function(){
   let emQuadro = false; try{ emQuadro = window.self !== window.top; }catch(e){ emQuadro = true; }
   function tvCheia(ev){
     if(ev && ev.type === 'keydown' && (ev.key === 'Escape' || ev.keyCode === 27)) return;
-    if(ev && ev.target && ev.target.closest && ev.target.closest('#tvFull')) return;
+    if(ev && ev.target && ev.target.closest && ev.target.closest('#tvFull, #tvSair')) return;
     if(emQuadro){ try{ if(window.top.__tvTelaCheia) window.top.__tvTelaCheia(); }catch(e){} return; }
     if(current !== 'v-telao' || document.fullscreenElement || document.webkitFullscreenElement) return;
     const el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen;
