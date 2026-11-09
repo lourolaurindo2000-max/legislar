@@ -458,6 +458,11 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 .msgarq{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .msgarq span{flex:1;min-width:0;overflow-wrap:anywhere}
 .msglist{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto}
+/* sem internet */
+.pill.off i{background:#f87171}
+.offbanner{background:#7a1d14;color:#fff;font-weight:600;padding:10px 16px;text-align:center;font-size:.95rem;line-height:1.35}
+.offbanner[hidden],.tvoff[hidden]{display:none}
+.tvoff{display:inline-block;margin-right:16px;padding:6px 14px;border-radius:99px;background:rgba(248,113,113,.18);color:#fca5a5;font-weight:700;font-size:1.1rem;letter-spacing:.04em}
 </style>
 </head>
 <body>
@@ -473,6 +478,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
       <a href="#inicio" id="homeLink">Início</a>
     </div>
   </header>
+  <div class="offbanner" id="offBanner" role="status" hidden></div>
 
   <!-- INÍCIO -->
   <main class="wrap" id="v-inicio" hidden>
@@ -610,6 +616,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
         <img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina">
         <div class="brand"><small>Câmara Municipal de Almadina · Plenário Jonas Plínio</small><b>Votação Plenária</b></div>
         <div class="sp"></div>
+        <span class="tvoff" id="tvOff" hidden>Reconectando…</span>
         <span class="tvstate" id="tvState">Sessão fechada</span>
         <span class="clock" id="tvClock">--:--</span>
       </div>
@@ -715,7 +722,19 @@ function voltarAoDashboard(){
 
 /* relógio do servidor (tablets, notebook e TV com o mesmo horário) */
 let OFFSET = 0;
+try{ OFFSET = +ls.get('vp_offset') || 0; }catch(e){}
 const agora = () => Date.now() + OFFSET;
+/* ===================== SEM INTERNET =====================
+   O Firebase guarda no próprio aparelho tudo o que for feito sem internet e envia sozinho quando a conexão volta.
+   Aqui: nenhuma ação fica "travada" esperando a internet (prazo curto), o último estado conhecido fica salvo
+   no aparelho (abre mesmo sem internet) e o voto dado sem internet fica guardado até ser entregue. */
+let ONLINE = false, JA_CONECTOU = false;
+const comPrazo = (p, ms, valorNoPrazo) => new Promise((res, rej) => {
+  let feito = false;
+  const t = setTimeout(() => { if(feito) return; feito = true; valorNoPrazo instanceof Error ? rej(valorNoPrazo) : res(valorNoPrazo); }, ms);
+  Promise.resolve(p).then(v => { if(feito) return; feito = true; clearTimeout(t); res(v); }, e => { if(feito) return; feito = true; clearTimeout(t); rej(e); });
+});
+const SEM_REDE = () => new Error('sem-internet');
 const Store = {
   db:null, mode:'conectando',
   ref(p){ return this.db.ref(RAIZ + '/' + p); },
@@ -724,8 +743,9 @@ const Store = {
       if(window.firebase && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.databaseURL){
         if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
         this.db = firebase.database();
-        this.mode = 'online';
-        this.db.ref('.info/serverTimeOffset').on('value', s => { OFFSET = s.val() || 0; });
+        this.mode = 'conectando';
+        setTimeout(() => { if(!ONLINE){ this.mode = 'offline'; render(); } }, 5000);
+        this.db.ref('.info/serverTimeOffset').on('value', s => { OFFSET = s.val() || 0; ls.set('vp_offset', String(OFFSET)); });
         /* quando a Votação foi aberta pela última vez no notebook (para o telão não mostrar "Sessão encerrada" antiga) */
         this.db.ref('legislar/painel/tela').on('value', s => { const v = s.val() || {}; ABERTA_EM = v.pagina === 'votacao.html' && v.em ? v.em : 0; render(); });
         if(EH_TABLET) this.db.ref('legislar/painel/tela').on('value', s => {
@@ -733,7 +753,13 @@ const Store = {
           TELA_OK = aberta === true;
           if(!aberta) voltarAoDashboard();
         });
-        this.db.ref('.info/connected').on('value', s => { this.mode = s.val() ? 'online' : 'conectando'; if(s.val()) tabletOnline(); render(); });
+        this.db.ref('.info/connected').on('value', s => {
+          const on = !!s.val(), antes = ONLINE;
+          ONLINE = on;
+          if(on){ this.mode = 'online'; tabletOnline(); setTimeout(reenviarPendentes, 1500); if(JA_CONECTOU && !antes) toast('Internet de volta. Tudo sincronizado.'); JA_CONECTOU = true; }
+          else if(JA_CONECTOU || this.mode === 'offline') this.mode = 'offline';
+          render();
+        });
         return;
       }
     }catch(e){ console.error(e); }
@@ -747,17 +773,64 @@ const Store = {
     if(!this.db) return Local.watchCol(c,cb);
     this.ref(c).on('value', s => { const v = s.val() || {}; cb(Object.keys(v).map(id => Object.assign({id:id}, v[id]))); }, onDbError);
   },
-  async get(p){ if(!this.db) return Local.get(p); const s = await this.ref(p).once('value'); return s.val(); },
-  async set(p,d){ if(!this.db) return Local.set(p,d); return this.ref(p).set(d); },
-  async del(p){ if(!this.db) return Local.del(p); return this.ref(p).remove(); },
-  /* grava só se ainda não existir (registro único do voto) */
+  /* leitura: sem internet usa o que já está no aparelho; se não houver, desiste em 3 s (não trava a tela) */
+  async get(p){ if(!this.db) return Local.get(p); const s = await comPrazo(this.ref(p).once('value'), 3000, SEM_REDE()); return s.val(); },
+  /* gravação: sem internet fica guardada no aparelho e o Firebase envia sozinho quando a conexão volta */
+  async set(p,d){ if(!this.db) return Local.set(p,d); return comPrazo(this.ref(p).set(d), 2500, 'pendente'); },
+  async del(p){ if(!this.db) return Local.del(p); return comPrazo(this.ref(p).remove(), 2500, 'pendente'); },
+  /* grava só se ainda não existir (registro único do voto).
+     Sem internet: a gravação fica na fila do aparelho e é confirmada no servidor quando a conexão voltar ('pendente'). */
   async setIfAbsent(p,d){
     if(!this.db) return Local.setIfAbsent(p,d);
-    const r = await this.ref(p).transaction(cur => cur ? undefined : d);
+    const r = await comPrazo(this.ref(p).transaction(cur => cur ? undefined : d), ONLINE ? 6000 : 1500, 'pendente');
+    if(r === 'pendente') return 'pendente';
     return r.committed;
   }
 };
-function onDbError(e){ console.error(e); toast(e && /permission/i.test(e.code||e.message||'') ? 'O Firebase recusou o acesso. Confira as regras do Realtime Database.' : 'Falha de conexão com o banco. Verifique a internet.'); }
+/* ---------- último estado conhecido guardado no aparelho (abre mesmo sem internet) ---------- */
+let cacheT = null, CACHE_PRONTO = false;
+function salvarCache(){
+  if(Store.mode === 'local' || !CACHE_PRONTO) return;
+  clearTimeout(cacheT);
+  cacheT = setTimeout(() => {
+    try{ ls.set('vp_cache', JSON.stringify({t:Date.now(), estado:S.estado, presenca:S.presenca, pauta:S.pauta, votos:S.votos, aparelhos:S.aparelhos, ensaio:ENSAIO, abertaEm:ABERTA_EM})); }catch(e){}
+  }, 600);
+}
+function carregarCache(){
+  try{
+    const c = JSON.parse(ls.get('vp_cache') || 'null');
+    if(!c || !c.t || Date.now() - c.t > 12*3600*1000) return;
+    S.estado = c.estado || null; S.presenca = c.presenca || {}; S.pauta = c.pauta || []; S.votos = c.votos || [];
+    S.aparelhos = c.aparelhos || {}; ENSAIO = !!c.ensaio; ABERTA_EM = c.abertaEm || 0;
+  }catch(e){}
+}
+/* ---------- votos dados sem internet: ficam guardados no tablet até o servidor confirmar ---------- */
+const PEND = 'vp_pend';
+const lerPend = () => { try{ return JSON.parse(ls.get(PEND) || '{}') || {}; }catch(e){ return {}; } };
+const gravarPend = o => { if(Object.keys(o).length) ls.set(PEND, JSON.stringify(o)); else ls.del(PEND); };
+let reenviando = false;
+async function reenviarPendentes(){
+  if(reenviando || !Store.db || !ONLINE) return;
+  const pend = lerPend(); if(!Object.keys(pend).length) return;
+  reenviando = true;
+  try{
+    const atual = await Store.get('sessao/atual');
+    for(const path of Object.keys(pend)){
+      const doc = pend[path];
+      const ja = await Store.get(path);
+      if(ja){ delete pend[path]; continue; }                       // já chegou ao servidor
+      if(atual && atual.votacao === 'aberta' && atual.pautaId === doc.pid){
+        const r = await Store.setIfAbsent(path, doc);
+        if(r === true || r === false) delete pend[path];
+      } else {
+        delete pend[path];                                          // votação já encerrada: o voto não pode mais entrar
+        toast('A votação foi encerrada antes de o voto guardado chegar ao servidor.');
+      }
+    }
+  }catch(e){ /* tenta de novo na próxima reconexão */ }
+  finally{ gravarPend(pend); reenviando = false; }
+}
+function onDbError(e){ console.error(e); if(!ONLINE && !/permission/i.test((e && (e.code||e.message)) || '')) return; toast(e && /permission/i.test(e.code||e.message||'') ? 'O Firebase recusou o acesso. Confira as regras do Realtime Database.' : 'Falha de conexão com o banco. Verifique a internet.'); }
 
 /* ---------- tablet do vereador: conectado / desconectado em tempo real ---------- */
 let wakeLock = null;
@@ -776,13 +849,10 @@ function tabletOffline(vid){
 }
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') tabletOnline(); });
 
-/* fila de escrita: uma gravação por vez por documento */
-const queues = {};
+/* gravação: o Firebase já envia na ordem em que foram feitas (também as feitas sem internet).
+   Não espera a confirmação do servidor para seguir — sem internet a tela não trava. */
 function write(path, data){
-  const prev = queues[path] || Promise.resolve();
-  const next = prev.catch(()=>{}).then(() => Store.set(path, data));
-  queues[path] = next;
-  return next.catch(e => { toast('Não foi possível gravar. Tente de novo.'); throw e; });
+  return Store.set(path, data).catch(e => { toast('Não foi possível gravar. Tente de novo.'); console.error(e); });
 }
 
 /* ===================== estado em memória ===================== */
@@ -929,9 +999,19 @@ function automacao(){
 /* ===================== render ===================== */
 function render(){
   const pill = $('#modePill');
-  pill.className = 'pill ' + (Store.mode === 'online' ? 'on' : Store.mode === 'local' ? 'loc' : '');
-  pill.querySelector('span').textContent = Store.mode === 'online' ? 'Ao vivo' : Store.mode === 'local' ? 'Modo local' : 'Conectando';
+  pill.className = 'pill ' + (Store.mode === 'online' ? 'on' : Store.mode === 'local' ? 'loc' : Store.mode === 'offline' ? 'off' : '');
+  pill.querySelector('span').textContent = Store.mode === 'online' ? 'Ao vivo' : Store.mode === 'local' ? 'Modo local' : Store.mode === 'offline' ? 'Sem internet' : 'Conectando';
   $('#localBanner').hidden = Store.mode !== 'local';
+  /* aviso de "sem internet" (no telão só um selo discreto no canto) */
+  const off = Store.mode === 'offline', nb = $('#offBanner'), sl = $('#tvOff');
+  if(nb){
+    nb.hidden = !off || current === 'v-telao';
+    nb.textContent = current === 'v-vereador' || current === 'v-ver-login'
+      ? 'Sem internet no momento. Pode votar normalmente: o voto fica guardado neste tablet e é enviado sozinho quando a conexão voltar.'
+      : 'Sem internet no momento. O sistema continua funcionando neste aparelho; tudo o que for feito agora é enviado sozinho quando a conexão voltar. Os votos dos tablets chegam assim que a internet voltar.';
+  }
+  if(sl) sl.hidden = !off || current !== 'v-telao';
+  salvarCache();
   const chk = $('#chkEnsaio'); if(chk && document.activeElement !== chk) chk.checked = ENSAIO;
   if(current === 'v-operador') renderOperador();
   if(current === 'v-vereador') renderVereador();
@@ -1092,28 +1172,44 @@ $('#opCurrent').addEventListener('click', ev => {
     setEstado({votacao:'aberta', inicioVotacao:agora(), resultado:null, pautaConcluida:false}); toast('Votação liberada nos tablets.');
   }
   if(id === 'btnDesmarcar') setEstado({pautaId:null});
-  if(id === 'btnEncerrar' && m) confirmBox({
-    titulo:'Encerrar a votação?', texto:`${votosDe(m.id).length} de ${presentes().length} presentes votaram. Quem não votou será contado como "não votou".`, ok:'Encerrar e apurar', cls:'stop',
+  if(id === 'btnEncerrar' && m){
+    const semRede = presentes().filter(v => !votosDe(m.id).some(x => x.vid === v.id) && !(S.login[v.id] && S.login[v.id].logado)).map(v => v.nome.split(' ')[0]);
+    const aviso = !ONLINE && Store.db ? ' ATENÇÃO: este computador está sem internet — votos dados nos tablets podem ainda não ter chegado. Se possível, espere a internet voltar.'
+      : semRede.length ? ` Atenção: tablet sem conexão agora: ${semRede.join(', ')} (o voto pode estar guardado no tablet esperando a internet).` : '';
+    confirmBox({
+    titulo:'Encerrar a votação?', texto:`${votosDe(m.id).length} de ${presentes().length} presentes votaram. Quem não votou será contado como "não votou".` + aviso, ok:'Encerrar e apurar', cls:'stop',
     onOk: () => encerrar(m)
-  });
+  }); }
   if(id === 'btnProxima') setEstado({votacao:'livre', pautaId:null, resultado:null, inicioVotacao:null, pautaConcluida:false});
 });
+let encerrando = false;   // evita apurar duas vezes (automático + botão ao mesmo tempo)
 async function encerrar(m){
-  let vs = votosDe(m.id);
+  if(encerrando) return; encerrando = true;
   try{
-    const todos = await Store.get('votos');
-    if(todos) vs = Object.keys(todos).map(id => Object.assign({id:id}, todos[id])).filter(v => v.pid === m.id);
-  }catch(e){}
-  const sim = vs.filter(v=>v.voto==='sim').length, nao = vs.filter(v=>v.voto==='nao').length, abs = vs.filter(v=>v.voto==='abs').length;
-  const naoVotou = Math.max(0, presentes().length - vs.length);
-  const apuracao = {sim:sim, nao:nao, abs:abs, naoVotou:naoVotou};
-  if(sim === nao){
-    // EMPATE: o Presidente da Mesa desempata
-    await setEstado({votacao:'desempate', apuracao:apuracao});
-    toast(E().presidente ? 'Empate! Aguardando o voto de desempate do Presidente.' : 'Empate! Selecione o Presidente da Mesa para desempatar.');
-    return;
-  }
-  await finalizar(m, apuracao, null);
+    const a = E(); if(a.votacao !== 'aberta' || a.pautaId !== m.id) return;
+    let vs = votosDe(m.id);
+    try{
+      const todos = await Store.get('votos');
+      if(todos) vs = Object.keys(todos).map(id => Object.assign({id:id}, todos[id])).filter(v => v.pid === m.id);
+    }catch(e){}
+    const sim = vs.filter(v=>v.voto==='sim').length, nao = vs.filter(v=>v.voto==='nao').length, abs = vs.filter(v=>v.voto==='abs').length;
+    const naoVotou = Math.max(0, presentes().length - vs.length);
+    /* quem foi contado nesta apuração (um voto que chegue depois do encerramento não muda o resultado nem a ata) */
+    const contados = {}; vs.forEach(v => { contados[v.vid] = v.voto; });
+    const apuracao = {sim:sim, nao:nao, abs:abs, naoVotou:naoVotou, contados:contados};
+    if(sim === nao){
+      // EMPATE: o Presidente da Mesa desempata
+      await setEstado({votacao:'desempate', apuracao:apuracao});
+      toast(E().presidente ? 'Empate! Aguardando o voto de desempate do Presidente.' : 'Empate! Selecione o Presidente da Mesa para desempatar.');
+      return;
+    }
+    await finalizar(m, apuracao, null);
+  } finally { encerrando = false; }
+}
+/* votos que valeram na apuração (quando a apuração guardou a lista); senão, os votos gravados */
+function votosValidos(m, r){
+  if(r && r.contados) return Object.keys(r.contados).map(vid => ({id:m.id+'__'+vid, pid:m.id, vid:vid, voto:r.contados[vid]}));
+  return votosDe(m.id);
 }
 /* grava o resultado final (minerva = voto de desempate do Presidente, quando houve empate) */
 async function finalizar(m, ap, minerva){
@@ -1128,9 +1224,14 @@ async function finalizar(m, ap, minerva){
 /* voto de desempate: vale só uma vez por matéria */
 let desempatando = false;
 async function desempatar(voto){
-  if(desempatando) return; desempatando = true;
+  if(desempatando) return;
+  /* no tablet, o desempate precisa de internet (evita o tablet e a Mesa registrarem dois desempates diferentes) */
+  if(EH_TABLET && Store.db && !ONLINE) return toast('Sem internet neste tablet. O desempate pode ser registrado pela Mesa, no painel do Operador.');
+  desempatando = true;
   try{
-    const m = pautaAtual(), atual = await Store.get('sessao/atual');
+    const m = pautaAtual();
+    let atual = null;
+    try{ atual = await Store.get('sessao/atual'); }catch(e){ atual = S.estado; }
     if(!m || !atual || atual.votacao !== 'desempate' || atual.pautaId !== m.id) return toast('Não há desempate pendente.');
     const ok = await Store.setIfAbsent('desempate/' + m.id, {voto:voto, presidente:atual.presidente || '', ts:agora()});
     if(!ok) return toast('O desempate já foi registrado.');
@@ -1176,7 +1277,7 @@ function gerarRelatorio(){
   const logo = new URL('img/brasao.png', location.href).href;
   const NOME_VOTO = {sim:'SIM', nao:'NÃO', abs:'ABSTENÇÃO'};
   const blocos = materias.map((m, i) => {
-    const r = m.resultado, vs = votosDe(m.id);
+    const r = m.resultado, vs = votosValidos(m, r);
     const linhas = VEREADORES.map(v => {
       const x = vs.find(y => y.vid === v.id);
       const voto = x ? NOME_VOTO[x.voto] : 'NÃO VOTOU';
@@ -1363,17 +1464,21 @@ async function votar(voto){
     if(!vid || !m || e.votacao !== 'aberta') return toast('A votação não está aberta.');
     if(!(S.presenca[vid] && S.presenca[vid].presente)) return toast('Você não consta como presente.');
     if(!ENSAIO && (!S.aparelhos[vid] || S.aparelhos[vid].dev !== DEV)) return toast('Este tablet não é o aparelho deste vereador.');
-    try{
-      const atual = await Store.get('sessao/atual');
-      if(!atual || atual.votacao !== 'aberta' || atual.pautaId !== m.id) return toast('A votação desta matéria já foi encerrada.');
-    }catch(e){ toast('Sem conexão. Verifique a internet e tente de novo.'); return; }
+    if(S.votos.some(x => x.pid === m.id && x.vid === vid)) return toast('Seu voto já foi registrado.');
+    if(ONLINE){
+      try{
+        const atual = await Store.get('sessao/atual');
+        if(!atual || atual.votacao !== 'aberta' || atual.pautaId !== m.id) return toast('A votação desta matéria já foi encerrada.');
+      }catch(e){ /* sem resposta do servidor: segue com o estado que está no tablet */ }
+    }
     const path = 'votos/' + m.id + '__' + vid;
     const doc = {pid:m.id, vid, voto, ts:agora()};
     let gravou = false;
     try{ gravou = await Store.setIfAbsent(path, doc); }catch(e){ toast('Não foi possível gravar o voto. Tente de novo.'); return; }
     if(!gravou){ toast('Seu voto já foi registrado.'); return; }
+    if(gravou === 'pendente'){ const p = lerPend(); p[path] = doc; gravarPend(p); }
     S.votos = [...S.votos.filter(x=>x.id!==m.id+'__'+vid), Object.assign({id:m.id+'__'+vid}, doc)]; render();
-    toast('Voto registrado.');
+    toast(gravou === 'pendente' ? 'Voto guardado no tablet. Será enviado assim que a internet voltar.' : 'Voto registrado.');
     /* depois de confirmar o voto, mostra "Voto registrado" por 3 s e volta sozinho para a tela de vereadores (sem apertar Sair) */
     clearTimeout(saidaVotoT);
     saidaVotoT = setTimeout(() => { saidaVotoT = null; if(ls.get('vp_vid') === vid) sairVereador(); }, 3000);
@@ -1411,7 +1516,7 @@ function renderTelao(){
       return;
     }
   }
-  const vs = m ? votosDe(m.id) : [];
+  const vs = !m ? [] : e.votacao === 'encerrada' ? votosValidos(m, e.resultado) : e.votacao === 'desempate' ? votosValidos(m, e.apuracao) : votosDe(m.id);
   const enc = e.votacao === 'encerrada' || e.votacao === 'desempate';
   const grid = VEREADORES.map(v => {
     const p = S.presenca[v.id] && S.presenca[v.id].presente;
@@ -1541,12 +1646,12 @@ const Mensagens = (() => {
   function baixar(id, b){
     const m = porId[id]; if(!m || !m.arquivo || !refArq) return;
     b.disabled = true; toast('Abrindo ' + m.arquivo.nome + '…');
-    refArq.child(id).once('value').then(s => {
+    comPrazo(refArq.child(id).once('value'), ONLINE ? 30000 : 4000, SEM_REDE()).then(s => {
       const v = s.val() || {}; let d = '';
       for(let i = 0; i < (m.arquivo.partes || 0); i++) d += (v[i] || v[String(i)] || '');
       if(!d) throw new Error('vazio');
       VerDoc.abrir(d, m.arquivo.nome, m.arquivo.tipo);   // abre para leitura, sem baixar
-    }).catch(() => toast('Não foi possível abrir o arquivo.')).then(() => { b.disabled = false; });
+    }).catch(() => toast(ONLINE ? 'Não foi possível abrir o arquivo.' : 'Sem internet: o arquivo abre quando a conexão voltar.')).then(() => { b.disabled = false; });
   }
   function limparArq(){ arqSel = null; $('#msgArqNome').textContent = 'Nenhum arquivo (opcional). Até 10 MB.'; $('#msgArqTirar').hidden = true; }
   const lerArquivo = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error('leitura')); r.readAsDataURL(f); });
@@ -1573,7 +1678,7 @@ const Mensagens = (() => {
     const a = ev.target.closest && ev.target.closest('[data-apagar-msg]'); if(!a || !refMsgs) return;
     const id = a.getAttribute('data-apagar-msg');
     confirmBox({titulo:'Apagar mensagem', texto:'Apagar esta mensagem de todas as telas?', ok:'Apagar', cls:'stop', onOk: () =>
-      Promise.all([refMsgs.child(id).remove(), refArq.child(id).remove()]).then(() => toast('Mensagem apagada.')).catch(() => toast('Não foi possível apagar. Verifique a internet.'))});
+      comPrazo(Promise.all([refMsgs.child(id).remove(), refArq.child(id).remove()]), 3000, 'pendente').then(() => toast('Mensagem apagada.')).catch(() => toast('Não foi possível apagar. Verifique a internet.'))});
   });
   $('#msgArqBtn').addEventListener('click', () => $('#msgArquivo').click());
   $('#msgArqTirar').addEventListener('click', limparArq);
@@ -1585,6 +1690,7 @@ const Mensagens = (() => {
   $('#msgForm').addEventListener('submit', ev => {
     ev.preventDefault();
     if(!refMsgs) return toast('Sem conexão com o Firebase.');
+    if(!ONLINE) return toast('Sem internet agora. A mensagem pode ser enviada quando a conexão voltar (a votação continua funcionando).');
     const texto = $('#msgTexto').value.trim(), f = arqSel;
     if(!texto && !f) return toast('Escreva uma mensagem ou anexe um arquivo.');
     const id = refMsgs.push().key;
@@ -1611,6 +1717,8 @@ const Mensagens = (() => {
 (async function start(){
   route();
   await Store.init();
+  if(Store.db) carregarCache();   /* sem internet: começa com o último estado conhecido deste aparelho */
+  CACHE_PRONTO = true;
   render();
   Store.watchDoc('sessao/atual', d => { S.estado = d; render(); if(EH_TABLET && !TELA_OK) voltarAoDashboard(); if(EH_TABLET && d && d.pautaConcluida) sairConcluido(); });
   Store.watchCol('login', list => { S.login = porId(list); render(); });

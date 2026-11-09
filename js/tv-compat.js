@@ -35,6 +35,14 @@
     if (cs && cs.src) base = cs.src.replace(/[^\/]*$/, '');
 
     W.__ES_MODERNO = sintaxeOk;
+
+    // ---------- sem internet: guarda as páginas no aparelho (sw.js na raiz do site) ----------
+    try {
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost') && base) {
+            var raiz = base.replace(/js\/$/, '');
+            W.addEventListener('load', function () { navigator.serviceWorker.register(raiz + 'sw.js', { scope: raiz })['catch'](function () {}); });
+        }
+    } catch (e) {}
     if (!apisOk || !sintaxeOk) D.write('<script src="' + base + 'core-js.min.js"><\/script>');
     if (!sintaxeOk) D.write('<script src="' + base + 'babel.min.js"><\/script>');
 
