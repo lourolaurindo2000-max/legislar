@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+    <script src="js/tv-compat.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a1022">
 <meta name="mobile-web-app-capable" content="yes">
@@ -622,9 +623,9 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 <div id="msgRoot"></div>
 
 <script src="visualizar.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script>
+<!-- Firebase 10 nos navegadores novos; Firebase 8 nas Smart TVs antigas (ex.: Hisense) — ver js/tv-compat.js -->
+<script>__fb()</script>
+<script id="app-votacao">window.__ok_votacao = 1;   /* TV antiga: se este bloco não rodar, js/tv-compat.js converte e roda */
 /* ===================== dados fixos ===================== */
 const VEREADORES = [
   {id:'v1', nome:'Jackson Costa',     ap:1, foto:'https://2.gravatar.com/userimage/277172047/8039d08ed8a294328b8f8b70bbbeb765?size=240'},
@@ -1630,5 +1631,6 @@ const Mensagens = (() => {
   }
 })();
 </script>
+<script>__es5('app-votacao', '__ok_votacao')</script>
 </body>
 </html>

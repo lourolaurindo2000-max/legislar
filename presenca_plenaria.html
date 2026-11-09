@@ -1,4 +1,5 @@
 <!doctype html><html><head><meta charset=utf8>
+    <script src="js/tv-compat.js"></script>
     <!-- ACESSO DA PRESIDÊNCIA: no aparelho de controle, Controle de Fala e Presença Plenária pedem a senha (o Sorteio de Fala não).
          A Smart TV (quadro da TV, aparelho marcado como TV ou navegador de TV) abre sem senha.
          A senha é pedida toda vez que o sistema é aberto. -->
@@ -169,8 +170,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@600;700&display=swap">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <!-- Firebase: presença sincronizada em tempo real entre todos os aparelhos -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<!-- Firebase 10 nos navegadores novos; Firebase 8 nas Smart TVs antigas (ex.: Hisense) — ver js/tv-compat.js -->
+<script>__fb()</script>
 <style>
 /* Layout: cabeçalho de sessão > faixa de 5 indicadores > presidência em destaque > grade do plenário. Mesa = gaveta lateral. Visual único escuro (painel de TV). */
 :root{

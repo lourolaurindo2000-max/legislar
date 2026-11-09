@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <script src="js/tv-compat.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso ao Sistema</title>
     <!-- Google Fonts -->
@@ -464,7 +465,7 @@
         </p>
     </footer>
 
-    <script>
+    <script id="app-index">window.__ok_index = 1;   /* TV antiga: se este bloco não rodar, js/tv-compat.js converte e roda */
         $(document).ready(function() {
             // CREDENCIAIS DE ACESSO
             const CREDENCIAIS_VALIDAS = {
@@ -560,5 +561,6 @@
             });
         });
     </script>
+<script>__es5('app-index', '__ok_index')</script>
 </body>
 </html>

@@ -2,9 +2,11 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <script src="js/tv-compat.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sorteio Plenário</title>
     <!-- Tailwind CSS -->
+    <script>__twcss('js/tw-sorteio.css')</script>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -301,10 +303,10 @@
     </div>
 
     <!-- Firebase (sincronização em tempo real) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <!-- Firebase 10 nos navegadores novos; Firebase 8 nas Smart TVs antigas (ex.: Hisense) — ver js/tv-compat.js -->
+    <script>__fb()</script>
 
-    <script>
+    <script id="app-sorteio">window.__ok_sorteio = 1;   /* TV antiga: se este bloco não rodar, js/tv-compat.js converte e roda */
         $(document).ready(function() {
             // Lista oficial dos 9 parlamentares com fotos profissionais
             const vereadoresOriginais = [
@@ -750,5 +752,6 @@
             }
         });
     </script>
+<script>__es5('app-sorteio', '__ok_sorteio')</script>
 </body>
 </html>

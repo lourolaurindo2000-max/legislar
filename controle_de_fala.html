@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <script src="js/tv-compat.js"></script>
     <!-- ACESSO DA PRESIDÊNCIA: no aparelho de controle, Controle de Fala e Presença Plenária pedem a senha (o Sorteio de Fala não).
          A Smart TV (quadro da TV, aparelho marcado como TV ou navegador de TV) abre sem senha.
          A senha é pedida toda vez que o sistema é aberto. -->
@@ -76,6 +77,7 @@
             background: linear-gradient(to bottom, #0B2545, #0A0F1D 50%, #0A0F1D); }
     </style>
     <!-- Tailwind CSS para estilização moderna e responsiva -->
+    <script>__twcss('js/tw-controle.css')</script>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -85,7 +87,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
     
     <script>
-        tailwind.config = {
+        if (window.tailwind) tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
@@ -642,10 +644,10 @@
     </div>
 
     <!-- Firebase (sincronização em tempo real) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <!-- Firebase 10 nos navegadores novos; Firebase 8 nas Smart TVs antigas (ex.: Hisense) — ver js/tv-compat.js -->
+    <script>__fb()</script>
 
-    <script>
+    <script id="app-controle">window.__ok_controle = 1;   /* TV antiga: se este bloco não rodar, js/tv-compat.js converte e roda */
         $(document.body).ready(function() {
             
             // --- BASE DE DADOS DOS 9 VEREADORES FICTÍCIOS ---
@@ -1342,6 +1344,7 @@
             updateTimerDisplay();
         });
     </script>
+<script>__es5('app-controle', '__ok_controle')</script>
     <script>
         // Smart TV: garante que o orador e o cronômetro sempre caibam na tela (qualquer TV / proporção)
         (function () {

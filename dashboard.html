@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <script src="js/tv-compat.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>O Legislativo</title>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -659,8 +660,8 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <!-- Firebase 10 nos navegadores novos; Firebase 8 nas Smart TVs antigas (ex.: Hisense) — ver js/tv-compat.js -->
+    <script>__fb()</script>
     <script>
         (function () {
             if (typeof firebase === 'undefined') return;
