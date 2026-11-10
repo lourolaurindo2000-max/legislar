@@ -1536,8 +1536,8 @@ async function votar(voto){
     if(!gravou){ toast('Seu voto já foi registrado.'); return; }
     if(gravou === 'pendente'){ const p = lerPend(); p[path] = doc; gravarPend(p); }
     S.votos = [...S.votos.filter(x=>x.id!==m.id+'__'+vid), Object.assign({id:m.id+'__'+vid}, doc)]; render();
-    /* som do voto só na Smart TV (js/bip-tv.js), o tablet fica em silêncio: Aprovar = urna, Reprovar = buzina, Abster = bip */
-    const som = voto==='sim' ? 'urna' : voto==='nao' ? 'buzina' : 'bip';
+    /* som do voto só na Smart TV (js/bip-tv.js), o tablet fica em silêncio: Aprovar = urna, Reprovar = 'reprova' (tu-tum), Abster = bip */
+    const som = voto==='sim' ? 'urna' : voto==='nao' ? 'reprova' : 'bip';
     if(gravou !== 'pendente') Store.set('som', {tipo:som, em:agora(), n:Math.floor(Math.random()*1e9)}).catch(()=>{});
     toast(gravou === 'pendente' ? 'Voto guardado no tablet. Será enviado assim que a internet voltar.' : 'Voto registrado.');
     /* depois de confirmar o voto, mostra "Voto registrado" por 3 s e volta sozinho para a tela de vereadores (sem apertar Sair) */

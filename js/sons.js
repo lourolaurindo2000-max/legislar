@@ -1,7 +1,7 @@
 /* Sons do plenário (ES5) — window.PldSom
    tocar('bip')    bip curto (Presença e Abster)
    tocar('urna')   sequência rápida de bips agudos com nota final, no estilo da urna eletrônica (Aprovar)
-   tocar('buzina') toque curto de buzina, 0,28 s (Reprovar)
+   tocar('reprova') duas notas graves descendentes "tu-tum", 0,45 s (Reprovar; 'buzina' antigo também cai aqui)
    Os sons são gerados aqui mesmo (sem arquivos). Usa Web Audio; se a TV/navegador não tiver,
    toca o mesmo som como WAV. Navegadores só liberam som depois de um toque/tecla: destravar(). */
 (function () {
@@ -24,13 +24,17 @@
         f = notas[k][0]; n = Math.floor(notas[k][1] * TAXA);
         for (i = 0; i < n; i++) { t = i / TAXA; amostras.push(0.42 * env(t, notas[k][1], 0.004, k === notas.length - 1 ? 0.12 : 0.006) * quadradoSuave(2 * Math.PI * f * t)); }
       }
-    } else if (tipo === 'buzina') {
-      var dur = 0.28; n = Math.floor(dur * TAXA);   // buzina curta (toque rápido), a pedido do usuário
-      for (i = 0; i < n; i++) {
-        t = i / TAXA;
-        var a = 2 * ((t * 349) % 1) - 1, b = 2 * ((t * 440) % 1) - 1, c = 2 * ((t * 174.5) % 1) - 1;
-        var v = (0.45 * a + 0.4 * b + 0.25 * c) * 1.6;
-        amostras.push(0.45 * env(t, dur, 0.012, 0.05) * clamp(v));
+    } else if (tipo === 'reprova') {
+      // duas notas descendentes (Si -> Fá), timbre suave (seno + um pouco de harmônico), com pequena pausa
+      var rep = [[494, 0.15], [0, 0.04], [349, 0.26]], fr, du, fase;
+      for (k = 0; k < rep.length; k++) {
+        fr = rep[k][0]; du = rep[k][1]; n = Math.floor(du * TAXA);
+        for (i = 0; i < n; i++) {
+          t = i / TAXA;
+          if (!fr) { amostras.push(0); continue; }
+          fase = 2 * Math.PI * fr * t;
+          amostras.push(0.5 * env(t, du, 0.008, k === 2 ? 0.12 : 0.03) * (Math.sin(fase) * 0.75 + Math.sin(2 * fase) * 0.2 + Math.sin(3 * fase) * 0.1));
+        }
       }
     } else {
       n = Math.floor(0.12 * TAXA);
@@ -66,7 +70,7 @@
     try { var el = new Audio(wav(tipo)); el.volume = 1; var r = el.play(); if (r && r['catch']) r['catch'](function () {}); } catch (e) {}
   }
   function tocar(tipo) {
-    tipo = tipo === 'urna' || tipo === 'buzina' ? tipo : 'bip';
+    tipo = tipo === 'urna' ? 'urna' : (tipo === 'reprova' || tipo === 'buzina') ? 'reprova' : 'bip';
     var c = contexto();
     if (!c || !c.createBuffer) { reserva(tipo); return; }
     try {
