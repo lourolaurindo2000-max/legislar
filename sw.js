@@ -8,7 +8,7 @@
  * - Bibliotecas externas (Firebase, Font Awesome, fontes, fotos): usa a cópia guardada e atualiza por trás.
  * - O banco de dados (Firebase Realtime Database) NUNCA passa por aqui.
  */
-var VERSAO = 'pld-offline-v6';
+var VERSAO = 'pld-offline-v7';
 var PAGINAS = [
   './', 'index.html', 'dashboard.html', 'votacao.html', 'controle_de_fala.html', 'presenca_plenaria.html',
   'sistema_sorteio.html', 'visualizar.js', 'js/tv-compat.js', 'js/tw-controle.css', 'js/tw-sorteio.css',
@@ -59,7 +59,9 @@ function redePrimeiro(req) {
         });
       }
       var t = setTimeout(function () { if (!feito) daCopia(null); }, 4000);
-      fetch(req).then(function (r) {
+      // no-cache: sempre confere com o servidor (o GitHub manda guardar 10 min; sem isto os tablets ficavam com versão velha)
+      var busca = new URL(req.url).origin === self.location.origin ? fetch(req.url, { cache: 'no-cache' }) : fetch(req);
+      busca.then(function (r) {
         if (r && r.ok && r.type === 'basic') { var cp = r.clone(); c.put(chave, cp).catch(function () {}); }
         if (!feito) { feito = true; clearTimeout(t); resolve(r); }
       }).catch(function () {

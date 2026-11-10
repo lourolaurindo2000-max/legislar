@@ -64,7 +64,7 @@
     '#ft-barra .ft-bt{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;margin:0 12px}' +
     '#ft-barra button{background:#e6b955;color:#0a1022;border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;font-family:inherit}';
 
-  var aberto = false, est = null, dados = {}, foto = {}, offset = 0, minimizado = false, fotoAtual = '';
+  var estavaVisivel = false, aberto = false, est = null, dados = {}, foto = {}, offset = 0, minimizado = false, fotoAtual = '';
   var tela, barra;
 
   function el(id) { return document.getElementById(id); }
@@ -90,18 +90,20 @@
   }
   function mmss(s) { var m = Math.floor(s / 60), r = s % 60; return (m < 10 ? '0' : '') + m + ':' + (r < 10 ? '0' : '') + r; }
 
-  // Mostra durante a fala (rodando ou pausada); depois do fim fica 10 s e some.
+  // Mostra durante a fala (rodando ou pausada) e só com o Controle de Fala aberto no notebook.
   function visivel() {
     if (!est || !aberto) return false;   // notebook saiu do Controle de Fala: tablets voltam à página do Legislar
-    if (est.running || est.status === 'discurso' || est.status === 'pausado') return true;
-    if ((est.status === 'esgotado' || est.status === 'concluida') && est.fimId) return agora() - est.fimId < 10000;
-    return false;
+    // só durante a fala; finalizou (Zerar/esgotado) = fecha na hora
+    return !!(est.running || est.status === 'discurso' || est.status === 'pausado');
   }
 
   function render() {
     if (!tela) return;
     var ver = visivel();
     if (!ver) minimizado = false;
+    // a fala saiu da tela do tablet: volta para a página principal do Legislativo
+    if (!ver && estavaVisivel && !/dashboard\.html$/.test(location.pathname)) { estavaVisivel = false; location.href = 'dashboard.html'; return; }
+    estavaVisivel = ver;
     tela.className = ver && !minimizado ? 'ft-on' : '';
     barra.className = ver && minimizado ? 'ft-on' : '';
     if (!ver) return;
