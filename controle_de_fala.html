@@ -1158,6 +1158,20 @@
             if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) ehTV = true;   // navegador de Smart TV (Samsung, LG, Sony, Android/Google TV, Fire TV, Roku…)
             if (ehTV) { $('#btn-admin').remove(); $('#btn-tv-tela').remove(); $('#cf-sair').remove(); }
 
+            // Tablets (js/fala-tablet.js): só mostram o vereador enquanto o Controle de Fala está aberto no notebook.
+            // O notebook marca "aberto"; ao sair, fechar a aba ou cair a conexão, o banco apaga sozinho (onDisconnect).
+            if (!ehTV) {
+                const refAberto = db.ref('legislar/controleFala/notebookAberto');
+                db.ref('.info/connected').on('value', s => {
+                    if (s.val() !== true) return;
+                    refAberto.onDisconnect().remove();
+                    refAberto.set(firebase.database.ServerValue.TIMESTAMP);
+                });
+                const fechar = () => { try { refAberto.remove(); } catch (e) {} };
+                window.addEventListener('pagehide', fechar);
+                document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#cf-sair')) fechar(); }, true);
+            }
+
             // =====================================================================
             //  TELA DE ESPERA DA SMART TV
             //  A TV só mostra o vereador quando o notebook escolhe o orador ou inicia a fala.

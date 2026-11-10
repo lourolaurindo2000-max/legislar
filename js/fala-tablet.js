@@ -2,7 +2,8 @@
    Quando o notebook clica em "Iniciar" no Controle de Fala, todos os tablets mostram
    o vereador que está falando (foto, nome, partido e o tempo restante).
    Só funciona nos tablets/celulares: Smart TV e notebook não são alterados.
-   Lê (nunca grava) legislar/controleFala/estado, /dados e /fotos. */
+   Lê (nunca grava) legislar/controleFala/estado, /dados, /fotos e /notebookAberto
+   (marcado pelo notebook enquanto o Controle de Fala está aberto). */
 (function () {
   var ehTablet = false;
   try {
@@ -63,7 +64,7 @@
     '#ft-barra .ft-bt{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;margin:0 12px}' +
     '#ft-barra button{background:#e6b955;color:#0a1022;border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:14px;font-family:inherit}';
 
-  var est = null, dados = {}, foto = {}, offset = 0, minimizado = false, fotoAtual = '';
+  var aberto = false, est = null, dados = {}, foto = {}, offset = 0, minimizado = false, fotoAtual = '';
   var tela, barra;
 
   function el(id) { return document.getElementById(id); }
@@ -91,7 +92,7 @@
 
   // Mostra durante a fala (rodando ou pausada); depois do fim fica 10 s e some.
   function visivel() {
-    if (!est) return false;
+    if (!est || !aberto) return false;   // notebook saiu do Controle de Fala: tablets voltam à página do Legislar
     if (est.running || est.status === 'discurso' || est.status === 'pausado') return true;
     if ((est.status === 'esgotado' || est.status === 'concluida') && est.fimId) return agora() - est.fimId < 10000;
     return false;
@@ -152,6 +153,7 @@
     document.addEventListener('touchend', pedirTelaCheia, true);
     document.addEventListener('click', pedirTelaCheia, true);
     db.ref('.info/serverTimeOffset').on('value', function (s) { offset = s.val() || 0; });
+    db.ref('legislar/controleFala/notebookAberto').on('value', function (s) { aberto = !!s.val(); render(); });
     db.ref('legislar/controleFala/dados').on('value', function (s) { dados = s.val() || {}; render(); });
     db.ref('legislar/controleFala/estado').on('value', function (s) {
       var v = s.val();
