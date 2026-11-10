@@ -20,9 +20,29 @@
   document.addEventListener('keydown', destravar, true);
   document.addEventListener('click', destravar, true);
 
+  // Reserva para TVs sem Web Audio: o mesmo bip como arquivo WAV gerado aqui (8 kHz, 8 bits, 0,12 s)
+  var wav = null;
+  function gerarWav() {
+    var taxa = 8000, n = Math.floor(taxa * 0.12), i, d = '';
+    function u32(x) { return String.fromCharCode(x & 255, (x >> 8) & 255, (x >> 16) & 255, (x >> 24) & 255); }
+    function u16(x) { return String.fromCharCode(x & 255, (x >> 8) & 255); }
+    for (i = 0; i < n; i++) {
+      var env = Math.min(1, i / 80) * Math.min(1, (n - i) / 400);
+      d += String.fromCharCode(Math.round(128 + 90 * env * Math.sin(2 * Math.PI * 1046 * i / taxa)));
+    }
+    return 'data:audio/wav;base64,' + btoa('RIFF' + u32(36 + n) + 'WAVEfmt ' + u32(16) + u16(1) + u16(1) + u32(taxa) + u32(taxa) + u16(1) + u16(8) + 'data' + u32(n) + d);
+  }
+  function bipReserva() {
+    try {
+      if (!wav) wav = gerarWav();
+      var a = new Audio(wav); a.volume = 1;
+      var r = a.play(); if (r && r['catch']) r['catch'](function () {});
+    } catch (e) {}
+  }
+
   function bip() {
     var c = contexto();
-    if (!c) return;
+    if (!c) { bipReserva(); return; }
     try {
       if (c.state === 'suspended' && c.resume) c.resume();
       var t = c.currentTime, o = c.createOscillator(), g = c.createGain();
@@ -32,7 +52,7 @@
       g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
       o.connect(g); g.connect(c.destination);
       o.start(t); o.stop(t + 0.14);
-    } catch (e) {}
+    } catch (e) { bipReserva(); }
   }
 
   var tentativas = 0;
