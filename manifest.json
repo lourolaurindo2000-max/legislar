@@ -1,0 +1,12 @@
+{
+  "name": "Plenário Jonas Plínio — Câmara Municipal de Almadina",
+  "short_name": "Plenário",
+  "start_url": "dashboard.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "background_color": "#0B2545",
+  "theme_color": "#2c5282",
+  "icons": [
+    { "src": "img/logoCamara.PNG", "sizes": "600x600", "type": "image/png", "purpose": "any" }
+  ]
+}
