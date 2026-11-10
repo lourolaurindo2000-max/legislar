@@ -792,7 +792,7 @@
                     a.addEventListener('click', function () {
                         a.href = arq + '?v=' + Date.now();   // sempre abre a versão mais nova do sistema
                         // Sorteio: abrir o sistema NÃO zera mais a urna (zerar fazia vereador já sorteado sair de novo).
-                        // A urna só recomeça com "Nova urna", após os 9 sorteados ou 3 h sem sorteio.
+                        // A urna só recomeça após os 9 sorteados, com "Zerar urna" (administrador) ou 3 h sem sorteio.
                         if (arq === 'votacao.html') {
                             // Votação nova: tira o aviso "Sessão encerrada" da sessão anterior (o telão mostra "ainda não começou")
                             rt.ref('legislar/votacao/sessao/atual').transaction(function (cur) {

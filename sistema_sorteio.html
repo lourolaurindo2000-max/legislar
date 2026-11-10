@@ -245,11 +245,6 @@
             <p id="total-info" class="text-center sm:text-left">09 Vereadores na urna</p>
 
             <div class="flex items-center gap-2">
-                <!-- Nova urna (só no notebook do operador): devolve os 9 vereadores para a urna -->
-                <button id="btn-nova-urna" type="button" style="display:none" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg gold-border transition-all flex items-center gap-2 cursor-pointer shadow-md">
-                    <i class="fa-solid fa-box-open text-amber-400"></i> Nova urna
-                </button>
-
                 <!-- Tela Cheia -->
                 <button id="btn-tv-mode" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg gold-border transition-all flex items-center gap-2 cursor-pointer shadow-md">
                     <i id="tv-mode-icon" class="fa-solid fa-expand text-amber-400"></i> <span id="tv-mode-text">Tela Cheia</span>
@@ -400,8 +395,8 @@
 
             // Fotos ficam no banco como v0..v8 (índice do vereador)
             const fotoDe = i => (cfg.fotos && cfg.fotos['v' + i]) || FOTOS_PADRAO[i];
-            // URNA: os vereadores sorteados ficam guardados no banco até sair todo mundo (9), até o operador
-            // clicar em "Nova urna", ou até passar 3 horas sem sorteio (outra sessão).
+            // URNA: os vereadores sorteados ficam guardados no banco até sair todo mundo (9), até o administrador
+            // usar "Zerar urna", ou até passar 3 horas sem sorteio (outra sessão).
             // Sair do Sorteio (ex.: ir ao Controle de Fala) e voltar NÃO devolve ninguém para a urna —
             // assim nenhum vereador é sorteado duas vezes na mesma sessão.
             const VALIDADE_MS = 3 * 60 * 60 * 1000;
@@ -477,8 +472,13 @@
                 const visiveis = contando() ? todos.slice(0, -1) : todos;
                 sorteadosHistorico = visiveis.map(i => vereadoresOriginais[i]).filter(Boolean);
                 const restantes = TOTAL - visiveis.length;
+                // Tela limpa: ao abrir/recarregar o Sorteio não aparece nenhum vereador até o operador clicar em Sortear.
+                // A urna continua guardada no banco (quem já saiu não é sorteado de novo).
+                const telaLimpa = !contando() && !(abertaEm > 0 && estado.fim && estado.fim >= abertaEm - MARGEM_TV);
+                if (telaLimpa) sorteadosHistorico = [];
 
-                $('#total-info').text(visiveis.length === 0 ? '09 Vereadores na urna' : `${restantes} de 9 vereadores restantes na urna`);
+                // Com os 9 já sorteados, o próximo clique começa um ciclo novo: a urna conta como cheia
+                $('#total-info').text((restantes === TOTAL || (telaLimpa && restantes === 0)) ? '09 Vereadores na urna' : (telaLimpa ? `${String(restantes).padStart(2, '0')} vereadores na urna` : `${restantes} de 9 vereadores restantes na urna`));
 
                 if (sorteadosHistorico.length === 0) {
                     $('#winner-history-container').addClass('hidden');
@@ -504,9 +504,11 @@
                         $('#btn-sortear').html('<i class="fa-solid fa-dice mr-2"></i> Sortear Próximo');
                     }
                 } else {
-                    $('#status-title').text(sorteadosHistorico.length && restantes ? 'Aguardando Próximo Sorteio' : 'Aguardando Início');
+                    $('#status-title').text('Aguardando Início');
                     $('#central-photo').attr('src', logoInicial);
-                    if (restantes === 0) {
+                    if (telaLimpa) {
+                        $('#btn-sortear').html('<i class="fa-solid fa-dice mr-2"></i> Sortear');
+                    } else if (restantes === 0) {
                         $('#btn-sortear').html('<i class="fa-solid fa-rotate-right mr-2"></i> Novo Ciclo de Sorteio');
                     } else if (sorteadosHistorico.length) {
                         $('#btn-sortear').html('<i class="fa-solid fa-dice mr-2"></i> Sortear Próximo');
@@ -642,21 +644,6 @@
                 });
             });
             let travado = false;
-
-            // "Nova urna": devolve os 9 vereadores para a urna (nova sessão). Só no notebook do operador.
-            if (CONTROLE && !ESTA_TV) $('#btn-nova-urna').css('display', '');
-            $('#btn-nova-urna').on('click', function (e) {
-                e.preventDefault();
-                if (contando()) { alert('Aguarde o sorteio em andamento terminar.'); return; }
-                if (!confirm('Começar uma NOVA URNA?\n\nOs 9 vereadores voltam para a urna e a lista de sorteados é apagada em todos os aparelhos.')) return;
-                const t = agora();
-                refEstado.transaction(cur => {
-                    if (cur && cur.fim && t < cur.fim) return;
-                    return { sorteados: [], fim: 0, inicio: t };
-                }).then(res => {
-                    if (res && res.committed) { abertaEm = agora(); render(); }
-                }).catch(() => alert('Não foi possível zerar a urna: sem conexão com o banco.'));
-            });
 
             // ===== Modo administrador =====
             // Senha guardada como hash SHA-256 (não aparece em texto no código)
