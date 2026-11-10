@@ -877,7 +877,10 @@ const E = () => { const e = Object.assign(defEstado(), S.estado || {}); if(!e.pr
 function setEstado(patch){ const novo = Object.assign({}, E(), patch); S.estado = novo; render(); return write('sessao/atual', novo); }
 /* votação em curso = aberta ou aguardando o desempate do Presidente */
 const emCurso = e => e.votacao === 'aberta' || e.votacao === 'desempate';
-const presentes = () => VEREADORES.filter(v => S.presenca[v.id] && S.presenca[v.id].presente);
+// Presença padrão = PRESENTE (pedido do usuário, 09/11/2026): com a sessão fechada todos aparecem presentes;
+// com a sessão aberta vale a lista da chamada (o operador marca só quem faltar).
+const estaPresente = id => !(E() && E().aberta) || !!(S.presenca[id] && S.presenca[id].presente);
+const presentes = () => VEREADORES.filter(v => estaPresente(v.id));
 const pautaAtual = () => S.pauta.find(p => p.id === E().pautaId) || null;
 const votosDe = pid => S.votos.filter(v => v.pid === pid);
 const pautaOrdenada = () => [...S.pauta].sort((a,b) => (a.ordem||0) - (b.ordem||0));
@@ -1049,7 +1052,7 @@ function renderOperador(){
 
   $('#chamadaList').innerHTML = VEREADORES.map(v => {
     const lg = S.login[v.id] && S.login[v.id].logado;
-    const pr = S.presenca[v.id] && S.presenca[v.id].presente;
+    const pr = estaPresente(v.id);
     return `<div class="vrow"><div class="av">${avInner(v)}</div>
       <div class="nm">${esc(v.nome)}${e.presidente===v.id?' · <b style="color:var(--brass)">Presidente</b>':''}<small><span class="dot ${lg?'on':''}"></span>${lg?'Tablet conectado':'Tablet desconectado'} · Aparelho ${v.ap}${S.aparelhos[v.id]?` · <button type="button" class="linkbtn" data-liberar="${v.id}" style="font-size:.76rem;padding:0">Liberar tablet</button>`:''}</small></div>
       <button class="tog ${pr?'on':''}" data-pres="${v.id}" ${(!e.aberta||emCurso(e))?'disabled':''}>${pr?'Presente':'Ausente'}</button></div>`;
@@ -1167,7 +1170,7 @@ $('#chkEnsaio').addEventListener('change', ev => {
 });
 $('#btnFecharSessao').addEventListener('click', () => confirmBox({
   titulo:'Encerrar a sessão?', texto:'A presença será zerada e os tablets voltarão para a tela de espera.', ok:'Encerrar sessão', cls:'stop',
-  onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:false,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado(Object.assign(defEstado(), {presidente:E().presidente, sessaoEncerrada:true, encerradaEm:agora()})); toast('Sessão encerrada.'); }
+  onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:true,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado(Object.assign(defEstado(), {presidente:E().presidente, sessaoEncerrada:true, encerradaEm:agora()})); toast('Sessão encerrada.'); }
 }));
 $('#opCurrent').addEventListener('click', ev => {
   const mb = ev.target.closest('[data-minerva]');
@@ -1525,7 +1528,7 @@ function renderTelao(){
   const vs = !m ? [] : e.votacao === 'encerrada' ? votosValidos(m, e.resultado) : e.votacao === 'desempate' ? votosValidos(m, e.apuracao) : votosDe(m.id);
   const enc = e.votacao === 'encerrada' || e.votacao === 'desempate';
   const grid = VEREADORES.map(v => {
-    const p = S.presenca[v.id] && S.presenca[v.id].presente;
+    const p = estaPresente(v.id);
     const vt = vs.find(x=>x.vid===v.id);
     let st = 'AUSENTE', cls = '';
     if(p){
