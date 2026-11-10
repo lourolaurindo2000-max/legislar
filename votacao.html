@@ -653,14 +653,14 @@ html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador n
 /* ===================== dados fixos ===================== */
 const VEREADORES = [
   {id:'v1', nome:'Jackson Costa',     ap:1, foto:'https://2.gravatar.com/userimage/277172047/8039d08ed8a294328b8f8b70bbbeb765?size=240'},
-  {id:'v2', nome:'Dilson Junior',     ap:2, foto:'https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=240'},
-  {id:'v3', nome:'Lucas Cavalcante',  ap:3, foto:'https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=240'},
-  {id:'v4', nome:'Marilene Santos',   ap:4, foto:'https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=240'},
-  {id:'v5', nome:'Nilza Damasceno',   ap:5, foto:'https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=240'},
-  {id:'v6', nome:'Rogério Gotado',    ap:6, foto:'https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=240'},
+  {id:'v4', nome:'Marilene Santos',   ap:2, foto:'https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=240'},
+  {id:'v5', nome:'Nilza Damasceno',   ap:3, foto:'https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=240'},
+  {id:'v9', nome:'Wilson Freitas',    ap:4, foto:'https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=240'},
+  {id:'v6', nome:'Rogério Gotado',    ap:5, foto:'https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=240'},
+  {id:'v2', nome:'Dilson Junior',     ap:6, foto:'https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=240'},
   {id:'v7', nome:'Sylas Souza',       ap:7, foto:'https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=240'},
-  {id:'v8', nome:'José Lindomar',     ap:8, foto:'https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=240'},
-  {id:'v9', nome:'Wilson Freitas',    ap:9, foto:'https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=240'},
+  {id:'v3', nome:'Lucas Cavalcante',  ap:8, foto:'https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=240'},
+  {id:'v8', nome:'José Lindomar',     ap:9, foto:'https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=240'},
 ];
 const QUORUM = 5;               // maioria absoluta de 9
 // vereador entra só tocando no nome (sem senha)
@@ -885,7 +885,7 @@ const donoDoTablet = () => ENSAIO ? null : Object.keys(S.aparelhos).find(vid => 
 let ENSAIO = false;
 const vinculoOutro = vid => !ENSAIO && !!(S.aparelhos[vid] && S.aparelhos[vid].dev !== DEV);
 const defEstado = () => ({aberta:false, abertaEm:null, chamada:false, presidente:'', pautaId:null, votacao:'livre', inicioVotacao:null, resultado:null, apuracao:null, pautaConcluida:false});
-const PRESIDENTE_PADRAO = 'v6';   // Aparelho 6 — Presidente da Mesa (desempata)
+const PRESIDENTE_PADRAO = 'v6';   // Aparelho 5 (Rogério Gotado) — Presidente da Mesa (desempata)
 /* "Sessão encerrada" só aparece logo depois do encerramento (até 2 h); depois volta a ser "ainda não começou" */
 /* e só se foi encerrada DEPOIS da última abertura da Votação: abriu o sistema de novo → "Plenário Jonas Plínio" */
 let ABERTA_EM = 0;
