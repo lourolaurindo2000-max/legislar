@@ -108,7 +108,7 @@
   var escolhido = null, enviando = false, fecharT = null;
   var raiz, grid, modal;
 
-  // Bip curto a cada toque num nome ou botão (Web Audio, sem arquivo de som)
+  // (não usado: a pedido do usuário o bip sai só na Smart TV, não no tablet)
   var audioCtx = null;
   function bip() {
     try {
@@ -125,15 +125,15 @@
       o.start(t); o.stop(t + 0.14);
     } catch (e) {}
   }
-  // Avisa a Smart TV para tocar o mesmo bip (js/bip-tv.js no dashboard da TV)
+  // Cada toque num nome ou botão: a Smart TV toca o bip (js/bip-tv.js). O tablet fica em silêncio.
   function bipTV() {
     try { db.ref(BASE + '/bip').set({ em: firebase.database.ServerValue.TIMESTAMP, n: Math.floor(Math.random() * 1e9) }); } catch (e) {}
   }
   function tocou(e) {
     var t = e.target;
     while (t && t.nodeType === 1) {
-      if (t.tagName === 'BUTTON') { if (!t.disabled) { bip(); bipTV(); } return; }
-      if (t.className && /(^| )pt-card( |$)/.test(t.className)) { if (!/(^| )bloq( |$)/.test(t.className)) { bip(); bipTV(); } return; }
+      if (t.tagName === 'BUTTON') { if (!t.disabled) bipTV(); return; }
+      if (t.className && /(^| )pt-card( |$)/.test(t.className)) { if (!/(^| )bloq( |$)/.test(t.className)) bipTV(); return; }
       t = t.parentNode;
     }
   }
