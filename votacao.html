@@ -1288,6 +1288,8 @@ async function desempatar(voto){
     if(!m || !atual || atual.votacao !== 'desempate' || atual.pautaId !== m.id) return toast('Não há desempate pendente.');
     const ok = await Store.setIfAbsent('desempate/' + m.id, {voto:voto, presidente:atual.presidente || '', ts:agora()});
     if(!ok) return toast('O desempate já foi registrado.');
+    /* som do desempate na Smart TV (js/bip-tv.js), igual ao voto: Aprovar = urna, Reprovar = 'reprova', Abster = bip */
+    if(ok !== 'pendente') Store.set('som', {tipo: voto==='sim' ? 'urna' : voto==='nao' ? 'reprova' : 'bip', em:agora(), n:Math.floor(Math.random()*1e9)}).catch(()=>{});
     await finalizar(m, atual.apuracao || E().apuracao || {sim:0, nao:0, abs:0, naoVotou:0}, voto);
   }catch(e){ toast('Não foi possível registrar o desempate. Tente de novo.'); }
   finally{ desempatando = false; }
