@@ -210,9 +210,7 @@
 
                 <!-- Título / Estado / Nome do Parlamentar -->
                 <h2 id="status-title" class="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 tracking-wide min-h-[3.5rem] flex items-center justify-center">Aguardando Início</h2>
-                <!-- Ordem do sorteado (ex.: 2º sorteado · 7 restantes na urna) -->
-                <p id="ordem-info" style="display:none;margin:0 0 8px;color:#fcd34d;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:.85rem"></p>
-
+                
                 <!-- Nome do Presidente -->
                 <p id="president-name" class="text-xs sm:text-sm gold-text font-medium uppercase tracking-wider mb-5">Presidente - Rogério Gotado</p>
 
@@ -333,7 +331,7 @@
                 { nome: "Vereador Sylas Souza", foto: "https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=256" },
                 { nome: "Vereador Lucas Cavalcante", foto: "https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=256" },
                 { nome: "Vereador Dilson Junior", foto: "https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=256" },
-                { nome: "Vereador Rogério Gotado", foto: "https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=256" },
+                { nome: "Vereador Rogério Gotádo", foto: "https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=256" },
                 { nome: "Vereador Wilson Freitas", foto: "https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=256" },
                 { nome: "Vereadora Nilza Damasceno", foto: "https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=256" },
                 { nome: "Vereadora Marilene Costa", foto: "https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=256" },
@@ -376,6 +374,8 @@
                 try { noQuadro = window.self !== window.top; } catch (e) {}
                 return !noQuadro && !/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '');
             })();
+            // A TV pode abrir o sorteio alguns segundos depois do clique: aceita sorteios de até 1 min antes
+            const MARGEM_TV = ESTA_TV ? 60 * 1000 : 0;
 
             let estado = { sorteados: [], fim: 0 };
             let sorteadosHistorico = [];
@@ -393,64 +393,37 @@
 
             // Fotos ficam no banco como v0..v8 (índice do vereador)
             const fotoDe = i => (cfg.fotos && cfg.fotos['v' + i]) || FOTOS_PADRAO[i];
-            // URNA: cada abertura do Sorteio no notebook começa com os 9 vereadores na urna. Dentro do mesmo
-            // sorteio, quem já saiu nunca sai de novo (o banco confere a lista antes de gravar).
-            // Após os 9, o próximo clique começa um ciclo novo.
+            // Sorteios de mais de 3 horas atrás são de outra sessão: a urna volta cheia
             const VALIDADE_MS = 3 * 60 * 60 * 1000;
             const expirado = e => !!(e && e.fim) && agora() - e.fim > VALIDADE_MS;
-            // Só índices válidos (0 a 8) e sem repetição, mesmo que o banco tenha algum resto antigo
-            const limpar = arr => {
-                const out = [];
-                (Array.isArray(arr) ? arr : (arr && typeof arr === 'object' ? Object.keys(arr).sort((a, b) => a - b).map(k => arr[k]) : [])).forEach(n => {
-                    if (n === null || n === undefined || n === '' || typeof n === 'boolean') return;
-                    n = Number(n);
-                    if (Number.isInteger(n) && n >= 0 && n < TOTAL && out.indexOf(n) === -1) out.push(n);
-                });
-                return out;
-            };
-            // Vereadores já sorteados na urna atual (igual em todos os aparelhos, sem depender de quando a tela abriu)
-            const daUrna = e => (!e || !e.fim || expirado(e) || (e.inicio && e.fim < e.inicio)) ? [] : limpar(e.sorteados);
-            const lista = () => daUrna(estado);
+            const limpar = arr => Array.isArray(arr) ? arr.filter(n => n !== null && n !== undefined) : [];
+            // Início da sessão: gravado no banco quando o tablet/notebook abre o Sorteio (vale para todos, inclusive a TV).
+            // Sem essa marca, vale o momento em que esta tela abriu.
+            const inicioSessao = e => (e && e.inicio) || (abertaEm - MARGEM_TV);
+            // Só vale o sorteio feito depois do início da sessão: sorteios antigos não aparecem
+            const daSessao = e => !!(e && e.fim) && abertaEm > 0 && e.fim >= inicioSessao(e);
+            const lista = () => (expirado(estado) || !daSessao(estado)) ? [] : limpar(estado.sorteados);
             const contando = () => !!estado.fim && agora() < estado.fim;
-            // TELA LIMPA ao abrir/reiniciar (notebook e Smart TV): nenhum vereador aparece até o operador sortear.
-            // Não depende do relógio do aparelho (a Smart TV pode estar com a hora errada): guarda qual era o
-            // último sorteio do banco quando a tela abriu e só mostra nomes quando acontece um sorteio NOVO.
-            // Exceção: se a tela abriu durante a contagem (ou a TV abriu logo após o clique), mostra esse sorteio.
-            let baseFim;             // estado.fim no momento em que esta tela abriu (undefined = ainda não carregou)
-            let carregado = false;   // já recebeu o estado do banco
-            const ACABOU_DE_SORTEAR = ESTA_TV ? 20 * 1000 : 0;   // TV antiga pode demorar alguns segundos para abrir
-            function marcarAbertura() {
-                const f = estado.fim || 0;
-                baseFim = (f && (contando() || agora() - f < ACABOU_DE_SORTEAR)) ? -1 : f;
-            }
-            // Notebook abriu, recarregou ou voltou ao Sorteio: começa um SORTEIO NOVO, com os 9 vereadores na urna
+            // Momento em que esta tela abriu: só destaca no centro sorteios feitos depois disso
+            let abertaEm = 0;
+            // Tablet/notebook abriu, recarregou ou voltou ao Sorteio: começa sessão nova, sem nenhum vereador sorteado
             // (em todos os aparelhos, inclusive a TV). Se houver um sorteio rodando agora, não interrompe.
-            // O botão Sortear só libera depois que a urna nova foi gravada.
-            let pronto = !CONTROLE;
             function novaSessao() {
                 if (!CONTROLE) return;
-                pronto = false;
                 const t = agora();
                 refEstado.transaction(cur => {
-                    if (cur && cur.fim && t < cur.fim) return;   // sorteio em andamento: não mexe
-                    return { sorteados: [], fim: 0, inicio: t };
-                }).then(() => { pronto = true; }, () => { pronto = true; });
+                    cur = cur || {};
+                    if (cur.fim && t < cur.fim) return;
+                    return Object.assign({}, cur, { inicio: t });
+                }).catch(() => {});
             }
-            novaSessao();
+            db.ref('.info/serverTimeOffset').once('value', () => {
+                abertaEm = agora();
+                novaSessao();
+                render();
+            });
             // Voltou para esta página pelo "voltar" do navegador (página restaurada sem recarregar)
-            window.addEventListener('pageshow', ev => { if (ev.persisted) { novaSessao(); if (carregado) { marcarAbertura(); render(); } } });
-
-            // Número aleatório imparcial (gerador criptográfico do navegador, sem viés)
-            function aleatorio(n) {
-                try {
-                    if (window.crypto && crypto.getRandomValues) {
-                        const lim = Math.floor(4294967296 / n) * n, b = new Uint32Array(1);
-                        do { crypto.getRandomValues(b); } while (b[0] >= lim);
-                        return b[0] % n;
-                    }
-                } catch (err) {}
-                return Math.floor(Math.random() * n);
-            }
+            window.addEventListener('pageshow', ev => { if (ev.persisted) { abertaEm = agora(); novaSessao(); render(); } });
 
             refConfig.on('value', snap => {
                 const v = snap.val();
@@ -473,8 +446,6 @@
 
             refEstado.on('value', snap => {
                 estado = Object.assign({ sorteados: [], fim: 0 }, snap.val() || {});
-                // 1ª leitura do banco (já com a hora do servidor acertada): marca o que já existia ao abrir
-                if (!carregado) { carregado = true; marcarAbertura(); }
                 render();
             }, err => {
                 console.error('Firebase: sem permissão. Verifique as regras do banco.', err);
@@ -487,14 +458,8 @@
                 const visiveis = contando() ? todos.slice(0, -1) : todos;
                 sorteadosHistorico = visiveis.map(i => vereadoresOriginais[i]).filter(Boolean);
                 const restantes = TOTAL - visiveis.length;
-                // Tela limpa: ao abrir/recarregar o Sorteio não aparece nenhum vereador até o operador clicar em Sortear.
-                // A urna continua guardada no banco (quem já saiu não é sorteado de novo).
-                const sorteioNovo = !!estado.fim && baseFim !== undefined && estado.fim !== baseFim;
-                const telaLimpa = !contando() && !sorteioNovo;
-                if (telaLimpa) sorteadosHistorico = [];
 
-                // Com os 9 já sorteados, o próximo clique começa um ciclo novo: a urna conta como cheia
-                $('#total-info').text((restantes === TOTAL || (telaLimpa && restantes === 0)) ? '09 Vereadores na urna' : (telaLimpa ? `${String(restantes).padStart(2, '0')} vereadores na urna` : `${restantes} de 9 vereadores restantes na urna`));
+                $('#total-info').text(visiveis.length === 0 ? '09 Vereadores na urna' : `${restantes} de 9 vereadores restantes na urna`);
 
                 if (sorteadosHistorico.length === 0) {
                     $('#winner-history-container').addClass('hidden');
@@ -507,13 +472,11 @@
                 pararAnimacao();
 
                 $('#btn-sortear').prop('disabled', false).removeClass('opacity-75');
-                const sorteioRecente = sorteioNovo;
-                $('#ordem-info').hide();
+                const sorteioRecente = abertaEm && estado.fim && estado.fim >= inicioSessao(estado);
                 if (sorteadosHistorico.length && sorteioRecente) {
                     const vencedor = sorteadosHistorico[sorteadosHistorico.length - 1];
                     $('#status-title').html(`<span class="text-amber-400 drop-shadow-md">${vencedor.nome}</span>`);
                     $('#central-photo').attr('src', vencedor.foto);
-                    $('#ordem-info').text(`${sorteadosHistorico.length}º sorteado` + (restantes ? ` · ${restantes} na urna` : ' · todos sorteados')).show();
                     if (restantes === 0) {
                         $('#btn-sortear').html('<i class="fa-solid fa-rotate-right mr-2"></i> Novo Ciclo de Sorteio');
                     } else {
@@ -522,9 +485,7 @@
                 } else {
                     $('#status-title').text('Aguardando Início');
                     $('#central-photo').attr('src', logoInicial);
-                    if (telaLimpa) {
-                        $('#btn-sortear').html('<i class="fa-solid fa-dice mr-2"></i> Sortear');
-                    } else if (restantes === 0) {
+                    if (restantes === 0) {
                         $('#btn-sortear').html('<i class="fa-solid fa-rotate-right mr-2"></i> Novo Ciclo de Sorteio');
                     } else if (sorteadosHistorico.length) {
                         $('#btn-sortear').html('<i class="fa-solid fa-dice mr-2"></i> Sortear Próximo');
@@ -544,11 +505,7 @@
                     const falta = Math.ceil((estado.fim - agora()) / 1000);
                     if (falta <= 0) { pararAnimacao(); render(); return; }
                     $('#timer-number').text(falta);
-                    // Embaralha só quem ainda está na urna (quem já foi sorteado não aparece de novo)
-                    const jaSaiu = lista().slice(0, -1);
-                    const naUrna = vereadoresOriginais.filter((v, i) => jaSaiu.indexOf(i) === -1);
-                    const pool = naUrna.length ? naUrna : vereadoresOriginais;
-                    let randomParlamentar = pool[Math.floor(Math.random() * pool.length)];
+                    let randomParlamentar = vereadoresOriginais[Math.floor(Math.random() * vereadoresOriginais.length)];
                     $('#status-title').text(randomParlamentar.nome);
                     $('#central-photo').attr('src', randomParlamentar.foto);
                 }, 90);
@@ -629,37 +586,24 @@
             // Ação principal de Sorteio — grava no banco; todos os aparelhos acompanham
             $('#btn-sortear').on('click', function(e) {
                 e.preventDefault();
-                if (emSorteio || contando() || !carregado || travado || !pronto) return;
+                if (emSorteio || contando()) return;
                 const duracao = (cfg.tempo || 5) * 1000;
 
                 // Qualquer aparelho (notebook, tablet, celular) que sortear faz a Smart TV abrir o Sorteio
                 if (CONTROLE) db.ref('legislar/painel/tela').set({ pagina: 'sistema_sorteio.html', em: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
 
-                // Transação no banco: só um sorteio por vez e NUNCA repete vereador na mesma urna
-                // (mesmo com dois aparelhos clicando ao mesmo tempo, o banco confere a lista antes de gravar)
-                travado = true;
-                $('#btn-sortear').prop('disabled', true).addClass('opacity-75');
+                // Transação: só um sorteio por vez e sem repetir vereador
                 refEstado.transaction(cur => {
                     cur = cur || {};
                     const t = agora();
                     if (cur.fim && t < cur.fim) return;   // já há um sorteio em andamento
-                    let usados = daUrna(cur);
-                    let inicio = cur.inicio || t;
-                    if (!usados.length || usados.length >= TOTAL) { usados = []; inicio = t; }   // urna nova / novo ciclo após os 9
-                    const disponiveis = vereadoresOriginais.map((v, i) => i).filter(i => usados.indexOf(i) === -1);
-                    const sorteado = disponiveis[aleatorio(disponiveis.length)];
-                    return { sorteados: usados.concat([sorteado]), fim: t + duracao, inicio: inicio };
-                }).then(res => {
-                    travado = false;
-                    if (!res || !res.committed) render();
-                }).catch(err => {
-                    travado = false;
-                    console.error(err);
-                    render();
-                    alert('Não foi possível sortear: sem conexão com o banco. Verifique a internet e tente de novo.');
+                    let usados = (expirado(cur) || !daSessao(cur)) ? [] : limpar(cur.sorteados);
+                    if (usados.length >= TOTAL) usados = [];   // Novo ciclo automático após os 9
+                    const disponiveis = vereadoresOriginais.map((v, i) => i).filter(i => !usados.includes(i));
+                    const sorteado = disponiveis[Math.floor(Math.random() * disponiveis.length)];
+                    return { sorteados: [...usados, sorteado], fim: t + duracao, inicio: cur.inicio || null };
                 });
             });
-            let travado = false;
 
             // ===== Modo administrador =====
             // Senha guardada como hash SHA-256 (não aparece em texto no código)
@@ -792,7 +736,7 @@
 
             $('#admin-zerar-urna').on('click', function () {
                 if (!confirm('Devolver os 9 vereadores para a urna e apagar a lista de sorteados em todos os aparelhos?')) return;
-                refEstado.set({ sorteados: [], fim: 0, inicio: agora() }).then(() => avisar('Urna zerada: 09 vereadores na urna'), erroSalvar);
+                refEstado.set({ sorteados: [], fim: 0 }).then(() => avisar('Urna zerada: 09 vereadores na urna'), erroSalvar);
             });
 
             $('#admin-restaurar-tudo').on('click', function () {
