@@ -1113,7 +1113,8 @@ function renderOperador(){
   const lista = VER_ARQ ? arq : todas.filter(p => !p.arquivado);
   if(VER_ARQ && !arq.length) VER_ARQ = false;
   $('#pautaCount').innerHTML = (VER_ARQ ? `${arq.length} arquivada(s)` : `${todas.filter(p=>p.status!=='votado').length} pendente(s)`) +
-    (arq.length || VER_ARQ ? ` · <button type="button" class="linkbtn" id="btnArq">${VER_ARQ ? 'Voltar à pauta' : `Arquivadas (${arq.length})`}</button>` : '');
+    (arq.length || VER_ARQ ? ` · <button type="button" class="linkbtn" id="btnArq">${VER_ARQ ? 'Voltar à pauta' : `Arquivadas (${arq.length})`}</button>` : '') +
+    (VER_ARQ && arq.length ? ` · <button type="button" class="linkbtn" id="btnApagarTodas" style="color:var(--nao)">Apagar todas</button>` : '');
   $('#pautaList').innerHTML = lista.length ? lista.map((p,i) => {
     const sel = p.id === e.pautaId;
     const r = p.resultado;
@@ -1268,7 +1269,10 @@ async function desempatar(voto){
 }
 const porId = list => { const o = {}; list.forEach(x => { o[x.id] = x; }); return o; };
 const stripId = o => { const r = Object.assign({}, o); delete r.id; return r; };
-$('#pautaCount').addEventListener('click', ev => { if(ev.target.closest('#btnArq')){ VER_ARQ = !VER_ARQ; renderOperador(); } });
+$('#pautaCount').addEventListener('click', ev => {
+  if(ev.target.closest('#btnArq')){ VER_ARQ = !VER_ARQ; renderOperador(); }
+  if(ev.target.closest('#btnApagarTodas')){ const arq = S.pauta.filter(p => p.arquivado); if(arq.length) apagarArquivada(arq); }
+});
 $('#pautaList').addEventListener('click', ev => {
   const s = ev.target.closest('[data-sel]'), d = ev.target.closest('[data-del]'), rs = ev.target.closest('[data-rest]');
   const ap = ev.target.closest('[data-apagar]');
@@ -1633,12 +1637,13 @@ function toast(msg){
 /* Apagar matéria ARQUIVADA definitivamente (pedido do usuário, 09/11/2026): só pelo Operador, com senha própria.
    A senha não fica no código: só o SHA-256('vp-apagar:' + senha). Apaga a matéria, os votos dela e o desempate. */
 const APAGAR_HASH = 'b5068f80a924e847d2d0dc22ac24ed098251ec011331a869e7e67722e91775f4';
-function apagarArquivada(p){
+function apagarArquivada(alvo){
+  const lista = Array.isArray(alvo) ? alvo : [alvo], p = lista[0], varias = lista.length > 1;
   const root = $('#modalRoot');
   root.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Apagar definitivamente"><form class="box" autocomplete="off">
     <span class="eyebrow" style="color:var(--nao)">Apagar definitivamente</span>
-    <p style="margin:0"><b>${esc(p.tipo)} Nº ${esc(p.numero)}</b> — ${esc(p.ementa)}</p>
-    <p style="margin:0" class="muted">A matéria, os votos dela e o resultado serão apagados e <b>sairão do Relatório para a ata</b>. Não dá para desfazer.</p>
+    <p style="margin:0">${varias ? `<b>Todas as ${lista.length} matérias arquivadas</b>` : `<b>${esc(p.tipo)} Nº ${esc(p.numero)}</b> — ${esc(p.ementa)}`}</p>
+    <p style="margin:0" class="muted">${varias ? 'As matérias, os votos delas e os resultados serão apagados' : 'A matéria, os votos dela e o resultado serão apagados'} e <b>sairão do Relatório para a ata</b>. Não dá para desfazer.</p>
     <div class="field"><label for="apSenha">Senha para apagar</label><input id="apSenha" type="password" autocomplete="off"></div>
     <small id="apErr" style="color:var(--nao);min-height:1.2em"></small>
     <div class="row"><button type="button" class="btn" data-x="no">Voltar</button><button type="submit" class="btn stop">Apagar</button></div></form></div>`;
@@ -1652,10 +1657,15 @@ function apagarArquivada(p){
     if(!ok){ root.querySelector('#apErr').textContent = inp.value ? 'Senha incorreta.' : 'Digite a senha.'; inp.select(); return; }
     close();
     try{
-      const vs = votosDe(p.id);
-      await Promise.all([Store.del('pauta/' + p.id), Store.del('desempate/' + p.id)].concat(vs.map(v => Store.del('votos/' + (v.id || (p.id + '__' + v.vid))))));
-      if(E().pautaId === p.id) setEstado({pautaId:null});
-      toast('Matéria apagada definitivamente.');
+      const ops = [];
+      lista.forEach(m => {
+        ops.push(Store.del('pauta/' + m.id), Store.del('desempate/' + m.id));
+        votosDe(m.id).forEach(v => ops.push(Store.del('votos/' + (v.id || (m.id + '__' + v.vid)))));
+      });
+      await Promise.all(ops);
+      if(lista.some(m => E().pautaId === m.id)) setEstado({pautaId:null});
+      if(varias) VER_ARQ = false;
+      toast(varias ? `${lista.length} matérias apagadas definitivamente.` : 'Matéria apagada definitivamente.');
     }catch(e){ toast('Não foi possível apagar. Verifique a internet.'); }
   };
 }
