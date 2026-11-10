@@ -529,7 +529,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
         <div class="row" style="justify-content:space-between"><h2>Sessão e quórum</h2><span class="chip" id="sessChip">Fechada</span></div>
         <div class="row">
           <button class="btn primary" id="btnAbrir">Abrir votação</button>
-          <button class="btn brass" id="btnChamada">Fazer chamada</button>
+          <button class="btn brass" id="btnChamada" title="Marca como presentes só os vereadores que já entraram no tablet">Fazer chamada</button>
         </div>
         <div class="quorum">
           <div class="meter" aria-hidden="true"><i id="qBar"></i><b id="qMark"></b></div>
@@ -1034,7 +1034,7 @@ function renderOperador(){
   $('#sessChip').className = 'chip' + (e.aberta ? ' v' : '');
   $('#btnAbrir').disabled = e.aberta;
   $('#btnChamada').disabled = !e.aberta || emCurso(e);
-  $('#btnChamada').textContent = e.chamada ? 'Refazer chamada' : 'Fazer chamada';
+  $('#btnChamada').textContent = e.chamada ? 'Chamada pelos tablets' : 'Fazer chamada';
   $('#btnFecharSessao').disabled = !e.aberta || emCurso(e);
   $('#qPres').textContent = pres;
   const bar = $('#qBar'); bar.style.width = (pres/9*100)+'%'; bar.className = okQ ? 'ok' : '';
@@ -1128,7 +1128,13 @@ $('#opLogout').addEventListener('click', () => {
   if(emCurso(E())) return toast('Há uma votação em andamento. Termine a votação antes de sair.');
   OP_OK = false; location.href = 'dashboard.html';
 });
-$('#btnAbrir').addEventListener('click', () => { setEstado({aberta:true, abertaEm:agora(), chamada:false, votacao:'livre', pautaId:null, resultado:null, sessaoEncerrada:false}); toast('Sessão aberta. Faça a chamada.'); });
+// Abrir votação: todos os vereadores já entram como PRESENTES (pedido do usuário, 09/11/2026) — dá tempo de
+// cada um entrar no tablet. Quem faltar, o operador marca como Ausente na lista da chamada.
+$('#btnAbrir').addEventListener('click', () => {
+  VEREADORES.forEach(v => { S.presenca[v.id] = {presente:true, ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); });
+  setEstado({aberta:true, abertaEm:agora(), chamada:true, votacao:'livre', pautaId:null, resultado:null, sessaoEncerrada:false});
+  toast('Votação aberta: todos marcados como presentes. Marque como Ausente quem faltar.');
+});
 $('#btnChamada').addEventListener('click', async () => {
   for(const v of VEREADORES){
     const lg = !!(S.login[v.id] && S.login[v.id].logado);
