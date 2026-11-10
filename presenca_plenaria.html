@@ -27,7 +27,7 @@
             if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) tv = true;
             if (tv) return;
             try { localStorage.removeItem('pld_presidente_ate'); } catch (e) {}
-            d.classList.add('cf-bloq');   // pede a senha toda vez que o sistema é aberto
+            // Senha de entrada retirada (pedido do usuário, 09/11/2026): o notebook entra direto no sistema.
         })();
     </script>
     <style>
@@ -895,7 +895,7 @@ function sha256(ascii){
   function lock(){ document.body.classList.add("locked"); }
   function unlock(){ document.body.classList.remove("locked"); setTimeout(function(){ if (window.__refit) window.__refit(); }, 30); }
   // Login antigo (usuário/senha) desativado: o acesso é feito só pela Senha da Presidência no início da página.
-  window.__plenarioLogout = function(){ try { localStorage.removeItem(KEY); sessionStorage.removeItem(KEY); sessionStorage.removeItem("plenario.adm"); } catch(e){} if (window.__admChanged) window.__admChanged(); document.documentElement.classList.add("cf-bloq"); };
+  window.__plenarioLogout = function(){ try { localStorage.removeItem(KEY); sessionStorage.removeItem(KEY); sessionStorage.removeItem("plenario.adm"); } catch(e){} if (window.__admChanged) window.__admChanged(); location.href = "dashboard.html"; };
   window.__plenarioLocked = function(){ return document.body.classList.contains("locked"); };
   // Sair da página: encerra o acesso, sai da tela cheia e FECHA esta aba (fica a aba do dashboard).
   // Se o navegador não deixar fechar, troca esta aba pelo dashboard.
