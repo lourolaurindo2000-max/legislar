@@ -107,6 +107,32 @@
   var escolhido = null, enviando = false, fecharT = null;
   var raiz, grid, modal;
 
+  // Bip curto a cada toque num nome ou botão (Web Audio, sem arquivo de som)
+  var audioCtx = null;
+  function bip() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === 'suspended' && audioCtx.resume) audioCtx.resume();
+      var t = audioCtx.currentTime, o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(1046, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.35, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t); o.stop(t + 0.14);
+    } catch (e) {}
+  }
+  function tocou(e) {
+    var t = e.target;
+    while (t && t.nodeType === 1) {
+      if (t.tagName === 'BUTTON') { if (!t.disabled) bip(); return; }
+      if (t.className && /(^| )pt-card( |$)/.test(t.className)) { if (!/(^| )bloq( |$)/.test(t.className)) bip(); return; }
+      t = t.parentNode;
+    }
+  }
+
   function el(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function agora() { return Date.now() + offset; }
@@ -137,7 +163,7 @@
   function montar() {
     var st = document.createElement('style'); st.appendChild(document.createTextNode(css)); document.head.appendChild(st);
     raiz = document.createElement('div'); raiz.id = 'pt-pres';
-    raiz.innerHTML = '<div class="pt-top"><img class="pt-logo" src="img/logoCamara.PNG" alt="" onerror="this.style.display=\'none\'">' +
+    raiz.innerHTML = '<div class="pt-top"><img class="pt-logo" src="img/brasao.png" alt="" onerror="this.style.display=\'none\'">' +
       '<div class="pt-tit"><b>Presença Plenária</b><small id="pt-cam"></small></div>' +
       '<div class="pt-info"><div class="pt-cont">Presentes <span id="pt-np">0</span> / <span id="pt-nt" style="color:#fff">0</span></div><div class="pt-sess" id="pt-sess">Aguardando</div></div></div>' +
       '<div class="pt-aviso" id="pt-aviso"></div><div class="pt-grid" id="pt-grid"></div>';
@@ -146,6 +172,7 @@
       '<div class="pt-msg" id="pt-msg"></div><button type="button" class="pt-reg" id="pt-reg">Registrar presença</button>' +
       '<button type="button" class="pt-canc" id="pt-canc">Voltar</button></div>';
     document.body.appendChild(raiz); document.body.appendChild(modal);
+    raiz.addEventListener('click', tocou, true); modal.addEventListener('click', tocou, true);
     grid = el('pt-grid');
     grid.addEventListener('click', function (e) {
       var t = e.target;
