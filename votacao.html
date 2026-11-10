@@ -463,6 +463,8 @@ html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador n
 .btn.selpauta{background:var(--brass);border-color:var(--brass);color:#fff;font-weight:800;letter-spacing:.02em;white-space:nowrap;animation:selPisca 1.1s ease-in-out infinite!important}
 .btn.selpauta:hover:not(:disabled){filter:brightness(1.12);border-color:var(--brass)}
 .btn.selpauta:disabled{background:var(--surface);border-color:var(--line);color:inherit;animation:none!important;box-shadow:none}
+/* pauta já selecionada: botão fixo em amarelo ouro, para o operador saber qual está ativa */
+.btn.selpauta.ativa,.btn.selpauta.ativa:disabled{background:#FFC107;border-color:#E0A800;color:#1b2c57;opacity:1;cursor:default;animation:none!important;box-shadow:0 0 0 3px rgba(255,193,7,.35);filter:none}
 @keyframes selPisca{0%,100%{box-shadow:0 0 0 0 rgba(216,168,69,.85);filter:brightness(1)}50%{box-shadow:0 0 0 7px rgba(216,168,69,0),0 0 16px 3px rgba(216,168,69,.75);filter:brightness(1.28)}}
 /* mensagens e arquivos para todas as telas */
 .field textarea{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:10px 12px;min-height:84px;width:100%;resize:vertical;font:inherit;color:inherit}
@@ -1145,7 +1147,7 @@ function renderOperador(){
       ? `<span class="row"><span class="res ${r&&r.veredito==='APROVADO'?'ap':'rp'}">${esc(r?r.veredito:'')}</span><button class="linkbtn" data-rest="${p.id}" style="margin-left:10px">Restaurar</button><button class="lixo" data-apagar="${p.id}" title="Apagar definitivamente (pede senha)" aria-label="Apagar definitivamente"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></span>`
       : p.status === 'votado'
       ? `<span class="row"><span class="res ${r&&r.veredito==='APROVADO'?'ap':'rp'}">${esc(r?r.veredito:'')}</span><button class="lixo" data-del="${p.id}" ${sel&&e.votacao!=='livre'?'disabled':''} title="Arquivar esta matéria votada" aria-label="Arquivar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></span>`
-      : `<span class="row"><button class="btn selpauta" data-sel="${p.id}" ${(emCurso(e)||sel)?'disabled':''}>${sel?'Selecionada':'Selecionar Pauta'}</button><button class="linkbtn" data-del="${p.id}" ${emCurso(e)&&sel?'disabled':''} aria-label="Remover">Remover</button></span>`;
+      : `<span class="row"><button class="btn selpauta${sel?' ativa':''}" data-sel="${p.id}" ${(emCurso(e)||sel)?'disabled':''}>${sel?'Selecionada':'Selecionar Pauta'}</button><button class="linkbtn" data-del="${p.id}" ${emCurso(e)&&sel?'disabled':''} aria-label="Remover">Remover</button></span>`;
     return `<div class="pitem ${sel?'sel':''}"><span class="n">${i+1}</span><div style="min-width:0"><small class="mtipo">${esc(p.tipo)} Nº ${esc(p.numero)}</small><p>${esc(p.ementa)}</p><small>${esc(p.autor||'')}</small></div>${right}</div>`;
   }).join('') : `<p class="muted" style="margin:0">${VER_ARQ ? 'Nenhuma matéria arquivada.' : 'Nenhuma matéria na pauta. Adicione a primeira no formulário abaixo.'}</p>`;
   tickElapsed();
