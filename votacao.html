@@ -1115,7 +1115,7 @@ function renderOperador(){
     const sel = p.id === e.pautaId;
     const r = p.resultado;
     const right = p.arquivado
-      ? `<span class="row"><span class="res ${r&&r.veredito==='APROVADO'?'ap':'rp'}">${esc(r?r.veredito:'')}</span><button class="linkbtn" data-rest="${p.id}" style="margin-left:10px">Restaurar</button></span>`
+      ? `<span class="row"><span class="res ${r&&r.veredito==='APROVADO'?'ap':'rp'}">${esc(r?r.veredito:'')}</span><button class="linkbtn" data-rest="${p.id}" style="margin-left:10px">Restaurar</button><button class="lixo" data-apagar="${p.id}" title="Apagar definitivamente (pede senha)" aria-label="Apagar definitivamente"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></span>`
       : p.status === 'votado'
       ? `<span class="row"><span class="res ${r&&r.veredito==='APROVADO'?'ap':'rp'}">${esc(r?r.veredito:'')}</span><button class="lixo" data-del="${p.id}" ${sel&&e.votacao!=='livre'?'disabled':''} title="Arquivar esta matéria votada" aria-label="Arquivar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></span>`
       : `<span class="row"><button class="btn" data-sel="${p.id}" ${(emCurso(e)||sel)?'disabled':''}>${sel?'Selecionada':'Selecionar'}</button><button class="linkbtn" data-del="${p.id}" ${emCurso(e)&&sel?'disabled':''} aria-label="Remover">Remover</button></span>`;
@@ -1268,6 +1268,8 @@ const stripId = o => { const r = Object.assign({}, o); delete r.id; return r; };
 $('#pautaCount').addEventListener('click', ev => { if(ev.target.closest('#btnArq')){ VER_ARQ = !VER_ARQ; renderOperador(); } });
 $('#pautaList').addEventListener('click', ev => {
   const s = ev.target.closest('[data-sel]'), d = ev.target.closest('[data-del]'), rs = ev.target.closest('[data-rest]');
+  const ap = ev.target.closest('[data-apagar]');
+  if(ap){ const p = S.pauta.find(x=>x.id===ap.dataset.apagar); if(p) apagarArquivada(p); return; }
   if(rs){ const p = S.pauta.find(x=>x.id===rs.dataset.rest); if(p){ write('pauta/'+p.id, Object.assign(stripId(p), {arquivado:false})); toast('Matéria restaurada na pauta.'); } return; }
   if(d){ const p = S.pauta.find(x=>x.id===d.dataset.del); if(p && p.status==='votado'){
     confirmBox({titulo:'Arquivar matéria votada?', texto:`${p.tipo} Nº ${p.numero} sai da lista da pauta. O resultado continua guardado e no Relatório para a ata; dá para restaurar em "Arquivadas".`, ok:'Arquivar', onOk:() => { write('pauta/'+p.id, Object.assign(stripId(p), {arquivado:true})); if(E().pautaId===p.id) setEstado({pautaId:null}); toast('Matéria arquivada.'); }});
@@ -1624,6 +1626,35 @@ let toastT;
 function toast(msg){
   let t = $('.toast'); if(!t){ t = document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); document.body.appendChild(t); }
   t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3200);
+}
+/* Apagar matéria ARQUIVADA definitivamente (pedido do usuário, 09/11/2026): só pelo Operador, com senha própria.
+   A senha não fica no código: só o SHA-256('vp-apagar:' + senha). Apaga a matéria, os votos dela e o desempate. */
+const APAGAR_HASH = 'b5068f80a924e847d2d0dc22ac24ed098251ec011331a869e7e67722e91775f4';
+function apagarArquivada(p){
+  const root = $('#modalRoot');
+  root.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Apagar definitivamente"><form class="box" autocomplete="off">
+    <span class="eyebrow" style="color:var(--nao)">Apagar definitivamente</span>
+    <p style="margin:0"><b>${esc(p.tipo)} Nº ${esc(p.numero)}</b> — ${esc(p.ementa)}</p>
+    <p style="margin:0" class="muted">A matéria, os votos dela e o resultado serão apagados e <b>sairão do Relatório para a ata</b>. Não dá para desfazer.</p>
+    <div class="field"><label for="apSenha">Senha para apagar</label><input id="apSenha" type="password" autocomplete="off"></div>
+    <small id="apErr" style="color:var(--nao);min-height:1.2em"></small>
+    <div class="row"><button type="button" class="btn" data-x="no">Voltar</button><button type="submit" class="btn stop">Apagar</button></div></form></div>`;
+  const close = () => root.innerHTML = '';
+  const inp = root.querySelector('#apSenha'); setTimeout(() => inp.focus(), 50);
+  root.querySelector('[data-x="no"]').onclick = close;
+  root.querySelector('.modal').onclick = ev => { if(ev.target.classList.contains('modal')) close(); };
+  root.querySelector('form').onsubmit = async ev => {
+    ev.preventDefault();
+    let ok = false; try{ ok = (await sha256hex('vp-apagar:' + inp.value)) === APAGAR_HASH; }catch(e){}
+    if(!ok){ root.querySelector('#apErr').textContent = inp.value ? 'Senha incorreta.' : 'Digite a senha.'; inp.select(); return; }
+    close();
+    try{
+      const vs = votosDe(p.id);
+      await Promise.all([Store.del('pauta/' + p.id), Store.del('desempate/' + p.id)].concat(vs.map(v => Store.del('votos/' + (v.id || (p.id + '__' + v.vid))))));
+      if(E().pautaId === p.id) setEstado({pautaId:null});
+      toast('Matéria apagada definitivamente.');
+    }catch(e){ toast('Não foi possível apagar. Verifique a internet.'); }
+  };
 }
 function confirmBox({titulo, texto, big, bigColor, ok, cls, onOk}){
   const root = $('#modalRoot');
