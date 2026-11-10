@@ -376,8 +376,6 @@
                 try { noQuadro = window.self !== window.top; } catch (e) {}
                 return !noQuadro && !/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '');
             })();
-            // A TV pode abrir o sorteio alguns segundos depois do clique: aceita sorteios de até 1 min antes
-            const MARGEM_TV = ESTA_TV ? 60 * 1000 : 0;
 
             let estado = { sorteados: [], fim: 0 };
             let sorteadosHistorico = [];
@@ -395,10 +393,9 @@
 
             // Fotos ficam no banco como v0..v8 (índice do vereador)
             const fotoDe = i => (cfg.fotos && cfg.fotos['v' + i]) || FOTOS_PADRAO[i];
-            // URNA: os vereadores sorteados ficam guardados no banco até sair todo mundo (9), até o administrador
-            // usar "Zerar urna", ou até passar 3 horas sem sorteio (outra sessão).
-            // Sair do Sorteio (ex.: ir ao Controle de Fala) e voltar NÃO devolve ninguém para a urna —
-            // assim nenhum vereador é sorteado duas vezes na mesma sessão.
+            // URNA: cada abertura do Sorteio no notebook começa com os 9 vereadores na urna. Dentro do mesmo
+            // sorteio, quem já saiu nunca sai de novo (o banco confere a lista antes de gravar).
+            // Após os 9, o próximo clique começa um ciclo novo.
             const VALIDADE_MS = 3 * 60 * 60 * 1000;
             const expirado = e => !!(e && e.fim) && agora() - e.fim > VALIDADE_MS;
             // Só índices válidos (0 a 8) e sem repetição, mesmo que o banco tenha algum resto antigo
@@ -415,16 +412,33 @@
             const daUrna = e => (!e || !e.fim || expirado(e) || (e.inicio && e.fim < e.inicio)) ? [] : limpar(e.sorteados);
             const lista = () => daUrna(estado);
             const contando = () => !!estado.fim && agora() < estado.fim;
-            // Momento em que esta tela abriu: só destaca no centro (foto grande) sorteios feitos depois disso;
-            // a lista "Sorteados" e a urna continuam valendo.
-            let abertaEm = 0;
+            // TELA LIMPA ao abrir/reiniciar (notebook e Smart TV): nenhum vereador aparece até o operador sortear.
+            // Não depende do relógio do aparelho (a Smart TV pode estar com a hora errada): guarda qual era o
+            // último sorteio do banco quando a tela abriu e só mostra nomes quando acontece um sorteio NOVO.
+            // Exceção: se a tela abriu durante a contagem (ou a TV abriu logo após o clique), mostra esse sorteio.
+            let baseFim;             // estado.fim no momento em que esta tela abriu (undefined = ainda não carregou)
             let carregado = false;   // já recebeu o estado do banco
-            db.ref('.info/serverTimeOffset').once('value', () => {
-                abertaEm = agora();
-                render();
-            });
+            const ACABOU_DE_SORTEAR = ESTA_TV ? 20 * 1000 : 0;   // TV antiga pode demorar alguns segundos para abrir
+            function marcarAbertura() {
+                const f = estado.fim || 0;
+                baseFim = (f && (contando() || agora() - f < ACABOU_DE_SORTEAR)) ? -1 : f;
+            }
+            // Notebook abriu, recarregou ou voltou ao Sorteio: começa um SORTEIO NOVO, com os 9 vereadores na urna
+            // (em todos os aparelhos, inclusive a TV). Se houver um sorteio rodando agora, não interrompe.
+            // O botão Sortear só libera depois que a urna nova foi gravada.
+            let pronto = !CONTROLE;
+            function novaSessao() {
+                if (!CONTROLE) return;
+                pronto = false;
+                const t = agora();
+                refEstado.transaction(cur => {
+                    if (cur && cur.fim && t < cur.fim) return;   // sorteio em andamento: não mexe
+                    return { sorteados: [], fim: 0, inicio: t };
+                }).then(() => { pronto = true; }, () => { pronto = true; });
+            }
+            novaSessao();
             // Voltou para esta página pelo "voltar" do navegador (página restaurada sem recarregar)
-            window.addEventListener('pageshow', ev => { if (ev.persisted) { abertaEm = agora(); render(); } });
+            window.addEventListener('pageshow', ev => { if (ev.persisted) { novaSessao(); if (carregado) { marcarAbertura(); render(); } } });
 
             // Número aleatório imparcial (gerador criptográfico do navegador, sem viés)
             function aleatorio(n) {
@@ -459,7 +473,8 @@
 
             refEstado.on('value', snap => {
                 estado = Object.assign({ sorteados: [], fim: 0 }, snap.val() || {});
-                carregado = true;
+                // 1ª leitura do banco (já com a hora do servidor acertada): marca o que já existia ao abrir
+                if (!carregado) { carregado = true; marcarAbertura(); }
                 render();
             }, err => {
                 console.error('Firebase: sem permissão. Verifique as regras do banco.', err);
@@ -474,7 +489,8 @@
                 const restantes = TOTAL - visiveis.length;
                 // Tela limpa: ao abrir/recarregar o Sorteio não aparece nenhum vereador até o operador clicar em Sortear.
                 // A urna continua guardada no banco (quem já saiu não é sorteado de novo).
-                const telaLimpa = !contando() && !(abertaEm > 0 && estado.fim && estado.fim >= abertaEm - MARGEM_TV);
+                const sorteioNovo = !!estado.fim && baseFim !== undefined && estado.fim !== baseFim;
+                const telaLimpa = !contando() && !sorteioNovo;
                 if (telaLimpa) sorteadosHistorico = [];
 
                 // Com os 9 já sorteados, o próximo clique começa um ciclo novo: a urna conta como cheia
@@ -491,7 +507,7 @@
                 pararAnimacao();
 
                 $('#btn-sortear').prop('disabled', false).removeClass('opacity-75');
-                const sorteioRecente = abertaEm > 0 && estado.fim && estado.fim >= abertaEm - MARGEM_TV;
+                const sorteioRecente = sorteioNovo;
                 $('#ordem-info').hide();
                 if (sorteadosHistorico.length && sorteioRecente) {
                     const vencedor = sorteadosHistorico[sorteadosHistorico.length - 1];
@@ -613,7 +629,7 @@
             // Ação principal de Sorteio — grava no banco; todos os aparelhos acompanham
             $('#btn-sortear').on('click', function(e) {
                 e.preventDefault();
-                if (emSorteio || contando() || !carregado || travado) return;
+                if (emSorteio || contando() || !carregado || travado || !pronto) return;
                 const duracao = (cfg.tempo || 5) * 1000;
 
                 // Qualquer aparelho (notebook, tablet, celular) que sortear faz a Smart TV abrir o Sorteio
