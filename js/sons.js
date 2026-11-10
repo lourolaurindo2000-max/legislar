@@ -1,7 +1,7 @@
 /* Sons do plenário (ES5) — window.PldSom
    tocar('bip')    bip curto (Presença e Abster)
    tocar('urna')   sequência rápida de bips agudos com nota final, no estilo da urna eletrônica (Aprovar)
-   tocar('buzina') buzina grave (Reprovar)
+   tocar('buzina') toque curto de buzina, 0,28 s (Reprovar)
    Os sons são gerados aqui mesmo (sem arquivos). Usa Web Audio; se a TV/navegador não tiver,
    toca o mesmo som como WAV. Navegadores só liberam som depois de um toque/tecla: destravar(). */
 (function () {
@@ -25,12 +25,12 @@
         for (i = 0; i < n; i++) { t = i / TAXA; amostras.push(0.42 * env(t, notas[k][1], 0.004, k === notas.length - 1 ? 0.12 : 0.006) * quadradoSuave(2 * Math.PI * f * t)); }
       }
     } else if (tipo === 'buzina') {
-      var dur = 0.75; n = Math.floor(dur * TAXA);
+      var dur = 0.28; n = Math.floor(dur * TAXA);   // buzina curta (toque rápido), a pedido do usuário
       for (i = 0; i < n; i++) {
         t = i / TAXA;
         var a = 2 * ((t * 349) % 1) - 1, b = 2 * ((t * 440) % 1) - 1, c = 2 * ((t * 174.5) % 1) - 1;
         var v = (0.45 * a + 0.4 * b + 0.25 * c) * 1.6;
-        amostras.push(0.45 * env(t, dur, 0.02, 0.08) * clamp(v));
+        amostras.push(0.45 * env(t, dur, 0.012, 0.05) * clamp(v));
       }
     } else {
       n = Math.floor(0.12 * TAXA);
