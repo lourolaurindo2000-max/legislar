@@ -751,6 +751,19 @@
                             alert('A Votação Plenária é aberta pelo operador no notebook.\nQuando a votação for aberta, este tablet entra sozinho na tela de voto.');
                         }, true);
                     }
+                    // Tablet só vota: Controle de Fala, Sorteio de Fala e Presença Plenária são do notebook do operador
+                    // (só o notebook controla a Smart TV)
+                    ['controle_de_fala.html', 'sistema_sorteio.html', 'presenca_plenaria.html'].forEach(function (arq) {
+                        Array.prototype.forEach.call(document.querySelectorAll('.grid-menu a.card[href^="' + arq + '"]'), function (c) {
+                            c.style.opacity = '.45';
+                            c.style.cursor = 'not-allowed';
+                            c.removeAttribute('target');
+                            c.addEventListener('click', function (e) {
+                                e.preventDefault(); e.stopImmediatePropagation();
+                                alert('Este sistema é usado só no notebook do operador.\nNo tablet, use apenas a Votação Plenária.');
+                            }, true);
+                        });
+                    });
                     // Quando o notebook abre a Votação, o tablet entra sozinho na tela do vereador
                     // (não entra se a pauta já foi toda votada — o tablet acabou de sair dela)
                     var telaV = null, concluida = null;
@@ -767,7 +780,7 @@
                 Array.prototype.forEach.call(document.querySelectorAll('.grid-menu a.card'), function (a) {
                     var arq = (a.getAttribute('href') || '').split('#')[0].split('?')[0];
                     if (!PAGINAS[arq]) return;
-                    if (ehTablet && arq === 'votacao.html') return;
+                    if (ehTablet) return;   // tablet nunca muda a Smart TV
                     a.addEventListener('click', function () {
                         a.href = arq + '?v=' + Date.now();   // sempre abre a versão mais nova do sistema
                         if (arq === 'sistema_sorteio.html') {

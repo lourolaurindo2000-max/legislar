@@ -3,6 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <script src="js/tv-compat.js"></script>
+    <!-- TABLET / CELULAR: só votam (Votação Plenária). Este sistema é usado só no notebook do operador,
+         que é o único que controla a Smart TV. A Smart TV (quadro da TV ou navegador de TV) abre normalmente. -->
+    <script>
+        (function () {
+            var q = false;
+            try { q = window.self !== window.top; } catch (e) { q = true; }
+            if (q) return;
+            if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) return;
+            var tablet = false;
+            try { tablet = navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches; } catch (e) {}
+            if (!tablet) return;
+            document.documentElement.style.display = 'none';
+            try { alert('Este sistema é usado só no notebook do operador.\nNo tablet, use apenas a Votação Plenária.'); } catch (e) {}
+            location.replace('dashboard.html');
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sorteio Plenário</title>
     <!-- Tailwind CSS -->
