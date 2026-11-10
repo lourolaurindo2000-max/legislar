@@ -5,7 +5,8 @@
    Só funciona nos tablets/celulares: Smart TV, notebook e a página presenca_plenaria.html não são alterados.
    Lê legislar/painel/tela, legislar/presenca/(vereadores, sessao/atual, config/camara) e
    legislar/votacao/aparelhos + config/ensaio (para saber de quem é o tablet).
-   Grava SOMENTE legislar/presenca/vereadores/{id} = {status:'presente', atualizadoEm} — nunca marca ausente. */
+   Grava SOMENTE legislar/presenca/vereadores/{id} = {status:'presente', atualizadoEm} — nunca marca ausente —
+   e legislar/presenca/bip = {em, n} a cada toque (a Smart TV toca o bip junto). */
 (function () {
   var ehTablet = false;
   try {
@@ -124,11 +125,15 @@
       o.start(t); o.stop(t + 0.14);
     } catch (e) {}
   }
+  // Avisa a Smart TV para tocar o mesmo bip (js/bip-tv.js no dashboard da TV)
+  function bipTV() {
+    try { db.ref(BASE + '/bip').set({ em: firebase.database.ServerValue.TIMESTAMP, n: Math.floor(Math.random() * 1e9) }); } catch (e) {}
+  }
   function tocou(e) {
     var t = e.target;
     while (t && t.nodeType === 1) {
-      if (t.tagName === 'BUTTON') { if (!t.disabled) bip(); return; }
-      if (t.className && /(^| )pt-card( |$)/.test(t.className)) { if (!/(^| )bloq( |$)/.test(t.className)) bip(); return; }
+      if (t.tagName === 'BUTTON') { if (!t.disabled) { bip(); bipTV(); } return; }
+      if (t.className && /(^| )pt-card( |$)/.test(t.className)) { if (!/(^| )bloq( |$)/.test(t.className)) { bip(); bipTV(); } return; }
       t = t.parentNode;
     }
   }
