@@ -42,19 +42,19 @@
     '#ft-fala{position:fixed;left:0;top:0;right:0;bottom:0;width:100%;height:100%;z-index:99990;display:none;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;' +
     'background:#0a1022;background:radial-gradient(1100px 620px at 8% -12%,rgba(58,100,216,.35),transparent 62%),radial-gradient(900px 520px at 108% 0%,rgba(230,185,85,.16),transparent 60%),#0a1022;' +
     'color:#fff;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;text-align:center}' +
-    '#ft-fala.ft-on{display:flex}' +
-    '#ft-fala .ft-box{max-width:620px;width:100%}' +
-    '#ft-fala .ft-tag{display:inline-block;padding:7px 16px;border-radius:999px;font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border:1px solid rgba(230,185,85,.55);color:#e6b955;background:rgba(230,185,85,.08)}' +
+    '#ft-fala.ft-on{display:flex;touch-action:none;overscroll-behavior:none}' +
+    '#ft-fala .ft-box{max-width:620px;max-width:92vw;width:100%}' +
+    '#ft-fala .ft-tag{display:inline-block;padding:7px 16px;border-radius:999px;font-size:14px;font-size:2.2vmin;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border:1px solid rgba(230,185,85,.55);color:#e6b955;background:rgba(230,185,85,.08)}' +
     '#ft-fala .ft-tag i{display:inline-block;width:9px;height:9px;border-radius:50%;background:#34d399;margin-right:9px;vertical-align:1px;animation:ft-pulso 1.2s infinite}' +
     '#ft-fala.ft-pausa .ft-tag i{background:#fbbf24;animation:none}' +
     '#ft-fala.ft-fim .ft-tag i{background:#f87171;animation:none}' +
     '@keyframes ft-pulso{0%,100%{opacity:1}50%{opacity:.25}}' +
-    '#ft-fala .ft-foto{display:block;width:210px;height:210px;max-width:46vw;max-height:46vw;margin:26px auto 18px;border-radius:50%;object-fit:cover;border:5px solid #e6b955;box-shadow:0 0 0 8px rgba(230,185,85,.12),0 18px 50px rgba(0,0,0,.5);background:#1b2547}' +
-    '#ft-fala .ft-nome{font-size:34px;font-weight:800;line-height:1.15;margin:0}' +
-    '#ft-fala .ft-sub{font-size:17px;color:#c9d2ea;margin-top:8px}' +
-    '#ft-fala .ft-tempo{font-size:76px;font-weight:800;letter-spacing:.04em;margin-top:22px;font-variant-numeric:tabular-nums;color:#fff}' +
+    '#ft-fala .ft-foto{display:block;width:210px;height:210px;width:34vmin;height:34vmin;margin:26px auto 18px;margin:4vmin auto 2.6vmin;border-radius:50%;object-fit:cover;border:5px solid #e6b955;box-shadow:0 0 0 8px rgba(230,185,85,.12),0 18px 50px rgba(0,0,0,.5);background:#1b2547}' +
+    '#ft-fala .ft-nome{font-size:34px;font-size:5.4vmin;font-weight:800;line-height:1.15;margin:0}' +
+    '#ft-fala .ft-sub{font-size:17px;font-size:2.7vmin;color:#c9d2ea;margin-top:8px}' +
+    '#ft-fala .ft-tempo{font-size:76px;font-size:13vmin;font-weight:800;letter-spacing:.04em;margin-top:22px;margin-top:3vmin;font-variant-numeric:tabular-nums;color:#fff}' +
     '#ft-fala .ft-tempo.ft-alerta{color:#fbbf24}#ft-fala .ft-tempo.ft-zero{color:#f87171}' +
-    '#ft-fala .ft-modo{font-size:14px;color:#8f9bbd;margin-top:4px;text-transform:uppercase;letter-spacing:.1em}' +
+    '#ft-fala .ft-modo{font-size:14px;font-size:2.2vmin;color:#8f9bbd;margin-top:4px;text-transform:uppercase;letter-spacing:.1em}' +
     '#ft-fala .ft-ocultar{margin-top:28px;background:transparent;color:#c9d2ea;border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:11px 22px;font-size:15px;font-family:inherit}' +
     '#ft-barra{position:fixed;left:12px;right:12px;bottom:12px;z-index:99989;display:none;align-items:center;padding:10px 14px;border-radius:16px;background:#0f1a3a;border:1px solid rgba(230,185,85,.5);color:#fff;font-family:Inter,system-ui,Arial,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.45)}' +
     '#ft-barra.ft-on{display:flex}' +
@@ -105,6 +105,7 @@
     if (!ver && estavaVisivel && !/dashboard\.html$/.test(location.pathname)) { estavaVisivel = false; location.href = 'dashboard.html'; return; }
     estavaVisivel = ver;
     tela.className = ver && !minimizado ? 'ft-on' : '';
+    document.documentElement.style.overflow = ver ? 'hidden' : '';
     barra.className = ver && minimizado ? 'ft-on' : '';
     if (!ver) return;
     var id = est.vereadorId || 1, p = PADRAO[id] || {}, d = dados['v' + id] || {};
