@@ -791,15 +791,8 @@
                     if (ehTablet) return;   // tablet nunca muda a Smart TV
                     a.addEventListener('click', function () {
                         a.href = arq + '?v=' + Date.now();   // sempre abre a versão mais nova do sistema
-                        if (arq === 'sistema_sorteio.html') {
-                            // Sorteio novo: limpa os vereadores do sorteio anterior (TV e tablets mostram só o brasão)
-                            var t = agora();
-                            rt.ref('legislar/sorteioFala/estado').transaction(function (cur) {
-                                cur = cur || {};
-                                if (cur.fim && t < cur.fim) return;   // não interrompe sorteio em andamento
-                                return Object.assign({}, cur, { inicio: t });
-                            }).catch(function () {});
-                        }
+                        // Sorteio: abrir o sistema NÃO zera mais a urna (zerar fazia vereador já sorteado sair de novo).
+                        // A urna só recomeça com "Nova urna", após os 9 sorteados ou 3 h sem sorteio.
                         if (arq === 'votacao.html') {
                             // Votação nova: tira o aviso "Sessão encerrada" da sessão anterior (o telão mostra "ainda não começou")
                             rt.ref('legislar/votacao/sessao/atual').transaction(function (cur) {
