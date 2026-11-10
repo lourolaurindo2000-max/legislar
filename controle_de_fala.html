@@ -30,7 +30,7 @@
             if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) tv = true;
             if (tv) return;
             try { localStorage.removeItem('pld_presidente_ate'); } catch (e) {}
-            d.classList.add('cf-bloq');   // pede a senha toda vez que o sistema é aberto
+            // Senha de entrada retirada (pedido do usuário, 09/11/2026): o notebook entra direto no sistema.
         })();
     </script>
     <style>
@@ -424,9 +424,7 @@
                 var b = e.target.closest ? e.target.closest('#cf-sair') : null;
                 if (!b) return;
                 
-                html.classList.add('cf-bloq');
-                erro.textContent = ''; campo.value = '';
-                focar();
+                location.href = 'dashboard.html';   // sem senha de entrada: Sair volta ao painel principal
             });
         })();
     </script>
@@ -457,7 +455,7 @@
             </button>
 
             <!-- Encerrar o acesso do Presidente (não aparece na Smart TV) -->
-            <button id="cf-sair" type="button" title="Sair (encerrar acesso do Presidente)" class="bg-governo-darkBlue hover:bg-rose-700 text-white px-3 py-2.5 rounded-xl border border-gray-600 transition flex items-center gap-2 text-sm font-bold">
+            <button id="cf-sair" type="button" title="Sair (voltar ao painel)" class="bg-governo-darkBlue hover:bg-rose-700 text-white px-3 py-2.5 rounded-xl border border-gray-600 transition flex items-center gap-2 text-sm font-bold">
                 <i class="fa-solid fa-right-from-bracket"></i><span class="hidden md:inline">Sair</span>
             </button>
 
