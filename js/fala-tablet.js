@@ -130,8 +130,27 @@
     fotoRef.on('value', function (s) { foto = {}; if (s.val()) foto['v' + id] = s.val(); render(); });
   }
 
+  // Tela cheia: o navegador só permite depois de um toque. Qualquer toque no tablet
+  // (inclusive na tela da fala, que não tem botões) coloca a tela cheia, com ou sem ensaio.
+  function emTelaCheia() {
+    try {
+      if (matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) return true;
+    } catch (e) {}
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+  function pedirTelaCheia() {
+    if (emTelaCheia()) return;
+    var h = document.documentElement;
+    try {
+      var r = h.requestFullscreen ? h.requestFullscreen({ navigationUI: 'hide' }) : (h.webkitRequestFullscreen ? h.webkitRequestFullscreen() : null);
+      if (r && r['catch']) r['catch'](function () {});
+    } catch (e) {}
+  }
+
   function iniciar() {
     montar();
+    document.addEventListener('touchend', pedirTelaCheia, true);
+    document.addEventListener('click', pedirTelaCheia, true);
     db.ref('.info/serverTimeOffset').on('value', function (s) { offset = s.val() || 0; });
     db.ref('legislar/controleFala/dados').on('value', function (s) { dados = s.val() || {}; render(); });
     db.ref('legislar/controleFala/estado').on('value', function (s) {
