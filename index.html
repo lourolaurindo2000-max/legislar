@@ -420,12 +420,12 @@
             <form id="loginForm">
                 <div class="input-group">
                     <label for="username">Usuário</label>
-                    <input type="text" id="username" name="username" class="credencial-preenchida" value="admin" placeholder="Digite seu usuário" required autocomplete="username">
+                    <input type="text" id="username" name="username" value="" placeholder="Digite seu usuário" required autocomplete="username">
                 </div>
                 
                 <div class="input-group">
                     <label for="password">Senha</label>
-                    <input type="password" id="password" name="password" class="credencial-preenchida" value="123" placeholder="••••••••" required autocomplete="current-password">
+                    <input type="password" id="password" name="password" value="" placeholder="••••••••" required autocomplete="current-password">
                 </div>
                 
                 <button type="submit" class="btn-login">
@@ -468,10 +468,17 @@
     <script id="app-index">window.__ok_index = 1;   /* TV antiga: se este bloco não rodar, js/tv-compat.js converte e roda */
         $(document).ready(function() {
             // CREDENCIAIS DE ACESSO
+            // Acesso restrito ao Operador. A senha fica guardada só como SHA-256('pld-login:' + senha).
             const CREDENCIAIS_VALIDAS = {
-                usuario: "admin",
-                senha: "123"
+                usuario: "operador",
+                hash: "bc8de97f0f01d8fe8c3e8ec8de8df41cb923b2f6e9da5d404e17876fc88aa480"
             };
+            function hashSenha(t) {
+                if (!(window.crypto && crypto.subtle && window.TextEncoder)) return Promise.resolve('');
+                return crypto.subtle.digest('SHA-256', new TextEncoder().encode('pld-login:' + t)).then(function (buf) {
+                    return [].map.call(new Uint8Array(buf), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+                });
+            }
 
             const URL_DESTINO = "dashboard.html";
 
@@ -488,7 +495,8 @@
                 const passInput = $('#password').val();
                 const $alert = $('#alert-message');
 
-                if (userInput === CREDENCIAIS_VALIDAS.usuario && passInput === CREDENCIAIS_VALIDAS.senha) {
+                hashSenha(passInput).then(function (h) {
+                if (userInput.toLowerCase() === CREDENCIAIS_VALIDAS.usuario && h === CREDENCIAIS_VALIDAS.hash) {
                     $alert.removeClass('alert-error').addClass('alert-success')
                           .html('<i class="fa-solid fa-circle-check"></i> Autenticado com sucesso! Redirecionando...')
                           .fadeIn();
@@ -506,6 +514,7 @@
                         $('#username, #password').css('border-color', 'var(--border-color)');
                     }, 1500);
                 }
+                });
             });
 
             // --- LÓGICA TELA CHEIA (SMART TV) ---
@@ -543,7 +552,7 @@
                     const lower = texto.toLowerCase();
 
                     if (lower.includes('senha') || lower.includes('usuario') || lower.includes('acesso')) {
-                        resposta = "Para acessar o teste, utilize o usuário <b>admin</b> e a senha <b>123</b>.";
+                        resposta = "O acesso ao sistema é restrito ao <b>Operador</b>. Em caso de dúvida sobre a senha, procure o responsável pelo sistema.";
                     } else if (lower.includes('tv') || lower.includes('tela')) {
                         resposta = "Você pode clicar no botão 'Tela Cheia' no canto superior direito para adaptar a visualização para Smart TVs.";
                     } else if (lower.includes('olá') || lower.includes('oi')) {
