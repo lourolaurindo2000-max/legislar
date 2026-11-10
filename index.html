@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <script src="js/tv-compat.js"></script>
+    <script src="js/login-guard.js"></script>
+    <script>/* Smart TV: sem login, entra direto no legislativo */ if (window.PldLogin && PldLogin.smartTV()) { document.documentElement.style.visibility = "hidden"; location.replace("dashboard.html"); }</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso ao Sistema</title>
     <!-- Google Fonts -->
@@ -501,8 +503,12 @@
                           .html('<i class="fa-solid fa-circle-check"></i> Autenticado com sucesso! Redirecionando...')
                           .fadeIn();
 
+                    if (window.PldLogin) PldLogin.entrar();
+                    var volta = (location.search.match(/[?&]volta=([^&]*)/) || [])[1];
+                    try { volta = volta ? decodeURIComponent(volta) : ''; } catch (e2) { volta = ''; }
+                    if (!/^[\w-]+\.html([?#].*)?$/.test(volta)) volta = URL_DESTINO;
                     setTimeout(function() {
-                        window.location.href = URL_DESTINO;
+                        window.location.href = volta;
                     }, 1000);
                 } else {
                     $alert.removeClass('alert-success').addClass('alert-error')
