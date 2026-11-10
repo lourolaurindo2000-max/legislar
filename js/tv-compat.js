@@ -71,7 +71,41 @@
     W.__fb = function () {
         var v = fbModerno ? '10.12.2' : '8.10.1', suf = fbModerno ? '-compat' : '';
         D.write('<script src="https://www.gstatic.com/firebasejs/' + v + '/firebase-app' + suf + '.js"><\/script>' +
-                '<script src="https://www.gstatic.com/firebasejs/' + v + '/firebase-database' + suf + '.js"><\/script>');
+                '<script src="https://www.gstatic.com/firebasejs/' + v + '/firebase-database' + suf + '.js"><\/script>' +
+                '<script src="https://www.gstatic.com/firebasejs/' + v + '/firebase-auth' + suf + '.js"><\/script>' +
+                '<script>__fbAuth()<\/script>');
+    };
+
+    // ---------- Segurança do banco: cada aparelho entra no Firebase com uma identidade anônima ----------
+    // O banco só aceita aparelhos identificados (regras "auth != null"). Nada muda no uso dos sistemas:
+    // a identidade é criada sozinha no primeiro acesso e fica guardada no aparelho.
+    W.__fbAuth = function () {
+        var fb = W.firebase;
+        if (!fb || !fb.initializeApp || fb.__pldAuth) return;
+        fb.__pldAuth = 1;
+        var orig = fb.initializeApp, feitos = {};
+        fb.initializeApp = function () {
+            var app = orig.apply(this, arguments);
+            try { identificar(app); } catch (e) {}
+            return app;
+        };
+        function identificar(app) {
+            if (!app || feitos[app.name] || typeof app.auth !== 'function') return;
+            feitos[app.name] = 1;
+            var a = app.auth(), primeiro = true, parar = null;
+            parar = a.onAuthStateChanged(function (u) {
+                if (!primeiro) return;
+                primeiro = false;
+                if (parar) { try { parar(); } catch (e) {} }
+                if (u) return;                                   // aparelho já identificado: nada a fazer
+                a.signInAnonymously().then(function () {
+                    // primeiro acesso deste aparelho: recarrega UMA vez para o banco abrir já identificado
+                    var ja = '1';
+                    try { ja = sessionStorage.getItem('pld_fb_id'); sessionStorage.setItem('pld_fb_id', '1'); } catch (e) {}
+                    if (!ja) location.reload();
+                })['catch'](function (e) { if (W.console) console.warn('Firebase: identificação anônima falhou', e && e.code); });
+            });
+        }
     };
 
     // ---------- Tailwind: o cdn.tailwindcss.com só roda em navegador novo; nas TVs antigas usa o CSS pronto ----------
