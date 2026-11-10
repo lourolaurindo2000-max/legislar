@@ -5,6 +5,7 @@
     <script src="js/tv-compat.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a1022">
+<link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -896,7 +897,9 @@ const VIEWS = ['v-inicio','v-op-login','v-operador','v-ver-login','v-vereador','
    O Operador é só o notebook; o Telão é só a Smart TV. */
 const EH_TABLET = (() => { try{ return navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches; }catch(e){ return false; } })();
 let semTelaCheia = false;   // o vereador saiu da tela cheia pelo botão: não volta sozinha
-const emTelaCheia = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+// instalado como aplicativo (manifest.json, display fullscreen) = já está sempre em tela cheia
+const comoApp = () => { try{ return matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }catch(e){ return false; } };
+const emTelaCheia = () => comoApp() || !!(document.fullscreenElement || document.webkitFullscreenElement);
 function telaCheia(ev){
   const d = document, el = d.documentElement;
   if(semTelaCheia || (ev && ev.target && ev.target.closest && ev.target.closest('#btnTela'))) return;
@@ -915,7 +918,7 @@ if(EH_TABLET){
     bt.setAttribute('aria-label', on ? 'Sair da tela cheia' : 'Entrar em tela cheia');
     bt.querySelector('path').setAttribute('d', on ? 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5' : 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5');
   };
-  bt.hidden = false;
+  bt.hidden = comoApp();   // como aplicativo o botão não é necessário
   bt.addEventListener('click', () => {
     if(emTelaCheia()){
       semTelaCheia = true;
