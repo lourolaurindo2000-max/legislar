@@ -1,12 +1,19 @@
 {
+  "id": "./",
   "name": "Plenário Jonas Plínio — Câmara Municipal de Almadina",
   "short_name": "Plenário",
+  "description": "Votação Plenária da Câmara Municipal de Almadina",
   "start_url": "dashboard.html",
   "scope": "./",
   "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
   "background_color": "#0B2545",
-  "theme_color": "#2c5282",
+  "theme_color": "#0B2545",
   "icons": [
-    { "src": "img/logoCamara.PNG", "sizes": "600x600", "type": "image/png", "purpose": "any" }
+    { "src": "img/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "img/icone-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "img/icone-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

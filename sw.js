@@ -8,11 +8,12 @@
  * - Bibliotecas externas (Firebase, Font Awesome, fontes, fotos): usa a cópia guardada e atualiza por trás.
  * - O banco de dados (Firebase Realtime Database) NUNCA passa por aqui.
  */
-var VERSAO = 'pld-offline-v1';
+var VERSAO = 'pld-offline-v2';
 var PAGINAS = [
   './', 'index.html', 'dashboard.html', 'votacao.html', 'controle_de_fala.html', 'presenca_plenaria.html',
   'sistema_sorteio.html', 'visualizar.js', 'js/tv-compat.js', 'js/tw-controle.css', 'js/tw-sorteio.css',
-  'img/brasao.png', 'img/logoCamara.PNG', 'img/plenario.png'
+  'img/brasao.png', 'img/logoCamara.PNG', 'img/plenario.png', 'js/capa-tablet.js', 'manifest.json',
+  'img/icone-192.png', 'img/icone-512.png'
 ];
 var EXTERNOS = [
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js',

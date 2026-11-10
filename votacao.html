@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
     <script src="js/tv-compat.js"></script>
+    <script src="js/capa-tablet.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a1022">
 <link rel="manifest" href="manifest.json">
@@ -453,6 +454,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 .tv .tvv.aus .tvfoto{filter:grayscale(1)}
 .btn-tela{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-weight:700;font-size:.85rem;margin-right:8px}
 .btn-tela[hidden]{display:none}
+html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador não sai da tela cheia */
 .btn-tela:active{transform:scale(.97)}
 @media (max-width:520px){.btn-tela span{display:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -479,6 +481,7 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
       <img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina">
       <div class="brand"><small>Câmara Municipal de Almadina</small><b>Votação Plenária</b></div>
       <div class="sp"></div>
+      <button type="button" class="btn-tela" id="btnInstalar" hidden aria-label="Instalar como aplicativo (tela cheia sempre)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>Instalar app</span></button>
       <button type="button" class="btn-tela" id="btnTela" hidden aria-label="Sair da tela cheia"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span>Sair da tela cheia</span></button>
       <span class="pill" id="modePill"><i></i><span>Conectando</span></span>
       <a href="#inicio" id="homeLink">Início</a>
@@ -902,7 +905,7 @@ const comoApp = () => { try{ return matchMedia('(display-mode: fullscreen)').mat
 const emTelaCheia = () => comoApp() || !!(document.fullscreenElement || document.webkitFullscreenElement);
 function telaCheia(ev){
   const d = document, el = d.documentElement;
-  if(semTelaCheia || (ev && ev.target && ev.target.closest && ev.target.closest('#btnTela'))) return;
+  if((semTelaCheia && !document.documentElement.classList.contains('sessao-real')) || (ev && ev.target && ev.target.closest && ev.target.closest('#btnTela'))) return;
   if(emTelaCheia()) return;
   const f = el.requestFullscreen || el.webkitRequestFullscreen;
   if(!f) return;
@@ -919,6 +922,20 @@ if(EH_TABLET){
     bt.querySelector('path').setAttribute('d', on ? 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5' : 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5');
   };
   bt.hidden = comoApp();   // como aplicativo o botão não é necessário
+  // Android (Chrome): botão "Instalar app" — instalado, abre sempre em tela cheia, sem barras
+  const bi = document.getElementById('btnInstalar');
+  let pedidoInstalar = null;
+  window.addEventListener('beforeinstallprompt', ev => {
+    ev.preventDefault(); pedidoInstalar = ev;
+    if(!comoApp()) bi.hidden = false;
+  });
+  window.addEventListener('appinstalled', () => { bi.hidden = true; pedidoInstalar = null; });
+  bi.addEventListener('click', () => {
+    if(!pedidoInstalar) return;
+    pedidoInstalar.prompt();
+    pedidoInstalar.userChoice.then(r => { if(r && r.outcome === 'accepted') bi.hidden = true; }).catch(()=>{});
+    pedidoInstalar = null;
+  });
   bt.addEventListener('click', () => {
     if(emTelaCheia()){
       semTelaCheia = true;
@@ -1793,7 +1810,7 @@ const Mensagens = (() => {
   Store.watchCol('presenca', list => { S.presenca = porId(list); render(); });
   Store.watchCol('votos', list => { S.votos = list; render(); });
   Store.watchCol('aparelhos', list => { S.aparelhos = porId(list); S.apLoaded = true; render(); });
-  Store.watchDoc('config/ensaio', v => { ENSAIO = !!(v && v.ligado); render(); });
+  Store.watchDoc('config/ensaio', v => { ENSAIO = !!(v && v.ligado); if(window.CapaTablet) CapaTablet.set(ENSAIO); render(); });
   Store.watchCol('pauta', list => { S.pauta = list; render(); });
   Mensagens.init();
   if(Store.mode === 'local' && !ls.get('vp_seed')){

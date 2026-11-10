@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <script src="js/tv-compat.js"></script>
+    <script src="js/capa-tablet.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>O Legislativo</title>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -431,7 +432,11 @@
 
             // O primeiro toque fora dos botões ativa a tela cheia.
             // Toques nos botões do sistema (links) abrem a página na hora, sem tela cheia.
+            // Tablet dos vereadores (Android): fica SEMPRE em tela cheia — qualquer toque volta para ela.
+            var tabletVer = false;
+            try { tabletVer = navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches && window.top === window; } catch (e) {}
             function primeiroToque(e) {
+                if (tabletVer) { if (!emTelaCheia() && suportado && !modoApp) entrar(); return; }
                 if (e && e.target && e.target.closest && e.target.closest('a, button, .suporte-ia')) return;
                 if (!emTelaCheia() && suportado && !modoApp) entrar();
                 document.removeEventListener('click', primeiroToque, true);
@@ -774,6 +779,8 @@
                     }
                     refTela.on('value', function (s) { telaV = s.val() || {}; avaliarVotacao(); });
                     rt.ref('legislar/votacao/sessao/atual').on('value', function (s) { var e = s.val() || {}; concluida = !!e.pautaConcluida; avaliarVotacao(); });
+                    // Modo de ensaio desligado = sessão real: o tablet mostra a capa "Toque para começar" (tela cheia)
+                    rt.ref('legislar/votacao/config/ensaio').on('value', function (s) { var v = s.val(); if (window.CapaTablet) CapaTablet.set(!!(v && v.ligado)); });
                 }
                 // ---------- Notebook / computador: ao abrir um dos 4 sistemas, a TV abre junto ----------
                 var abriuDaqui = false, voltarT = null;
