@@ -111,6 +111,11 @@ h2{font-size:1.45rem}
 .vrow .nm small{display:block;font-size:.76rem;color:var(--muted)}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--line);margin-right:5px;vertical-align:middle}
 .dot.on{background:var(--sim)}
+.faltam{margin:10px 0 4px;padding:10px 12px;border:1px solid var(--brass);border-radius:8px;background:var(--sunk)}
+.faltam small{display:block;margin-top:2px}
+.faltam-lista{display:flex;flex-wrap:wrap;margin-top:6px}
+.faltam-it{display:inline-flex;align-items:center;margin:4px 12px 4px 0;font-weight:600}
+.faltam-it .tog{margin-left:8px;color:var(--nao)}
 .tog{border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:.82rem;font-weight:700;background:var(--surface);min-height:36px}
 .tog.on{background:var(--sim);border-color:var(--sim);color:#fff}
 .quorum{display:flex;flex-direction:column;gap:8px}
@@ -1078,6 +1083,9 @@ function renderOperador(){
       const ps = presentes();
       html += `<div class="row" style="justify-content:space-between"><b style="color:var(--sim)">VOTAÇÃO ABERTA · <span class="big-num" data-elapsed></span></b><span><span class="big-num">${vs.length}</span> de ${ps.length} votaram</span></div>
         <div class="votedline">${ps.map(v => { const x = vs.find(y=>y.vid===v.id); return `<span class="chip ${x?x.voto:''}">${esc(v.nome.split(' ')[0])}${x?' · '+VOTO_CURTO[x.voto]:''}</span>`; }).join('')}</div>
+        ${(() => { const falta = ps.filter(v => !vs.some(y => y.vid === v.id)); return !falta.length ? '' :
+          `<div class="faltam"><b>Faltam votar (${falta.length}):</b> <small class="muted">se alguém não está no plenário, marque como ausente para a votação não ficar esperando.</small>
+          <div class="faltam-lista">${falta.map(v => `<span class="faltam-it">${esc(v.nome)}<button type="button" class="tog" data-ausente="${v.id}">Marcar ausente</button></span>`).join('')}</div></div>`; })()}
         <div class="row"><button class="btn stop" id="btnEncerrar">Encerrar votação</button></div>`;
     } else if(e.votacao === 'desempate'){
       const a = e.apuracao || {};
@@ -1173,6 +1181,13 @@ $('#btnFecharSessao').addEventListener('click', () => confirmBox({
   onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:true,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado(Object.assign(defEstado(), {presidente:E().presidente, sessaoEncerrada:true, encerradaEm:agora()})); toast('Sessão encerrada.'); }
 }));
 $('#opCurrent').addEventListener('click', ev => {
+  // "Marcar ausente" no aviso "Faltam votar": tira o vereador dos presentes durante a votação aberta
+  const au = ev.target.closest('[data-ausente]');
+  if(au){
+    const vid = au.dataset.ausente, restam = presentes().length - 1;
+    return confirmBox({titulo:'Marcar como ausente?', texto:`${vName(vid)} deixa de contar como presente e a votação não espera mais o voto dele.` + (restam < QUORUM ? ` ATENÇÃO: ficarão só ${restam} presentes, abaixo do quórum de ${QUORUM}.` : ''), ok:'Marcar ausente', cls:'stop',
+      onOk: () => { S.presenca[vid] = {presente:false, ts:agora()}; write('presenca/'+vid, S.presenca[vid]); render(); toast(`${vName(vid)} marcado como ausente.`); }});
+  }
   const mb = ev.target.closest('[data-minerva]');
   if(mb){ const voto = mb.dataset.minerva; return confirmBox({titulo:'Voto de desempate do Presidente', big:VOTO_LABEL[voto], bigColor:`var(--${voto})`, texto:'Registrar a decisão do Presidente da Mesa para esta matéria?', ok:'Registrar', cls: voto==='sim'?'go':'stop', onOk: () => desempatar(voto)}); }
   const id = ev.target.id, m = pautaAtual();
