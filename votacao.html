@@ -1504,6 +1504,7 @@ $('#verBody').addEventListener('click', ev => {
   const mb = ev.target.closest('[data-minerva]');
   if(mb){
     const voto = mb.dataset.minerva;
+    bipAprovar();   /* bip nos botões de desempate do Presidente (APROVAR/REPROVAR); o "Confirmar desempate" continua em silêncio */
     if(E().presidente !== ls.get('vp_vid')) return toast('Só o Presidente da Mesa pode desempatar.');
     return confirmBox({titulo:'Voto de desempate', big:VOTO_LABEL[voto], bigColor:`var(--${voto})`,
       texto:'Como Presidente da Mesa, seu voto decide esta matéria. Depois de confirmar, não pode ser alterado.', ok:'Confirmar desempate', cls: voto==='sim'?'go':'stop',
