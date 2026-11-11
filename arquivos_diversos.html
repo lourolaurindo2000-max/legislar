@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+    <script src="js/tv-compat.js"></script>
+    <script src="js/login-guard.js"></script>
+    <script>
+    /* Arquivos Diversos: só tablets e notebook. Smart TV volta para o painel. */
+    (function () {
+      var tv = false;
+      try { tv = window.self !== window.top || (localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0)); } catch (e) { tv = true; }
+      if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) tv = true;
+      if (tv) { document.documentElement.style.display = 'none'; location.replace('dashboard.html'); }
+    })();
+    </script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a1022">
+<link rel="manifest" href="manifest.json">
+<title>Arquivos Diversos — Câmara de Almadina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+</head>
+<body>
+<script src="visualizar.js"></script>
+<script>__fb()</script>
+<script>window.DOCCFG = { secao: 'diversos', titulo: 'Arquivos Diversos', item: 'documento', pessoal: true };</script>
+<script src="js/docs.js?v=1"></script>
+</body>
+</html>

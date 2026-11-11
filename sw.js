@@ -8,11 +8,11 @@
  * - Bibliotecas externas (Firebase, Font Awesome, fontes, fotos): usa a cópia guardada e atualiza por trás.
  * - O banco de dados (Firebase Realtime Database) NUNCA passa por aqui.
  */
-var VERSAO = 'pld-offline-v28';
+var VERSAO = 'pld-offline-v29';
 var PAGINAS = [
   './', 'index.html', 'dashboard.html', 'votacao.html', 'controle_de_fala.html', 'presenca_plenaria.html',
   'sistema_sorteio.html', 'visualizar.js', 'js/tv-compat.js', 'js/tw-controle.css', 'js/tw-sorteio.css',
-  'img/brasao.png', 'img/logoCamara.PNG', 'img/plenario.png', 'js/capa-tablet.js', 'js/fala-tablet.js', 'js/presenca-tablet.js', 'js/bip-tv.js', 'js/sons.js', 'js/login-guard.js', 'manifest.json', 'anotacoes.html', 'js/anotacoes-aviso.js',
+  'img/brasao.png', 'img/logoCamara.PNG', 'img/plenario.png', 'js/capa-tablet.js', 'js/fala-tablet.js', 'js/presenca-tablet.js', 'js/bip-tv.js', 'js/sons.js', 'js/login-guard.js', 'manifest.json', 'anotacoes.html', 'js/anotacoes-aviso.js', 'ordem_do_dia.html', 'atas.html', 'arquivos_diversos.html', 'js/docs.js', 'js/docs-aviso.js',
   'img/icone-192.png', 'img/icone-512.png'
 ];
 var EXTERNOS = [
