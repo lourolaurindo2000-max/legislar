@@ -157,14 +157,35 @@
   }
 
   // De quem é este tablet: o vínculo da Votação (fora do Modo de ensaio); senão, o último vereador que registrou aqui.
-  function devId() { try { return localStorage.getItem('vp_dev') || ''; } catch (e) { return ''; } }
+  // Cada tablet pertence a UM vereador (mesmo vínculo da Votação: legislar/votacao/aparelhos/{vid} = {dev}).
+  // Fora do Modo de ensaio, o primeiro vereador que registra a presença num tablet ainda livre fica vinculado a ele;
+  // depois, esse tablet só deixa o dono marcar presença, e o nome dele fica bloqueado nos outros tablets.
+  // O Operador desfaz o vínculo em Votação → "Liberar tablet".
+  var PRES2VOT = {}; for (var k in VOT2PRES) if (VOT2PRES.hasOwnProperty(k)) PRES2VOT[VOT2PRES[k]] = k;
+  function devId() {
+    var d = '';
+    try { d = localStorage.getItem('vp_dev') || ''; } catch (e) {}
+    if (!d) {
+      d = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      try { localStorage.setItem('vp_dev', d); } catch (e) {}
+    }
+    return d;
+  }
   function dono() {
     var dev = devId();
     if (!ensaio && dev) for (var vid in aparelhos) if (aparelhos.hasOwnProperty(vid) && aparelhos[vid] && aparelhos[vid].dev === dev && VOT2PRES[vid] && vers[VOT2PRES[vid]]) return { id: VOT2PRES[vid], fixo: true };
+    if (!ensaio) return null;   // sessão real: tablet ainda sem dono
     var m = ''; try { m = localStorage.getItem('pt_meu') || ''; } catch (e) {}
     if (m && vers[m]) return { id: m, fixo: false };
     return null;
   }
+  // nome já vinculado a OUTRO tablet (fora do ensaio)
+  function deOutro(id) {
+    if (ensaio) return false;
+    var a = aparelhos[PRES2VOT[id]];
+    return !!(a && a.dev && a.dev !== devId());
+  }
+  function bloqueado(id) { var d = dono(); return (d && d.fixo && d.id !== id) || deOutro(id); }
 
   function montar() {
     var st = document.createElement('style'); st.appendChild(document.createTextNode(css)); document.head.appendChild(st);
@@ -202,7 +223,7 @@
     for (var i = 0; i < L.length; i++) {
       var id = L[i].id, v = L[i].v, s = norm(v.status);
       if (s === 'presente') np++;
-      var meu = d && d.id === id, bloq = d && d.fixo && !meu;
+      var meu = d && d.id === id, bloq = !meu && bloqueado(id);
       html += '<div class="pt-card ' + s + (meu ? ' meu' : '') + (bloq ? ' bloq' : '') + '" data-id="' + esc(id) + '">' +
         (meu ? '<span class="pt-tag">Este tablet</span>' : '') + avatar(id, v) +
         '<div class="pt-nome">' + esc(v.nome || id) + '</div>' +
@@ -226,7 +247,7 @@
   function abrir(id) {
     var d = dono();
     if (!vers[id]) return;
-    if (d && d.fixo && d.id !== id) return;   // tablet vinculado: só o dono registra aqui
+    if (bloqueado(id)) return;   // tablet vinculado: só o dono registra aqui; nome de outro tablet não abre
     escolhido = id; clearTimeout(fecharT);
     el('pt-msg').textContent = ''; el('pt-msg').className = 'pt-msg';
     modal.className = 'pt-on';
@@ -258,14 +279,36 @@
     if (!enviando && !m.textContent && s === 'justificado') m.textContent = 'A Mesa marcou como justificado. Toque abaixo se você está presente.';
   }
 
+  // Sessão real, tablet sem dono: primeiro vincula o tablet ao vereador (só se o nome estiver livre), depois registra.
+  function vincular(id, m) {
+    var vid = PRES2VOT[id], dev = devId();
+    if (!vid) { enviando = false; m.textContent = 'Vereador não encontrado na Votação.'; m.className = 'pt-msg erro'; renderModal(); return; }
+    var lento = setTimeout(function () { enviando = false; m.textContent = 'Sem internet. Toque de novo quando a conexão voltar.'; m.className = 'pt-msg erro'; renderModal(); }, 8000);
+    db.ref(RAIZ + '/votacao/aparelhos/' + vid).transaction(function (cur) {
+      if (cur && cur.dev && cur.dev !== dev) return;   // já é de outro tablet: não mexe
+      return { dev: dev, em: Date.now() };
+    }, function (err, ok, snap) {
+      clearTimeout(lento);
+      var v = snap && snap.val();
+      if (err || !ok || !v || v.dev !== dev) {
+        enviando = false;
+        m.textContent = err ? 'Não foi possível registrar. Toque de novo.' : 'Este vereador já está vinculado a outro tablet.';
+        m.className = 'pt-msg erro'; renderModal(); return;
+      }
+      aparelhos[vid] = v;
+      enviando = false; registrar();
+    }, false);
+  }
+
   function registrar() {
     var id = escolhido;
     if (!id || enviando || !vers[id] || norm(vers[id].status) === 'presente') return;
     if (!telaPronta && agora() < tela.em + ESPERA) return;
+    if (bloqueado(id)) return;
     var d = dono();
-    if (d && d.fixo && d.id !== id) return;
     enviando = true; renderModal();
     var m = el('pt-msg'), terminou = false;
+    if (!ensaio && !(d && d.fixo)) { vincular(id, m); return; }
     var lento = setTimeout(function () {
       if (terminou) return;
       m.textContent = 'Sem internet no momento. A presença será enviada assim que a conexão voltar.'; m.className = 'pt-msg erro';
