@@ -894,6 +894,17 @@
         })();
     </script>
 
+<script>
+/* Tablets: abrir os cartões na mesma janela (sem nova aba), para o app não sair da tela cheia
+   nem mostrar a barra com o título e o endereço do site. Notebook e Smart TV não mudam. */
+(function () {
+    var tab = false;
+    try { tab = navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(navigator.userAgent || '')) && window.top === window; } catch (e) {}
+    if (!tab) return;
+    var cs = document.querySelectorAll('.grid-menu a.card[target]');
+    for (var i = 0; i < cs.length; i++) cs[i].removeAttribute('target');
+})();
+</script>
 <script src="visualizar.js"></script>
 <script src="js/fala-tablet.js?v=3"></script>
 <script src="js/presenca-tablet.js?v=6"></script>
