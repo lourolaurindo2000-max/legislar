@@ -19,6 +19,11 @@
   function cheia() { return comoApp() || !!(D.fullscreenElement || D.webkitFullscreenElement); }
   var el = D.documentElement;
   var podeCheia = !!(el.requestFullscreen || el.webkitRequestFullscreen);
+  // Na Votação (script com data-sempre="1") a capa aparece SEMPRE ao abrir a página, em todos os tablets,
+  // mesmo com Modo de ensaio ligado, já em tela cheia ou instalado como app — padrão igual para todos.
+  var tag = D.querySelector('script[src*="capa-tablet.js"]');
+  var sempre = !!(tag && tag.getAttribute('data-sempre') === '1');
+  var entrou = false;
 
   // último estado conhecido do ensaio (para a capa aparecer já ao abrir a página)
   var ensaio = null;
@@ -50,6 +55,8 @@
       '<span class="bt">Toque para começar</span><p>Votação Plenária</p>';
     function tocar(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
+      entrou = true;
+      if (cheia()) { capa.className = ''; return; }
       try {
         var r = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : el.webkitRequestFullscreen();
         if (r && r['catch']) r['catch'](function () {});
@@ -64,7 +71,7 @@
   function avaliar() {
     criar();
     if (!capa) return;
-    var mostrar = ensaio === false && podeCheia && !cheia();
+    var mostrar = (sempre && !entrou) || (ensaio === false && podeCheia && !cheia());
     capa.className = mostrar ? 'on' : '';
     el.className = el.className.replace(/\s*\bsessao-real\b/g, '') + (ensaio === false ? ' sessao-real' : '');
   }
