@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+    <script src="js/tv-compat.js"></script>
+    <script src="js/login-guard.js"></script>
+    <script>
+    /* Anotações do Vereador: só tablets e notebook. Smart TV volta para o painel. */
+    (function () {
+      var tv = false;
+      try { tv = window.self !== window.top || (localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0)); } catch (e) { tv = true; }
+      if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) tv = true;
+      if (tv) { document.documentElement.style.display = 'none'; location.replace('dashboard.html'); }
+    })();
+    </script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a1022">
+<link rel="manifest" href="manifest.json">
+<title>Anotações do Vereador — Câmara de Almadina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{
+  --bg:#0a1022; --bg2:#111a35; --card:#151f3f; --card2:#1b2750; --line:#2a3766; --ink:#eef2fb; --muted:#9aa6c6;
+  --gold:#e6b955; --gold2:#ffc107; --ok:#34d399; --err:#f87171; --novo:#fbbf24;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif; --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(120% 80% at 50% 0%,var(--bg2),var(--bg) 70%) fixed;color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;color-scheme:dark}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.top{display:flex;align-items:center;padding:12px max(16px,env(safe-area-inset-right)) 12px max(16px,env(safe-area-inset-left));border-bottom:1px solid var(--line);background:rgba(10,16,34,.85);position:sticky;top:0;z-index:5}
+.top img{width:46px;height:46px;object-fit:contain;margin-right:12px;flex:none}
+.tit{flex:1;min-width:0}
+.tit b{display:block;font-family:var(--f-display);font-size:26px;letter-spacing:.02em;line-height:1.05;color:var(--gold)}
+.tit small{display:block;color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{font-size:13px;font-weight:700;padding:5px 10px;border-radius:999px;background:rgba(52,211,153,.14);color:var(--ok);margin-left:8px;white-space:nowrap}
+.pill.off{background:rgba(248,113,113,.14);color:var(--err)}
+.tb{margin-left:8px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-weight:700;font-size:14px;white-space:nowrap}
+.tb:hover{border-color:var(--gold);color:var(--gold)}
+.wrap{max-width:1000px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right)) 60px max(16px,env(safe-area-inset-left))}
+h2{font-family:var(--f-display);font-size:24px;letter-spacing:.03em;margin:22px 0 10px;color:var(--gold);display:flex;align-items:center}
+h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;color:#0a1022;background:var(--novo);border-radius:999px;padding:2px 9px}
+.vazio{color:var(--muted);border:1px dashed var(--line);border-radius:14px;padding:22px;text-align:center}
+/* Mensagens da Mesa */
+.msg{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.msg.novo{border-color:var(--novo);box-shadow:inset 4px 0 0 var(--novo)}
+.msg p{margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:18px}
+.msg .rod{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:13px}
+.msg .tag{font-size:11px;font-weight:800;letter-spacing:.08em;color:#0a1022;background:var(--novo);border-radius:6px;padding:2px 6px;margin-right:8px}
+.arq{display:flex;align-items:center;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.arq svg{flex:none;color:var(--gold);margin-right:10px}
+.arq span{flex:1;min-width:0}
+.arq b{display:block;overflow-wrap:anywhere;font-size:15px}
+.arq small{color:var(--muted);font-size:13px}
+.btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700}
+.btn-ver{background:var(--gold);color:#0a1022;margin-left:10px}
+.btn-ouro{background:var(--gold);color:#0a1022}
+.btn-sec{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn-del{background:transparent;border:1px solid rgba(248,113,113,.4);color:var(--err);padding:6px 10px;font-size:13px}
+.btn[disabled]{opacity:.5;cursor:default}
+/* Anotações */
+.barra{display:flex;align-items:center;flex-wrap:wrap;margin-top:22px}
+.barra h2{margin:0;flex:1}
+.notas{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));grid-gap:14px;margin-top:12px}
+.nota{background:#fdf6dd;color:#2b2310;border-radius:4px 14px 14px 14px;border-top:5px solid var(--gold);padding:12px 14px;cursor:pointer;min-width:0}
+.nota h4{margin:0 0 6px;font-family:var(--f-display);font-size:21px;line-height:1.1;overflow-wrap:anywhere}
+.nota p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.nota time{display:block;margin-top:8px;font-size:12px;color:#7a6a3d}
+.editor{background:var(--card);border:1px solid var(--gold);border-radius:14px;padding:14px;margin-top:12px}
+.editor input,.editor textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.editor input{font-family:var(--f-display);font-size:22px}
+.editor textarea{min-height:180px;resize:vertical;font-size:17px;line-height:1.55}
+.acoes{display:flex;justify-content:flex-end}
+.acoes .btn{margin-left:8px}
+/* Leitura */
+.leitor{position:fixed;top:0;right:0;bottom:0;left:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}
+.lbar{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--card)}
+.lbar .sp{flex:1}
+.lbar .btn{margin-left:8px}
+.lcorpo{flex:1;overflow-y:auto;padding:24px 20px 60px}
+.lin{max-width:70ch;margin:0 auto}
+.lin h3{font-family:var(--f-display);font-size:calc(var(--fs,24px)*1.4);margin:0 0 6px;color:var(--gold);overflow-wrap:anywhere}
+.lin time{color:var(--muted);font-size:14px}
+.lin div{font-size:var(--fs,24px);line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:14px}
+/* Escolha do dono do tablet */
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));grid-gap:12px;margin-top:12px}
+.ver{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 10px;text-align:center;font-weight:700;font-size:18px}
+.ver small{display:block;color:var(--muted);font-weight:600;font-size:13px;margin-top:4px}
+.ver.bloq{opacity:.38;filter:grayscale(1);cursor:default}
+.ver:not(.bloq):hover{border-color:var(--gold)}
+.aviso{color:var(--novo);min-height:24px;margin-top:10px;font-weight:600}
+/* Mesa (notebook) */
+.envio{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.envio textarea{width:100%;min-height:110px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;resize:vertical}
+.envio .linha{display:flex;align-items:center;flex-wrap:wrap;margin-top:10px}
+.envio .linha .btn{margin-right:10px;margin-bottom:6px}
+.envio .linha span{color:var(--muted);font-size:14px;flex:1;min-width:180px;margin-bottom:6px}
+.prog{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:10px}
+.prog i{display:block;height:100%;width:0;background:var(--gold);transition:width .2s}
+.nota-info{color:var(--muted);font-size:14px;margin-top:8px}
+/* Modal e aviso */
+.modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:50;background:rgba(5,8,18,.75);display:flex;align-items:center;justify-content:center;padding:16px}
+.mbox{background:var(--card);border:1px solid var(--gold);border-radius:18px;padding:22px;max-width:460px;width:100%;text-align:center}
+.mbox b{display:block;font-family:var(--f-display);font-size:28px;color:var(--gold)}
+.mbox p{color:var(--ink);margin:10px 0 18px}
+.mbox .btn{width:100%;margin-top:8px;padding:14px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;background:var(--ink);color:#0a1022;font-weight:700;padding:12px 18px;border-radius:12px;max-width:calc(100vw - 32px);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.toast.err{background:var(--err);color:#fff}
+@media (max-width:560px){.tb .lbl{display:none}.tit b{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="top">
+  <img src="img/brasao.png" alt="" onerror="this.style.display='none'">
+  <div class="tit"><b>Anotações do Vereador</b><small id="sub">Carregando…</small></div>
+  <span class="pill off" id="pill">Conectando</span>
+  <button class="tb" id="btnTela" type="button" hidden>⛶ <span class="lbl">Tela cheia</span></button>
+  <button class="tb" id="btnVoltar" type="button">← <span class="lbl">Painel</span></button>
+</div>
+
+<div class="wrap">
+  <!-- Tablet sem dono: escolher o vereador -->
+  <section id="vEscolha" hidden>
+    <h2>De quem é este tablet?</h2>
+    <p style="color:var(--muted);margin:0">Toque no seu nome. O tablet fica reservado para você (o mesmo vínculo da Votação e da Presença).</p>
+    <div class="grade" id="grade"></div>
+    <div class="aviso" id="avisoEsc"></div>
+  </section>
+
+  <!-- Tablet do vereador -->
+  <section id="vTablet" hidden>
+    <h2>Da Mesa <span class="n" id="nNovas" hidden></span></h2>
+    <div id="listaMesa"><div class="vazio">Carregando…</div></div>
+
+    <div class="barra">
+      <h2>Minhas anotações</h2>
+      <button class="btn btn-ouro" id="btnNova" type="button">+ Nova anotação</button>
+    </div>
+    <form class="editor" id="editor" hidden>
+      <input id="eTit" maxlength="120" placeholder="Título" autocomplete="off">
+      <textarea id="eTxt" maxlength="100000" placeholder="Escreva aqui…"></textarea>
+      <div class="acoes"><button class="btn btn-sec" type="button" id="eCanc">Cancelar</button><button class="btn btn-ouro" type="submit" id="eSalvar">Salvar</button></div>
+    </form>
+    <div class="notas" id="notas"></div>
+  </section>
+
+  <!-- Notebook da Mesa -->
+  <section id="vMesa" hidden>
+    <h2>Enviar para os tablets dos vereadores</h2>
+    <form class="envio" id="formEnvio">
+      <textarea id="mTexto" maxlength="4000" placeholder="Mensagem para todos os vereadores (opcional se anexar um arquivo)"></textarea>
+      <div class="linha">
+        <input type="file" id="mArq" hidden>
+        <button class="btn btn-sec" type="button" id="mArqBtn">📎 Anexar arquivo</button>
+        <span id="mArqNome">Nenhum arquivo (opcional). Até 10 MB.</span>
+        <button class="btn btn-sec" type="button" id="mArqTirar" hidden>Tirar</button>
+        <button class="btn btn-ouro" type="submit" id="mEnviar">Enviar para os tablets</button>
+      </div>
+      <div class="prog" id="mProg" hidden><i></i></div>
+      <div class="nota-info">Chega na hora em todos os tablets, em Anotações do Vereador. Não aparece na Smart TV.</div>
+    </form>
+    <h2>Enviadas</h2>
+    <div id="listaEnviadas"><div class="vazio">Carregando…</div></div>
+  </section>
+</div>
+
+<div class="leitor" id="leitor" hidden>
+  <div class="lbar">
+    <button class="btn btn-sec" id="lMenos" type="button">A−</button>
+    <button class="btn btn-sec" id="lMais" type="button">A+</button>
+    <span class="sp"></span>
+    <button class="btn btn-sec" id="lEditar" type="button">Editar</button>
+    <button class="btn btn-del" id="lApagar" type="button" style="padding:10px 14px">Apagar</button>
+    <button class="btn btn-ouro" id="lFechar" type="button">Fechar</button>
+  </div>
+  <div class="lcorpo"><div class="lin" id="lin"><h3 id="lTit"></h3><time id="lData"></time><div id="lTxt"></div></div></div>
+</div>
+
+<div class="modal" id="modal" hidden><div class="mbox"><b id="mdTit"></b><p id="mdTxt"></p>
+  <button class="btn btn-ouro" id="mdOk" type="button">Confirmar</button><button class="btn btn-sec" id="mdCanc" type="button">Cancelar</button></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="visualizar.js"></script>
+<script>__fb()</script>
+<script>
+(function () {
+  'use strict';
+  var RAIZ = window.__AN_RAIZ || 'legislar';
+  var BASE = RAIZ + '/anotacoes';
+  var PARTE = 1000000, LIMITE = 10 * 1024 * 1024, VISTO = 'an_visto';
+  // Mesmos ids da Votação (aparelhos/{vid} = {dev}), na ordem dos aparelhos
+  var VERS = [
+    { id: 'v1', nome: 'Jackson Costa', ap: 1 }, { id: 'v4', nome: 'Marilene Santos', ap: 2 }, { id: 'v5', nome: 'Nilza Damasceno', ap: 3 },
+    { id: 'v9', nome: 'Wilson Freitas', ap: 4 }, { id: 'v6', nome: 'Rogério Gotado', ap: 5 }, { id: 'v2', nome: 'Dilson Junior', ap: 6 },
+    { id: 'v3', nome: 'Lucas Cavalcante', ap: 7 }, { id: 'v7', nome: 'Sylas Souza', ap: 8 }, { id: 'v8', nome: 'José Lindomar', ap: 9 }
+  ];
+  var NOME = {}; VERS.forEach(function (v) { NOME[v.id] = v.nome; });
+
+  var EH_TABLET = false;
+  try { EH_TABLET = navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(navigator.userAgent || '')); } catch (e) {}
+  if (window.__AN_TABLET !== undefined) EH_TABLET = !!window.__AN_TABLET;   // só para teste automatizado
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function quando(t) { if (!t) return ''; var d = new Date(t); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' às ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function tamanho(b) { b = +b || 0; return b >= 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
+  function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+  var toastT = null;
+  function toast(t, err) { var el = $('toast'); el.textContent = t; el.className = 'toast' + (err ? ' err' : ''); el.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { el.hidden = true; }, 3500); }
+  var mdOk = null;
+  function confirmar(tit, txt, okTxt, fn) { $('mdTit').textContent = tit; $('mdTxt').textContent = txt; $('mdOk').textContent = okTxt || 'Confirmar'; mdOk = fn; $('modal').hidden = false; }
+  $('mdCanc').onclick = function () { $('modal').hidden = true; mdOk = null; };
+  $('mdOk').onclick = function () { $('modal').hidden = true; var f = mdOk; mdOk = null; if (f) f(); };
+  $('btnVoltar').onclick = function () { location.href = 'dashboard.html'; };
+
+  // Tela cheia (tablet)
+  function emTela() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  if (EH_TABLET) {
+    $('btnTela').hidden = false;
+    $('btnTela').onclick = function () { try { var el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) {} };
+    document.addEventListener('click', function () { if (!emTela()) { try { var el = document.documentElement; var p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if (p && p.catch) p.catch(function () {}); } catch (e) {} } }, true);
+  }
+
+  if (typeof firebase === 'undefined') { $('sub').textContent = 'Sem conexão com o servidor. Recarregue a página.'; return; }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp({
+      apiKey: 'AIzaSyAHawTmb2za8y2Eq70FWejq64-5J6Pbqfo', authDomain: 'projeto-teste-f08c4.firebaseapp.com',
+      databaseURL: 'https://projeto-teste-f08c4-default-rtdb.firebaseio.com', projectId: 'projeto-teste-f08c4',
+      storageBucket: 'projeto-teste-f08c4.firebasestorage.app', messagingSenderId: '788863562302', appId: '1:788863562302:web:2ddcfb6c2c892770de976f'
+    });
+  } catch (e) {}
+  var db = firebase.database();
+  var refMsgs = db.ref(BASE + '/mesa/mensagens'), refArq = db.ref(BASE + '/mesa/arquivos');
+  db.ref('.info/connected').on('value', function (s) { var on = s.val() === true; $('pill').textContent = on ? 'Conectado' : 'Sem internet'; $('pill').className = 'pill' + (on ? '' : ' off'); });
+
+  // ---------- Mensagens da Mesa (lidas por todos) ----------
+  var msgs = [], porId = {}, carregou = false, conhecidas = null;
+  function arqHtml(m) {
+    var a = m.arquivo; if (!a) return '';
+    return '<div class="arq"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/></svg>' +
+      '<span><b>' + esc(a.nome) + '</b><small>' + tamanho(a.tamanho) + '</small></span>' +
+      '<button class="btn btn-ver" type="button" data-ver="' + esc(m.id) + '">Ver</button></div>';
+  }
+  function abrirArquivo(id, b) {
+    var m = porId[id]; if (!m || !m.arquivo) return;
+    if (b) b.disabled = true; toast('Abrindo ' + m.arquivo.nome + '…');
+    refArq.child(id).once('value').then(function (s) {
+      var v = s.val() || {}, d = '';
+      for (var i = 0; i < (m.arquivo.partes || 0); i++) d += (v[i] || v[String(i)] || '');
+      if (!d) throw new Error('vazio');
+      VerDoc.abrir(d, m.arquivo.nome, m.arquivo.tipo);
+    }).catch(function () { toast('Não foi possível abrir o arquivo.', true); }).then(function () { if (b) b.disabled = false; });
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target.closest('[data-ver]') : null;
+    if (t) abrirArquivo(t.getAttribute('data-ver'), t);
+  });
+  refMsgs.orderByChild('criadoEm').limitToLast(40).on('value', function (s) {
+    var l = [];
+    s.forEach(function (c) { var v = c.val() || {}; v.id = c.key; if (v.criadoEm) l.push(v); });
+    l.sort(function (a, b) { return b.criadoEm - a.criadoEm; });
+    var novas = [];
+    if (conhecidas !== null) l.forEach(function (m) { if (!conhecidas[m.id]) novas.push(m); });
+    conhecidas = {}; l.forEach(function (m) { conhecidas[m.id] = true; });
+    msgs = l; porId = {}; l.forEach(function (m) { porId[m.id] = m; });
+    carregou = true;
+    renderMesa(); renderEnviadas();
+    if (novas.length && EH_TABLET && dono) toast(novas.length > 1 ? novas.length + ' novas mensagens da Mesa' : 'Nova mensagem da Mesa');
+  });
+  var vistoNaAbertura = +ls(VISTO) || 0;
+  function renderMesa() {
+    if (!EH_TABLET || !carregou) return;
+    var n = 0, h = '';
+    msgs.forEach(function (m) {
+      var novo = m.criadoEm > vistoNaAbertura; if (novo) n++;
+      h += '<div class="msg' + (novo ? ' novo' : '') + '">' + (m.texto ? '<p>' + esc(m.texto) + '</p>' : '') + arqHtml(m) +
+        '<div class="rod"><span>' + (novo ? '<span class="tag">NOVO</span>' : '') + esc(m.de || 'Mesa') + '</span><span>' + quando(m.criadoEm) + '</span></div></div>';
+    });
+    $('listaMesa').innerHTML = h || '<div class="vazio">Nenhuma mensagem ou arquivo da Mesa ainda.</div>';
+    $('nNovas').hidden = !n; $('nNovas').textContent = n === 1 ? '1 nova' : n + ' novas';
+    if (msgs.length && dono) ls(VISTO, String(Math.max(+ls(VISTO) || 0, msgs[0].criadoEm)));   // marcado como visto neste tablet
+  }
+
+  // ---------- NOTEBOOK: enviar para os tablets ----------
+  var arqSel = null;
+  function renderEnviadas() {
+    if (EH_TABLET || !carregou) return;
+    var h = '';
+    msgs.forEach(function (m) {
+      h += '<div class="msg">' + (m.texto ? '<p>' + esc(m.texto) + '</p>' : '') + arqHtml(m) +
+        '<div class="rod"><span>' + quando(m.criadoEm) + '</span><button class="btn btn-del" type="button" data-apagar="' + esc(m.id) + '">Apagar</button></div></div>';
+    });
+    $('listaEnviadas').innerHTML = h || '<div class="vazio">Nada enviado ainda.</div>';
+  }
+  function iniciarMesa() {
+    $('vMesa').hidden = false;
+    $('sub').textContent = 'Mesa · envio para os tablets dos vereadores';
+    function limpar() { arqSel = null; $('mArqNome').textContent = 'Nenhum arquivo (opcional). Até 10 MB.'; $('mArqTirar').hidden = true; }
+    $('mArqBtn').onclick = function () { $('mArq').click(); };
+    $('mArqTirar').onclick = limpar;
+    $('mArq').onchange = function () {
+      var f = this.files && this.files[0]; this.value = ''; if (!f) return;
+      if (f.size > LIMITE) { toast('O arquivo tem mais de 10 MB. Escolha um menor.', true); return; }
+      arqSel = f; $('mArqNome').textContent = f.name + ' · ' + tamanho(f.size); $('mArqTirar').hidden = false;
+    };
+    function ler(f) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = function () { rej(new Error('leitura')); }; r.readAsDataURL(f); }); }
+    $('formEnvio').onsubmit = function (ev) {
+      ev.preventDefault();
+      var texto = $('mTexto').value.replace(/^\s+|\s+$/g, ''), f = arqSel;
+      if (!texto && !f) { toast('Escreva uma mensagem ou anexe um arquivo.', true); return; }
+      var id = refMsgs.push().key, b = $('mEnviar'), prog = $('mProg'), barra = prog.firstChild;
+      b.disabled = true; b.textContent = 'Enviando…';
+      var p = Promise.resolve(null);
+      if (f) p = ler(f).then(function (d) {
+        var partes = Math.ceil(d.length / PARTE), feitas = 0, envios = [];
+        prog.hidden = false; barra.style.width = '0';
+        for (var i = 0; i < partes; i++) envios.push(refArq.child(id).child(String(i)).set(d.slice(i * PARTE, (i + 1) * PARTE)).then(function () { feitas++; barra.style.width = Math.round(feitas / partes * 100) + '%'; }));
+        return Promise.all(envios).then(function () { return { nome: f.name, tipo: f.type || '', tamanho: f.size, partes: partes }; });
+      });
+      p.then(function (arquivo) {
+        var m = { texto: texto, de: 'Mesa', criadoEm: firebase.database.ServerValue.TIMESTAMP };
+        if (arquivo) m.arquivo = arquivo;
+        return refMsgs.child(id).set(m);
+      }).then(function () {
+        $('mTexto').value = ''; limpar(); toast('Enviado para todos os tablets.');
+      }).catch(function () {
+        refArq.child(id).remove().catch(function () {});
+        toast('Não foi possível enviar. Verifique a internet.', true);
+      }).then(function () { b.disabled = false; b.textContent = 'Enviar para os tablets'; prog.hidden = true; });
+    };
+    document.addEventListener('click', function (e) {
+      var t = e.target && e.target.closest ? e.target.closest('[data-apagar]') : null; if (!t) return;
+      var id = t.getAttribute('data-apagar');
+      confirmar('Apagar envio?', 'A mensagem e o arquivo saem de todos os tablets. Esta ação não pode ser desfeita.', 'Apagar', function () {
+        refMsgs.child(id).remove().then(function () { return refArq.child(id).remove(); })
+          .then(function () { toast('Apagado.'); }).catch(function () { toast('Não foi possível apagar.', true); });
+      });
+    });
+  }
+
+  // ---------- TABLET: dono (mesmo vínculo da Votação e da Presença) ----------
+  var aparelhos = {}, ensaio = false, apOk = false, enOk = false, dono = null, iniciouNotas = null;
+  function devId() {
+    var d = ls('vp_dev');
+    if (!d) { d = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); ls('vp_dev', d); }
+    return d;
+  }
+  function calcDono() {
+    var dev = devId();
+    if (!ensaio) { for (var vid in aparelhos) if (aparelhos.hasOwnProperty(vid) && aparelhos[vid] && aparelhos[vid].dev === dev && NOME[vid]) return vid; return null; }
+    var m = ls('an_meu'); return m && NOME[m] ? m : null;   // Modo de ensaio: sem vínculo, lembra a última escolha
+  }
+  function deOutro(vid) { if (ensaio) return false; var a = aparelhos[vid]; return !!(a && a.dev && a.dev !== devId()); }
+  function avaliar() {
+    if (!apOk || !enOk) return;
+    var d = calcDono();
+    if (d !== dono) { dono = d; if (dono) iniciarNotas(dono); }
+    $('vEscolha').hidden = !!dono; $('vTablet').hidden = !dono;
+    $('sub').textContent = dono ? NOME[dono] + (ensaio ? ' · modo de ensaio' : '') : 'Escolha o seu nome';
+    if (!dono) renderGrade();
+    renderMesa();
+  }
+  function renderGrade() {
+    var h = '';
+    VERS.forEach(function (v) {
+      var b = deOutro(v.id);
+      h += '<button type="button" class="ver' + (b ? ' bloq' : '') + '" data-vid="' + v.id + '">' + esc(v.nome) + '<small>' + (b ? '🔒 Outro tablet' : 'Aparelho ' + v.ap) + '</small></button>';
+    });
+    $('grade').innerHTML = h;
+  }
+  var avisoT = null;
+  function iniciarTablet() {
+    $('grade').onclick = function (e) {
+      var t = e.target && e.target.closest ? e.target.closest('[data-vid]') : null; if (!t) return;
+      var vid = t.getAttribute('data-vid');
+      if (deOutro(vid)) { $('avisoEsc').textContent = NOME[vid] + ' já tem o próprio tablet. Cada vereador usa somente o seu.'; clearTimeout(avisoT); avisoT = setTimeout(function () { $('avisoEsc').textContent = ''; }, 4000); return; }
+      if (ensaio) { ls('an_meu', vid); avaliar(); return; }
+      confirmar(NOME[vid], 'Este tablet ficará reservado para ' + NOME[vid] + ' (Anotações, Votação e Presença). Confira se é o seu nome.', 'Sim, sou eu', function () {
+        var dev = devId();
+        db.ref(RAIZ + '/votacao/aparelhos/' + vid).transaction(function (cur) {
+          if (cur && cur.dev && cur.dev !== dev) return;
+          return { dev: dev, em: Date.now() };
+        }, function (err, ok, snap) {
+          var v = snap && snap.val();
+          if (err || !ok || !v || v.dev !== dev) { toast(err ? 'Sem internet. Tente de novo.' : NOME[vid] + ' já está vinculado a outro tablet.', true); return; }
+          aparelhos[vid] = v; avaliar();
+        }, false);
+      });
+    };
+    db.ref(RAIZ + '/votacao/aparelhos').on('value', function (s) { aparelhos = s.val() || {}; apOk = true; avaliar(); });
+    db.ref(RAIZ + '/votacao/config/ensaio').on('value', function (s) { var v = s.val(); ensaio = !!(v && v.ligado); enOk = true; avaliar(); });
+  }
+
+  // ---------- TABLET: minhas anotações (legislar/anotacoes/notas/{vid}) ----------
+  var notas = [], refNotas = null, editando = null, lendo = null, fs = +ls('an_fs') || 24;
+  function iniciarNotas(vid) {
+    if (refNotas) refNotas.off();
+    notas = []; fecharEditor(); fecharLeitor();
+    refNotas = db.ref(BASE + '/notas/' + vid);
+    $('notas').innerHTML = '<div class="vazio">Carregando…</div>';
+    refNotas.on('value', function (s) {
+      var l = []; s.forEach(function (c) { var v = c.val() || {}; v.id = c.key; l.push(v); });
+      l.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+      notas = l; renderNotas();
+      if (lendo) { var n = acha(lendo); if (n) encherLeitor(n); else fecharLeitor(); }
+    });
+  }
+  function acha(id) { for (var i = 0; i < notas.length; i++) if (notas[i].id === id) return notas[i]; return null; }
+  function renderNotas() {
+    var h = '';
+    notas.forEach(function (n) {
+      h += '<div class="nota" data-nota="' + esc(n.id) + '"><h4>' + esc(n.titulo || 'Sem título') + '</h4><p>' + esc(n.texto || '') + '</p><time>' + quando(n.ts) + '</time></div>';
+    });
+    $('notas').innerHTML = h || '<div class="vazio" style="grid-column:1/-1">Nenhuma anotação. Toque em “+ Nova anotação”.</div>';
+  }
+  function abrirEditor(n) {
+    editando = n ? n.id : null; $('eTit').value = n ? n.titulo || '' : ''; $('eTxt').value = n ? n.texto || '' : '';
+    $('editor').hidden = false; $('eTit').focus();
+  }
+  function fecharEditor() { editando = null; $('editor').hidden = true; $('eTit').value = ''; $('eTxt').value = ''; }
+  function encherLeitor(n) { $('lTit').textContent = n.titulo || 'Sem título'; $('lData').textContent = quando(n.ts) + (n.editado ? ' · editada ' + quando(n.editado) : ''); $('lTxt').textContent = n.texto || ''; }
+  function aplicaFs() { fs = Math.max(16, Math.min(56, fs)); $('lin').style.setProperty('--fs', fs + 'px'); ls('an_fs', String(fs)); }
+  function abrirLeitor(n) { lendo = n.id; encherLeitor(n); aplicaFs(); $('leitor').hidden = false; }
+  function fecharLeitor() { lendo = null; $('leitor').hidden = true; }
+  $('btnNova').onclick = function () { abrirEditor(null); };
+  $('eCanc').onclick = fecharEditor;
+  $('editor').onsubmit = function (e) {
+    e.preventDefault();
+    if (!dono || !refNotas) return;
+    var tit = $('eTit').value.replace(/^\s+|\s+$/g, ''), txt = $('eTxt').value;
+    if (!tit && !txt.replace(/\s/g, '')) { toast('Escreva um título ou um texto.', true); return; }
+    var p = editando ? refNotas.child(editando).update({ titulo: tit, texto: txt, editado: Date.now() })
+                     : refNotas.push({ titulo: tit, texto: txt, ts: Date.now() });
+    fecharEditor();
+    Promise.resolve(p).then(function () { toast('Anotação salva.'); }, function () { toast('Não foi possível salvar.', true); });
+  };
+  $('notas').onclick = function (e) { var t = e.target && e.target.closest ? e.target.closest('[data-nota]') : null; if (!t) return; var n = acha(t.getAttribute('data-nota')); if (n) abrirLeitor(n); };
+  $('lFechar').onclick = fecharLeitor;
+  $('lMenos').onclick = function () { fs -= 2; aplicaFs(); };
+  $('lMais').onclick = function () { fs += 2; aplicaFs(); };
+  $('lEditar').onclick = function () { var n = acha(lendo); fecharLeitor(); if (n) abrirEditor(n); };
+  $('lApagar').onclick = function () {
+    var id = lendo, n = acha(id); if (!n) return;
+    confirmar('Apagar anotação?', '“' + (n.titulo || 'Sem título') + '” será apagada. Esta ação não pode ser desfeita.', 'Apagar', function () {
+      refNotas.child(id).remove().then(function () { fecharLeitor(); toast('Anotação apagada.'); }, function () { toast('Não foi possível apagar.', true); });
+    });
+  };
+
+  if (EH_TABLET) iniciarTablet(); else iniciarMesa();
+})();
+</script>
+</body>
+</html>
