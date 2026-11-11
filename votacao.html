@@ -1511,7 +1511,7 @@ $('#verBody').addEventListener('click', ev => {
   }
   const b = ev.target.closest('[data-voto]'); if(!b || b.disabled) return;
   const voto = b.dataset.voto;
-  if(voto === 'sim') bipAprovar();   /* só o botão APROVAR faz bip; o "Confirmar voto" continua em silêncio */
+  bipAprovar();   /* bip nos botões APROVAR, REPROVAR e ABSTER; o "Confirmar voto" continua em silêncio */
   confirmBox({
     titulo:'Confirmar voto', big:VOTO_LABEL[voto], bigColor:`var(--${voto})`,
     texto:'Depois de confirmar, o voto aparece no telão e não pode ser alterado.', ok:'Confirmar voto', cls: voto==='sim'?'go':voto==='nao'?'stop':'brass',
