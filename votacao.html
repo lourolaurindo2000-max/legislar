@@ -1522,7 +1522,9 @@ $('#verBody').addEventListener('click', ev => {
 /* bip curto no tablet ao tocar em APROVAR (mesmo bip da Presença: 1046 Hz, 0,12 s) */
 var _bipCtx = null;
 function bipAprovar(){
-  return;   /* tablets em silêncio (pedido do usuário): o som do voto sai só na Smart TV, para não dar 2 bips */
+  /* tablet em silêncio (pedido do usuário): o toque no botão manda o bip para a Smart TV (js/bip-tv.js), nunca toca aqui */
+  try{ Store.set('som', {tipo:'bip', em:agora(), n:Math.floor(Math.random()*1e9)}).catch(()=>{}); }catch(e){}
+  return;
   try{
     var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
     if(!_bipCtx) _bipCtx = new AC();
