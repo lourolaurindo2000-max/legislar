@@ -77,7 +77,10 @@
     '#pt-pres .pt-card.meu{box-shadow:0 0 0 .5vmin #e6b955,0 0 3vmin rgba(230,185,85,.45)}' +
     '#pt-pres .pt-card.meu.ausente{animation:pt-brilho 1.6s ease-in-out infinite}' +
     '@keyframes pt-brilho{0%,100%{box-shadow:0 0 0 .5vmin #e6b955,0 0 1.5vmin rgba(230,185,85,.3)}50%{box-shadow:0 0 0 .5vmin #e6b955,0 0 4.5vmin rgba(230,185,85,.8)}}' +
-    '#pt-pres .pt-card.bloq{opacity:.55;cursor:default}' +
+    '#pt-pres .pt-card.bloq{opacity:.38;cursor:default;filter:grayscale(1)}' +
+    '#pt-pres .pt-tag.trava{color:#c9d2ea;background:rgba(255,255,255,.14)}' +
+    '#pt-pres .pt-aviso.alerta{color:#fbbf24}' +
+    '#pt-modal .pt-vinc{margin-top:1.8vmin;padding:1.4vmin 1.8vmin;border-radius:1.4vmin;font-size:2.2vmin;font-weight:600;color:#fde68a;background:rgba(230,185,85,.12);border:1px solid rgba(230,185,85,.4)}' +
     '#pt-pres .pt-card img,#pt-pres .pt-card .pt-ini{width:11vmin;height:11vmin;border-radius:50%;object-fit:cover;border:.5vmin solid rgba(255,255,255,.18);background:#1b2547;flex:0 0 auto}' +
     '#pt-pres .pt-card .pt-ini{display:flex;align-items:center;justify-content:center;font-size:4vmin;font-weight:800;color:#e6b955}' +
     '#pt-pres .pt-card.presente img{border-color:#34d399}' +
@@ -195,7 +198,7 @@
       '<div class="pt-info"><div class="pt-cont">Presentes <span id="pt-np">0</span> / <span id="pt-nt" style="color:#fff">0</span></div><div class="pt-sess" id="pt-sess">Aguardando</div></div></div>' +
       '<div class="pt-aviso" id="pt-aviso"></div><div class="pt-grid" id="pt-grid"></div>';
     modal = document.createElement('div'); modal.id = 'pt-modal';
-    modal.innerHTML = '<div class="pt-box"><div id="pt-mfoto"></div><div class="pt-mn" id="pt-mn"></div><div class="pt-ms" id="pt-ms"></div>' +
+    modal.innerHTML = '<div class="pt-box"><div id="pt-mfoto"></div><div class="pt-mn" id="pt-mn"></div><div class="pt-ms" id="pt-ms"></div><div class="pt-vinc" id="pt-vinc" style="display:none"></div>' +
       '<div class="pt-msg" id="pt-msg"></div><button type="button" class="pt-reg" id="pt-reg">Registrar presença</button>' +
       '<button type="button" class="pt-canc" id="pt-canc">Voltar</button></div>';
     document.body.appendChild(raiz); document.body.appendChild(modal);
@@ -205,7 +208,9 @@
       var t = e.target;
       while (t && t !== grid && !(t.getAttribute && t.getAttribute('data-id'))) t = t.parentNode;
       if (!t || t === grid) return;
-      abrir(t.getAttribute('data-id'));
+      var id = t.getAttribute('data-id');
+      if (bloqueado(id)) { avisoTrava(id); return; }
+      abrir(id);
     });
     el('pt-reg').addEventListener('click', registrar);
     el('pt-canc').addEventListener('click', fecharModal);
@@ -225,7 +230,7 @@
       if (s === 'presente') np++;
       var meu = d && d.id === id, bloq = !meu && bloqueado(id);
       html += '<div class="pt-card ' + s + (meu ? ' meu' : '') + (bloq ? ' bloq' : '') + '" data-id="' + esc(id) + '">' +
-        (meu ? '<span class="pt-tag">Este tablet</span>' : '') + avatar(id, v) +
+        (meu ? '<span class="pt-tag">Este tablet</span>' : bloq ? '<span class="pt-tag trava">&#128274; Outro tablet</span>' : '') + avatar(id, v) +
         '<div class="pt-nome">' + esc(v.nome || id) + '</div>' +
         '<div class="pt-sub">' + esc([v.cargo, v.partido].filter(function (x) { return x; }).join(' · ')) + '</div>' +
         '<div class="pt-st">' + rotulo(s) + '</div></div>';
@@ -238,10 +243,24 @@
     se.textContent = e === 'aberta' ? 'Sessão aberta' : e === 'suspensa' ? 'Sessão suspensa' : e === 'encerrada' ? 'Sessão encerrada' : 'Aguardando';
     se.className = 'pt-sess' + (e === 'aberta' || e === 'suspensa' ? ' ' + e : '');
     var av = el('pt-aviso');
-    if (d && vers[d.id] && norm(vers[d.id].status) === 'presente') { av.textContent = '✓ Sua presença está registrada, ' + (vers[d.id].nome || '') + '.'; av.className = 'pt-aviso ok'; }
+    if (avisoAte > Date.now()) { /* mostrando o aviso de nome bloqueado */ }
+    else if (d && d.fixo && vers[d.id] && norm(vers[d.id].status) !== 'presente') { av.textContent = 'Este tablet é de ' + (vers[d.id].nome || '') + '. Toque no seu nome para registrar a presença.'; av.className = 'pt-aviso'; }
+    else if (d && vers[d.id] && norm(vers[d.id].status) === 'presente') { av.textContent = '✓ Sua presença está registrada, ' + (vers[d.id].nome || '') + '.'; av.className = 'pt-aviso ok'; }
     else if (d) { av.textContent = 'Toque no seu nome para registrar a presença.'; av.className = 'pt-aviso'; }
     else { av.textContent = 'Toque no seu nome para registrar a sua presença.'; av.className = 'pt-aviso'; }
     if (escolhido) renderModal();
+  }
+
+  // Toque no nome de outro vereador: não abre nada, só explica (por 4 s)
+  var avisoAte = 0, avisoT = null;
+  function avisoTrava(id) {
+    var d = dono(), av = el('pt-aviso'), nome = vers[id] && vers[id].nome || '';
+    av.textContent = d && d.fixo
+      ? 'Este tablet é de ' + (vers[d.id] && vers[d.id].nome || '') + '. ' + nome + ' marca a presença no próprio tablet.'
+      : nome + ' já tem o próprio tablet. Cada vereador marca a presença somente no seu tablet.';
+    av.className = 'pt-aviso alerta';
+    avisoAte = Date.now() + 4000;
+    clearTimeout(avisoT); avisoT = setTimeout(function () { avisoAte = 0; render(); }, 4000);
   }
 
   function abrir(id) {
@@ -265,6 +284,7 @@
     el('pt-ms').textContent = [v.cargo, v.partido].filter(function (x) { return x; }).join(' · ');
     var b = el('pt-reg'), m = el('pt-msg');
     if (s === 'presente') {
+      el('pt-vinc').style.display = 'none';
       b.style.display = 'none';
       if (!enviando) { m.textContent = '✓ Presença registrada'; m.className = 'pt-msg ok'; }
       el('pt-canc').textContent = 'Fechar';
@@ -272,6 +292,9 @@
     }
     b.style.display = '';
     el('pt-canc').textContent = 'Voltar';
+    var dd = dono(), vc = el('pt-vinc');
+    if (!ensaio && !(dd && dd.fixo)) { vc.textContent = 'Atenção: ao registrar, este tablet fica reservado para ' + (v.nome || '') + '. Confira se é o seu nome.'; vc.style.display = ''; }
+    else vc.style.display = 'none';
     var falta = telaPronta ? 0 : Math.ceil((tela.em + ESPERA - agora()) / 1000);
     if (enviando) { b.disabled = true; b.textContent = 'Registrando…'; }
     else if (falta > 0) { b.disabled = true; b.textContent = 'Aguarde ' + falta + ' s…'; }
