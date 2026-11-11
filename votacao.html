@@ -1511,12 +1511,29 @@ $('#verBody').addEventListener('click', ev => {
   }
   const b = ev.target.closest('[data-voto]'); if(!b || b.disabled) return;
   const voto = b.dataset.voto;
+  if(voto === 'sim') bipAprovar();   /* só o botão APROVAR faz bip; o "Confirmar voto" continua em silêncio */
   confirmBox({
     titulo:'Confirmar voto', big:VOTO_LABEL[voto], bigColor:`var(--${voto})`,
     texto:'Depois de confirmar, o voto aparece no telão e não pode ser alterado.', ok:'Confirmar voto', cls: voto==='sim'?'go':voto==='nao'?'stop':'brass',
     onOk: () => votar(voto)
   });
 });
+/* bip curto no tablet ao tocar em APROVAR (mesmo bip da Presença: 1046 Hz, 0,12 s) */
+var _bipCtx = null;
+function bipAprovar(){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    if(!_bipCtx) _bipCtx = new AC();
+    if(_bipCtx.state === 'suspended') _bipCtx.resume();
+    var t = _bipCtx.currentTime, o = _bipCtx.createOscillator(), g = _bipCtx.createGain();
+    o.type = 'sine'; o.frequency.value = 1046;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.35, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    o.connect(g); g.connect(_bipCtx.destination);
+    o.start(t); o.stop(t + 0.13);
+  }catch(err){}
+}
 async function votar(voto){
   if(voting) return; voting = true;
   try{
