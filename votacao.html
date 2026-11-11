@@ -1522,6 +1522,7 @@ $('#verBody').addEventListener('click', ev => {
 /* bip curto no tablet ao tocar em APROVAR (mesmo bip da Presença: 1046 Hz, 0,12 s) */
 var _bipCtx = null;
 function bipAprovar(){
+  return;   /* tablets em silêncio (pedido do usuário): o som do voto sai só na Smart TV, para não dar 2 bips */
   try{
     var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
     if(!_bipCtx) _bipCtx = new AC();
