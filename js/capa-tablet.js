@@ -9,7 +9,7 @@
 (function () {
   var W = window, D = document;
   var tablet = false;
-  try { tablet = navigator.maxTouchPoints > 0 && !W.matchMedia('(any-pointer: fine)').matches && W.top === W; } catch (e) {}
+  try { tablet = navigator.maxTouchPoints > 0 && (!W.matchMedia('(any-pointer: fine)').matches || W.matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(navigator.userAgent || '')) && W.top === W; } catch (e) {}
   W.CapaTablet = { set: function () {}, ativo: function () { return false; } };
   if (!tablet) return;
 

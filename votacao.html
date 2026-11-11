@@ -4,7 +4,7 @@
 <meta charset="utf-8">
     <script src="js/tv-compat.js"></script>
     <script src="js/login-guard.js"></script>
-    <script src="js/capa-tablet.js?v=2" data-sempre="1"></script>
+    <script src="js/capa-tablet.js?v=3" data-sempre="1"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a1022">
 <link rel="manifest" href="manifest.json">
@@ -906,7 +906,7 @@ const pautaOrdenada = () => [...S.pauta].sort((a,b) => (a.ordem||0) - (b.ordem||
 const VIEWS = ['v-inicio','v-op-login','v-operador','v-ver-login','v-vereador','v-telao'];
 /* Tablet / celular (tela de toque sem mouse ou touchpad): só a parte do vereador (Aprovar, Reprovar, Abster).
    O Operador é só o notebook; o Telão é só a Smart TV. */
-const EH_TABLET = (() => { try{ return navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches; }catch(e){ return false; } })();
+const EH_TABLET = (() => { try{ return navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(navigator.userAgent || '')); }catch(e){ return false; } })();
 let semTelaCheia = false;   // o vereador saiu da tela cheia pelo botão: não volta sozinha
 // instalado como aplicativo (manifest.json, display fullscreen) = já está sempre em tela cheia
 const comoApp = () => { try{ return matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }catch(e){ return false; } };
@@ -1856,6 +1856,6 @@ const Mensagens = (() => {
 })();
 </script>
 <script>__es5('app-votacao', '__ok_votacao')</script>
-<script src="js/fala-tablet.js"></script>
+<script src="js/fala-tablet.js?v=3"></script>
 </body>
 </html>

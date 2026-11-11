@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <script src="js/tv-compat.js"></script>
     <script src="js/login-guard.js"></script>
-    <script src="js/capa-tablet.js"></script>
+    <script src="js/capa-tablet.js?v=3"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>O Legislativo</title>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -435,7 +435,7 @@
             // Toques nos botões do sistema (links) abrem a página na hora, sem tela cheia.
             // Tablet dos vereadores (Android): fica SEMPRE em tela cheia — qualquer toque volta para ela.
             var tabletVer = false;
-            try { tabletVer = navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches && window.top === window; } catch (e) {}
+            try { tabletVer = navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(navigator.userAgent || '')) && window.top === window; } catch (e) {}
             function primeiroToque(e) {
                 if (tabletVer) { if (!emTelaCheia() && suportado && !modoApp) entrar(); return; }
                 if (e && e.target && e.target.closest && e.target.closest('a, button, .suporte-ia')) return;
@@ -745,7 +745,7 @@
             } else {
                 // ---------- Tablet: a Votação Plenária só é aberta pelo operador no notebook ----------
                 var ehTablet = false;
-                try { ehTablet = navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches; } catch (e) {}
+                try { ehTablet = navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(navigator.userAgent || '')); } catch (e) {}
                 if (ehTablet) {
                     var cardVot = document.querySelector('.grid-menu a.card[href^="votacao.html"]');
                     if (cardVot) {
@@ -895,9 +895,9 @@
     </script>
 
 <script src="visualizar.js"></script>
-<script src="js/fala-tablet.js"></script>
-<script src="js/presenca-tablet.js"></script>
+<script src="js/fala-tablet.js?v=3"></script>
+<script src="js/presenca-tablet.js?v=3"></script>
 <script src="js/sons.js"></script>
-<script src="js/bip-tv.js"></script>
+<script src="js/bip-tv.js?v=3"></script>
 </body>
 </html>

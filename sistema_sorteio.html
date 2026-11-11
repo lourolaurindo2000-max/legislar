@@ -13,7 +13,7 @@
             if (q) return;
             if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) return;
             var tablet = false;
-            try { tablet = navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches; } catch (e) {}
+            try { tablet = navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(navigator.userAgent || '')); } catch (e) {}
             if (!tablet) return;
             document.documentElement.style.display = 'none';
             try { alert('Este sistema é usado só no notebook do operador.\nNo tablet, use apenas a Votação Plenária.'); } catch (e) {}

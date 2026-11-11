@@ -7,7 +7,7 @@
 (function () {
   var ehTablet = false;
   try {
-    ehTablet = navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches && window.self === window.top;
+    ehTablet = navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(navigator.userAgent || '')) && window.self === window.top;
   } catch (e) { ehTablet = false; }
   if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) ehTablet = false;
   if (!ehTablet || typeof firebase === 'undefined') return;

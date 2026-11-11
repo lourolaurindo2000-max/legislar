@@ -6,7 +6,7 @@
    Navegadores só liberam som depois de uma interação: basta apertar qualquer tecla do controle uma vez. */
 (function () {
   if (window.self !== window.top) return;
-  try { if (navigator.maxTouchPoints > 0 && !matchMedia('(any-pointer: fine)').matches) return; } catch (e) {}   // tablet: quem envia é ele
+  try { if (navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(navigator.userAgent || ''))) return; } catch (e) {}   // tablet: quem envia é ele
   var RAIZ = window.__PT_RAIZ || 'legislar';
   var offset = 0;
 
