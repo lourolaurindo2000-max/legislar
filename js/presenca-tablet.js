@@ -104,6 +104,7 @@
     '#pt-modal .pt-canc{display:block;width:100%;margin-top:1.6vmin;padding:2vmin;font-size:2.6vmin;font-weight:700;color:#c9d2ea;background:transparent;border:1px solid rgba(255,255,255,.25)}';
 
   var mostrando = false, tela = null, offset = 0, telaPronta = false;
+  var notebookAberto = false, ultTelaG = null;   // a Presença só aparece enquanto o notebook está com ela aberta
   var vers = {}, sess = {}, camara = {}, aparelhos = {}, ensaio = false, carregouVer = false;
   var escolhido = null, enviando = false, fecharT = null;
   var raiz, grid, modal;
@@ -287,7 +288,7 @@
 
   function avaliarTela(v) {
     v = v || {};
-    var ok = v.pagina === 'presenca_plenaria.html' && v.em && (agora() - v.em < VALIDADE);
+    var ok = notebookAberto && v.pagina === 'presenca_plenaria.html' && v.em && (agora() - v.em < VALIDADE);
     tela = ok ? { em: v.em } : null;
     telaPronta = !!(ok && agora() - v.em >= ESPERA);
     render();
@@ -297,7 +298,8 @@
     montar();
     db.ref('.info/serverTimeOffset').on('value', function (s) { offset = s.val() || 0; });
     var ultTela = null;
-    db.ref(RAIZ + '/painel/tela').on('value', function (s) { ultTela = s.val(); avaliarTela(ultTela); });
+    db.ref(RAIZ + '/painel/tela').on('value', function (s) { ultTela = s.val(); ultTelaG = ultTela; avaliarTela(ultTela); });
+    db.ref(BASE + '/notebookAberto').on('value', function (s) { notebookAberto = !!s.val(); avaliarTela(ultTelaG); });
     db.ref(BASE + '/vereadores').on('value', function (s) { vers = s.val() || {}; carregouVer = true; render(); });
     db.ref(BASE + '/sessao/atual').on('value', function (s) { sess = s.val() || {}; render(); });
     db.ref(BASE + '/config/camara').on('value', function (s) { camara = s.val() || {}; render(); });

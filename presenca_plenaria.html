@@ -1857,6 +1857,23 @@ function sha256(ascii){
   }
   var rt = firebase.database();
   var BASE = "legislar/presenca";
+  // Tablets (js/presenca-tablet.js): só mostram a Presença enquanto esta página está aberta no notebook.
+  // O notebook marca "aberto"; ao sair, fechar a aba ou cair a conexão, o banco apaga sozinho (onDisconnect).
+  (function(){
+    var ehTV = false;
+    try { ehTV = window.self !== window.top || (localStorage.getItem("pld_tv") === "1" && !(navigator.maxTouchPoints > 0)); } catch (e) { ehTV = true; }
+    if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|AFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || "")) ehTV = true;
+    if (ehTV) return;
+    var refAberto = rt.ref(BASE + "/notebookAberto");
+    rt.ref(".info/connected").on("value", function(s){
+      if (s.val() !== true) return;
+      refAberto.onDisconnect().remove();
+      refAberto.set(firebase.database.ServerValue.TIMESTAMP);
+    });
+    function fechar(){ try { refAberto.remove(); } catch (e) {} }
+    window.addEventListener("pagehide", fechar);
+    document.addEventListener("click", function(e){ var t = e.target; if (t && t.closest && t.closest("#btnSair, #btnAdmSair, .cf-voltar")) fechar(); }, true);
+  })();
   var refMsgs = rt.ref(BASE + "/mensagens"), refArq = rt.ref(BASE + "/arquivos");
   var PARTE = 1000000, LIMITE = 10 * 1024 * 1024, VISTO = "plenario.msgVisto";
   var msgs = [], porId = {}, conhecidas = null, pendente = null, arquivoSel = null, fecharT = null;
