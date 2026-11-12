@@ -8,7 +8,7 @@
  * - Bibliotecas externas (Firebase, Font Awesome, fontes, fotos): usa a cópia guardada e atualiza por trás.
  * - O banco de dados (Firebase Realtime Database) NUNCA passa por aqui.
  */
-var VERSAO = 'pld-offline-v47';
+var VERSAO = 'pld-offline-v48';
 var PAGINAS = [
   './', 'index.html', 'dashboard.html', 'votacao.html', 'controle_de_fala.html', 'presenca_plenaria.html',
   'sistema_sorteio.html', 'visualizar.js', 'js/tv-compat.js', 'js/tw-controle.css', 'js/tw-sorteio.css',

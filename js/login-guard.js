@@ -16,6 +16,15 @@
     return false;
   }
 
+  // Celular (tela pequena com toque): o vereador entra com nome + senha nas páginas pessoais
+  function ehCelular() {
+    try {
+      if (!(navigator.maxTouchPoints > 0)) return false;
+      if (/iPhone|iPod/i.test(navigator.userAgent || '')) return true;
+      return Math.min(screen.width, screen.height) < 600;
+    } catch (e) { return false; }
+  }
+
   function logado() {
     try {
       var t = parseInt(localStorage.getItem(CHAVE), 10);
@@ -25,6 +34,7 @@
 
   W.PldLogin = {
     smartTV: ehSmartTV,
+    celular: ehCelular,
     logado: logado,
     entrar: function () { try { localStorage.setItem(CHAVE, String(new Date().getTime())); } catch (e) {} },
     sair: function () { try { localStorage.removeItem(CHAVE); } catch (e) {} }
@@ -33,6 +43,7 @@
   // Na própria tela de login não bloqueia
   if (/(^|\/)(index\.html)?$/i.test(location.pathname)) return;
   if (ehSmartTV() || logado()) return;
+  if (ehCelular() && /(^|\/)(anotacoes|arquivos_diversos)\.html$/i.test(location.pathname)) return;
 
   var volta = location.pathname.replace(/^.*\//, '') + location.search + location.hash;
   try { document.documentElement.style.visibility = 'hidden'; } catch (e) {}

@@ -22,6 +22,9 @@
   var EH_TABLET = false;
   try { EH_TABLET = navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(navigator.userAgent || '')); } catch (e) {}
   if (window.__DOC_TABLET !== undefined) EH_TABLET = !!window.__DOC_TABLET;   // só para teste automatizado
+  // Celular do vereador (só em Arquivos Diversos): nome + senha, sem prender o aparelho
+  var EH_CEL = EH_TABLET && !!(window.DOCCFG && window.DOCCFG.pessoal) && !!(window.PldLogin && PldLogin.celular && PldLogin.celular());
+  if (window.__DOC_CEL !== undefined) EH_CEL = !!window.__DOC_CEL;
 
   // ---------- Estilo e estrutura ----------
   var st = document.createElement('style');
@@ -129,11 +132,17 @@
   function confirmar(tit, txt, okTxt, fn) { $('mdTit').textContent = tit; $('mdTxt').textContent = txt; $('mdOk').textContent = okTxt || 'Confirmar'; mdOk = fn; $('modal').hidden = false; }
   $('mdCanc').onclick = function () { $('modal').hidden = true; mdOk = null; };
   $('mdOk').onclick = function () { $('modal').hidden = true; var f = mdOk; mdOk = null; if (f) f(); };
-  $('btnVoltar').onclick = function () { location.href = 'dashboard.html'; };
+  $('btnVoltar').onclick = function () { location.href = EH_CEL ? 'anotacoes.html' : 'dashboard.html'; };
+  if (EH_CEL) {
+    $('btnVoltar').innerHTML = '📝 <span class="lbl">Anotações</span>';
+    $('vEscolha').querySelector('h2').textContent = 'Quem é você?';
+    $('vEscolha').querySelector('p').textContent = 'Toque no seu nome e digite a sua senha (a mesma de Anotações). O celular não fica preso a ninguém.';
+    $('sTroca').textContent = 'Não é você? Trocar o nome';
+  }
   document.title = CFG.titulo + ' — Câmara de Almadina';
 
   function emTela() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
-  if (EH_TABLET) {
+  if (EH_TABLET && !EH_CEL) {
     $('btnTela').hidden = false;
     $('btnTela').onclick = function () { try { var el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) {} };
     document.addEventListener('click', function () { if (!emTela()) { try { var el = document.documentElement; var p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if (p && p.catch) p.catch(function () {}); } catch (e) {} } }, true);
@@ -344,11 +353,12 @@
   }
   function devId() { var d = ls('vp_dev'); if (!d) { d = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); ls('vp_dev', d); } return d; }
   function calcDono() {
+    if (EH_CEL) { var c = ls('an_cel'); return c && NOME[c] ? c : null; }
     var dev = devId();
     if (!ensaio) { for (var vid in aparelhos) if (aparelhos.hasOwnProperty(vid) && aparelhos[vid] && aparelhos[vid].dev === dev && NOME[vid]) return vid; return null; }
     var m = ls('an_meu'); return m && NOME[m] ? m : null;
   }
-  function deOutro(vid) { if (ensaio) return false; var a = aparelhos[vid]; return !!(a && a.dev && a.dev !== devId()); }
+  function deOutro(vid) { if (ensaio || EH_CEL) return false; var a = aparelhos[vid]; return !!(a && a.dev && a.dev !== devId()); }
   function trancar() { liberado = null; editando = null; $('sPw').value = ''; $('sErr').textContent = ''; $('lista').innerHTML = ''; }
   function avaliar() {
     if (!apOk || !enOk) return;
@@ -356,15 +366,15 @@
     if (d !== dono) { dono = d; trancar(); }
     var aberto = !!dono && liberado === dono;
     $('vEscolha').hidden = !!dono; $('vSenha').hidden = !dono || aberto; $('vLista').hidden = !aberto; $('vEnvio').hidden = !aberto;
-    $('btnSairV').hidden = !aberto; $('sTroca').hidden = !ensaio;
+    $('btnSairV').hidden = !aberto; $('sTroca').hidden = !(ensaio || EH_CEL);
     if (dono && !aberto) $('sNome').textContent = NOME[dono];
-    $('sub').textContent = dono ? NOME[dono] + (ensaio ? ' · modo de ensaio' : '') : 'Escolha o seu nome';
+    $('sub').textContent = dono ? NOME[dono] + (EH_CEL ? ' · celular' : ensaio ? ' · modo de ensaio' : '') : 'Escolha o seu nome';
     if (!dono) renderGrade();
     render();
   }
   function renderGrade() {
     var h = '';
-    VERS.forEach(function (v) { var b = deOutro(v.id); h += '<button type="button" class="ver' + (b ? ' bloq' : '') + '" data-vid="' + v.id + '">' + esc(v.nome) + '<small>' + (b ? '🔒 Outro tablet' : 'Aparelho ' + v.ap) + '</small></button>'; });
+    VERS.forEach(function (v) { var b = deOutro(v.id); h += '<button type="button" class="ver' + (b ? ' bloq' : '') + '" data-vid="' + v.id + '">' + esc(v.nome) + '<small>' + (b ? '🔒 Outro tablet' : EH_CEL ? 'Vereador(a)' : 'Aparelho ' + v.ap) + '</small></button>'; });
     $('grade').innerHTML = h;
   }
   function iniciarTabletPessoal() {
@@ -372,7 +382,7 @@
     $('upDonoL').hidden = true;
     $('envInfo').textContent = 'Só você vê os documentos que enviar aqui.';
     $('btnSairV').onclick = function () { trancar(); avaliar(); };
-    $('sTroca').onclick = function () { ls('an_meu', null); trancar(); avaliar(); };
+    $('sTroca').onclick = function () { ls(EH_CEL ? 'an_cel' : 'an_meu', null); trancar(); avaliar(); };
     db.ref(RAIZ + '/anotacoes/senhas').on('value', function (s) { senhas = s.val() || {}; seOk = true; });
     $('formSenha').onsubmit = function (e) {
       e.preventDefault();
@@ -396,6 +406,7 @@
       var t = e.target && e.target.closest ? e.target.closest('[data-vid]') : null; if (!t) return;
       var vid = t.getAttribute('data-vid');
       if (deOutro(vid)) { $('avisoEsc').textContent = NOME[vid] + ' já tem o próprio tablet. Cada vereador usa somente o seu.'; clearTimeout(avisoT); avisoT = setTimeout(function () { $('avisoEsc').textContent = ''; }, 4000); return; }
+      if (EH_CEL) { ls('an_cel', vid); avaliar(); setTimeout(function () { try { $('sPw').focus(); } catch (e) {} }, 50); return; }
       if (ensaio) { ls('an_meu', vid); avaliar(); return; }
       confirmar(NOME[vid], 'Este tablet ficará reservado para ' + NOME[vid] + ' (Documentos, Anotações, Votação e Presença). Confira se é o seu nome.', 'Sim, sou eu', function () {
         var dev = devId();
