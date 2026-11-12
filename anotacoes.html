@@ -252,7 +252,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   ];
   var NOME = {}; VERS.forEach(function (v) { NOME[v.id] = v.nome; });
   // Senha do administrador (a mesma da página antiga de Anotações): só cadastra/troca senhas dos vereadores
-  var ADM_HASH = '85ce9c211a744825d0ee2708bb63e4882f161f37e5ee33a2e928053cd4c6d316';
+  var ADM_HASH = 'ef400fcce91654fb9aa5013728ddff19a00daa1b8fb7d091f364ce679eaee6c6';
   // Senhas dos vereadores: legislar/anotacoes/senhas/{vid} = {salt, hash} — PBKDF2-SHA256, 120 000 voltas
   function hex(buf) { var a = new Uint8Array(buf), h = ''; for (var i = 0; i < a.length; i++) h += (a[i] < 16 ? '0' : '') + a[i].toString(16); return h; }
   function deHex(h) { var a = new Uint8Array(h.length / 2); for (var i = 0; i < a.length; i++) a[i] = parseInt(h.substr(i * 2, 2), 16); return a; }
