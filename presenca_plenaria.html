@@ -386,10 +386,11 @@ body.tv .tv-exit{display:inline-flex!important}
 .adm-card .row{margin-top:12px}
 .adm-card .row .btn{flex:1;justify-content:center;padding:14px}
 .adm-card.shake{animation:shake .4s}
-.actions .btn.adm-discreto,body.fit .actions .btn.adm-discreto{width:28px;height:28px;padding:0;gap:0;justify-content:center;align-self:center;border:0;background:transparent;opacity:.18;border-radius:8px}
+.actions .btn.adm-discreto,body.fit .actions .btn.adm-discreto{width:34px;height:34px;padding:0;gap:0;justify-content:center;align-self:center;border:0;background:transparent;opacity:.55;border-radius:50%;transition:opacity .2s,background .2s}
 .actions .btn.adm-discreto span{display:none}
-.actions .btn.adm-discreto svg,body.fit .actions .btn.adm-discreto svg{width:14px;height:14px;color:var(--muted)}
-.actions .btn.adm-discreto:hover,.actions .btn.adm-discreto:focus-visible{opacity:.7;filter:none}
+.actions .btn.adm-discreto svg,body.fit .actions .btn.adm-discreto svg{width:20px;height:20px;color:var(--muted);transition:transform .5s ease}
+.actions .btn.adm-discreto:hover,.actions .btn.adm-discreto:focus-visible{opacity:1;filter:none;background:rgba(127,127,127,.12)}
+.actions .btn.adm-discreto:hover svg,.actions .btn.adm-discreto:focus-visible svg{transform:rotate(90deg)}
 .modos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .modo{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;border:1.5px solid var(--line-2);background:var(--bg);text-align:left;min-height:56px;transition:border-color .15s,background .15s}
 .modo:hover{background:var(--panel-2)}
@@ -654,7 +655,7 @@ body.tv .msg-item p{font-size:26px}
       <div class="conn" id="connText">Conectando ao banco de dados…</div>
     </div>
     <div class="actions">
-      <button class="btn adm-discreto hide-tv" id="btnMesa" type="button" aria-label="Administrador"><svg><use href="#i-lock"/></svg><span>Administrador</span></button>
+      <button class="btn adm-discreto hide-tv" id="btnMesa" type="button" aria-label="Configurações (administrador)" title="Configurações"><svg><use href="#i-gear"/></svg><span>Administrador</span></button>
       <button class="btn btn-green hide-tv" id="btnTv" type="button"><svg><use href="#i-tv"/></svg>Modo TV</button>
       <button class="btn btn-ghost" id="btnFull" type="button"><svg><use href="#i-full"/></svg><span>Tela Cheia</span></button>
       <button class="btn btn-ghost tv-exit" id="btnTvSair" type="button"><svg><use href="#i-x"/></svg>Sair do Modo TV</button>
@@ -1551,8 +1552,8 @@ function sha256(ascii){
   function isAdmin(){ try { return sessionStorage.getItem(ADM_KEY) === ADM_HASH; } catch(e){ return !!window.__admOk; } }
   function admChanged(){
     var on = isAdmin();
-    $("#btnMesa").attr("class", "btn adm-discreto hide-tv").removeAttr("title");
-    $("#btnMesa use").attr("href", "#i-lock");
+    $("#btnMesa").attr("class", "btn adm-discreto hide-tv").attr("title", "Configurações");
+    $("#btnMesa use").attr("href", "#i-gear");
     $("#btnMesa span").text("Administrador");
     if (!on) { closeMesa(); closeNav(); }
     if (typeof applyPerms === "function") applyPerms();
