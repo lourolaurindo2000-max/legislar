@@ -1626,7 +1626,7 @@ function renderTelao(){
     const spAtual = body.firstElementChild;
     if(spAtual && spAtual.getAttribute('data-sp') === spKey) return;
     body.innerHTML = `<div class="splash" data-sp="agu"><img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>Aguardando a votação</p></div>`;
-    if(encerradaRecente(e)) body.innerHTML = `<div class="splash" data-sp="${spKey}"><img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina"><h2 class="sessenc">SESSÃO ENCERRADA</h2><i class="traco traco-tv traco-enc" aria-hidden="true"></i><p>Plenário Jonas Plínio${e.encerradaEm ? ' · ' + new Date(e.encerradaEm).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : ''}</p></div>`;
+    if(encerradaRecente(e)) body.innerHTML = `<div class="splash" data-sp="${spKey}"><img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina"><h2 class="sessenc">SESSÃO ENCERRADA</h2><i class="traco traco-tv traco-enc" aria-hidden="true"></i><p>Plenário Jonas Plínio</p></div>`;
     return;
   }
   /* Pauta concluída com 2 ou mais matérias: resumo final com o nome e o resultado de cada uma */
