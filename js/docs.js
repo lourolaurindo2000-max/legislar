@@ -81,6 +81,7 @@
     '.senha input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:20px;text-align:center;letter-spacing:.1em}' +
     '.senha .btn{width:100%;margin-top:12px;padding:14px;font-size:18px}.senha .erro{color:var(--err);min-height:24px;margin-top:10px;font-weight:600}' +
     '.senha .troca{background:none;border:0;color:var(--muted);text-decoration:underline;margin-top:14px;font-size:14px}' +
+    '.senha .troca.cel{display:block;width:100%;margin-top:16px;padding:12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);text-decoration:none;font-size:16px;font-weight:700;background:var(--card2)}' +
     '.modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:50;background:rgba(5,8,18,.75);display:flex;align-items:center;justify-content:center;padding:16px}' +
     '.mbox{background:var(--card);border:1px solid var(--gold);border-radius:18px;padding:22px;max-width:460px;width:100%;text-align:center}' +
     '.mbox b{display:block;font-family:var(--f-display);font-size:28px;color:var(--gold)}.mbox p{margin:10px 0 18px}.mbox .btn{width:100%;margin-top:8px;padding:14px}' +
@@ -137,7 +138,7 @@
     $('btnVoltar').innerHTML = '📝 <span class="lbl">Anotações</span>';
     $('vEscolha').querySelector('h2').textContent = 'Quem é você?';
     $('vEscolha').querySelector('p').textContent = 'Toque no seu nome e digite a sua senha (a mesma de Anotações). O celular não fica preso a ninguém.';
-    $('sTroca').textContent = 'Não é você? Trocar o nome';
+    $('sTroca').textContent = 'Não é você? Trocar o nome'; $('sTroca').className = 'troca cel';
   }
   document.title = CFG.titulo + ' — Câmara de Almadina';
 
@@ -368,6 +369,7 @@
     $('vEscolha').hidden = !!dono; $('vSenha').hidden = !dono || aberto; $('vLista').hidden = !aberto; $('vEnvio').hidden = !aberto;
     $('btnSairV').hidden = !aberto; $('sTroca').hidden = !(ensaio || EH_CEL);
     if (dono && !aberto) $('sNome').textContent = NOME[dono];
+    if (EH_CEL && dono) $('sTroca').textContent = 'Não é ' + NOME[dono] + '? Escolher outro nome';
     $('sub').textContent = dono ? NOME[dono] + (EH_CEL ? ' · celular' : ensaio ? ' · modo de ensaio' : '') : 'Escolha o seu nome';
     if (!dono) renderGrade();
     render();
