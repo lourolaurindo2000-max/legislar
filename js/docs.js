@@ -237,7 +237,7 @@
       if (pessoal && d.por && NOME[d.por]) meta.push('por ' + NOME[d.por]);
       var tags = (novo ? '<span class="tag">NOVO</span>' : '') + (anoData && d.ano ? '<span class="tag ano">' + esc(d.ano) + '</span>' : '');
       if (pessoal) tags += d.dono === 'todos' ? '<span class="tag para">Para todos</span>' : (MESA ? '<span class="tag para">' + esc(NOME[d.dono] || 'Sem destinatário (oculto)') + '</span>' : '');
-      h += '<div class="doc' + (novo ? ' novo' : '') + '"><div class="ico">PDF</div><div class="inf"><b>' + esc(d.nome) + '</b><small>' + tags + esc(meta.join(' · ')) + '</small></div>' +
+      h += '<div class="doc' + (novo ? ' novo' : '') + '"><div class="ico">' + (/^image\//.test(d.tipo || '') ? 'FOTO' : 'PDF') + '</div><div class="inf"><b>' + esc(d.nome) + '</b><small>' + tags + esc(meta.join(' · ')) + '</small></div>' +
         '<div class="acs"><button class="btn btn-ouro" type="button" data-ver="' + esc(d.id) + '">Ver</button>' +
         (MESA ? '<button class="btn btn-sec" type="button" data-editar="' + esc(d.id) + '">Editar</button>' : '') +
         (podeApagar(d) ? '<button class="btn btn-del" type="button" data-apagar="' + esc(d.id) + '">Apagar</button>' : '') + '</div>' +
