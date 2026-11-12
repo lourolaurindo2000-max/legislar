@@ -782,7 +782,11 @@
             // Libera o som na TV/tablet no primeiro toque (exigência dos navegadores)
             $(document).one('click touchstart keydown', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); });
 
+            // Sons só na Smart TV (html.modo-tv): notebook e tablets ficam em silêncio (evita som atrasado/duplicado)
+            const somSoNaTV = document.documentElement.classList.contains('modo-tv');
+
             function playBeep(frequency = 800, type = 'sine', duration = 0.2) {
+                if (!somSoNaTV) return;
                 try {
                     if (audioCtx.state === 'suspended') {
                         audioCtx.resume();
@@ -808,6 +812,7 @@
 
             // Fim da fala: bipes curtos e bem audíveis durante 3 segundos (bip 0,15 s + pausa 0,1 s)
             function playEndBleep5Sec() {
+                if (!somSoNaTV) return;
                 try {
                     if (audioCtx.state === 'suspended') {
                         audioCtx.resume();
