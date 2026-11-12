@@ -806,28 +806,29 @@
                 }
             }
 
-            // Bip contínuo e bem audível de 5 segundos para o fim da fala
+            // Fim da fala: bipes curtos e bem audíveis durante 3 segundos (bip 0,15 s + pausa 0,1 s)
             function playEndBleep5Sec() {
                 try {
                     if (audioCtx.state === 'suspended') {
                         audioCtx.resume();
                     }
-                    const duration = 5.0;
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-
-                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime + duration - 0.2);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + duration);
+                    const t0 = audioCtx.currentTime + 0.05;
+                    const total = 3.0, bip = 0.15, passo = 0.25;
+                    for (let t = 0; t + bip <= total + 0.001; t += passo) {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        const ini = t0 + t;
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(1000, ini);
+                        gain.gain.setValueAtTime(0.0001, ini);
+                        gain.gain.exponentialRampToValueAtTime(0.3, ini + 0.01);
+                        gain.gain.setValueAtTime(0.3, ini + bip - 0.02);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, ini + bip);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(ini);
+                        osc.stop(ini + bip + 0.01);
+                    }
                 } catch (e) {
                     console.error("Erro ao tocar alarme de 5s", e);
                 }
