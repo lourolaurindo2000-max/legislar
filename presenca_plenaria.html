@@ -73,7 +73,18 @@
             display: flex; align-items: center; justify-content: center; gap: 6px; }
         #cf-login .cf-cartao.cf-tremer { animation: cfTremer .4s; }
         @keyframes cfTremer { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
-    </style>
+    
+/* Traço azul animado (mesmo movimento do painel principal): respira e um brilho passa por ele */
+.traco{display:block;height:4px;width:40px;border-radius:3px;margin:5px 0 1px;background-color:#90cdf4;
+  background-image:-webkit-linear-gradient(left,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 35%,rgba(255,255,255,.85) 50%,rgba(255,255,255,0) 65%,rgba(255,255,255,0) 100%);
+  background-image:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0) 35%,rgba(255,255,255,.85) 50%,rgba(255,255,255,0) 65%,rgba(255,255,255,0) 100%);
+  background-size:250% 100%;background-repeat:no-repeat;box-shadow:0 0 8px rgba(144,205,244,.45);
+  -webkit-animation:tracoResp 4s ease-in-out infinite,tracoBrilho 2.6s linear infinite;animation:tracoResp 4s ease-in-out infinite,tracoBrilho 2.6s linear infinite}
+@-webkit-keyframes tracoResp{0%,100%{width:40px}50%{width:90px}}
+@keyframes tracoResp{0%,100%{width:40px}50%{width:90px}}
+@-webkit-keyframes tracoBrilho{0%{background-position:130% 0}100%{background-position:-30% 0}}
+@keyframes tracoBrilho{0%{background-position:130% 0}100%{background-position:-30% 0}}
+</style>
 <meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
     <!-- ACESSO DA PRESIDÊNCIA (não aparece na Smart TV) -->
     <div id="cf-login" role="dialog" aria-modal="true" aria-labelledby="cf-login-titulo">
@@ -644,7 +655,7 @@ body.tv .msg-item p{font-size:26px}
     <div class="brand">
       <div class="brasao" id="brasao"><span>CM</span></div>
       <div style="min-width:0">
-        <h1 id="nomePlenario">Câmara de Almadina</h1>
+        <h1 id="nomePlenario">Câmara de Almadina</h1><i class="traco" aria-hidden="true"></i>
         <p><span class="live-dot" id="liveDot"></span><span id="subtitulo">Estado da Bahia • Sistema Legislativo Oficial</span></p>
       </div>
     </div>
