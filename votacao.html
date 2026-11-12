@@ -490,6 +490,10 @@ html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador n
 @keyframes tracoResp{0%,100%{width:40px}50%{width:90px}}
 @-webkit-keyframes tracoBrilho{0%{background-position:130% 0}100%{background-position:-30% 0}}
 @keyframes tracoBrilho{0%{background-position:130% 0}100%{background-position:-30% 0}}
+/* Telão (Smart TV): traço maior, proporcional à tela de 1920×1080 */
+.traco-tv{height:7px;width:70px;margin-top:8px;border-radius:4px;box-shadow:0 0 14px rgba(144,205,244,.5);-webkit-animation-name:tracoRespTV,tracoBrilho;animation-name:tracoRespTV,tracoBrilho}
+@-webkit-keyframes tracoRespTV{0%,100%{width:70px}50%{width:160px}}
+@keyframes tracoRespTV{0%,100%{width:70px}50%{width:160px}}
 </style>
 </head>
 <body>
@@ -642,7 +646,7 @@ html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador n
     <div class="tvwrap">
       <div class="tvtop">
         <img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina">
-        <div class="brand"><small>Câmara Municipal de Almadina · Plenário Jonas Plínio</small><b>Votação Plenária</b></div>
+        <div class="brand"><small>Câmara Municipal de Almadina · Plenário Jonas Plínio</small><b>Votação Plenária</b><i class="traco traco-tv" aria-hidden="true"></i></div>
         <div class="sp"></div>
         <span class="tvoff" id="tvOff" hidden>Reconectando…</span>
         <span class="tvstate" id="tvState">Sessão fechada</span>
