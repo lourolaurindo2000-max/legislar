@@ -1561,6 +1561,12 @@ function sha256(ascii){
   admChanged();
   function pedirAdmin(depois){
     if (isAdmin()) { if (depois) depois(); return; }
+    /* Sem senha (pedido do usuário, 11/11/2026): só o notebook do operador abre esta página (tablets são redirecionados
+       e na TV o botão fica oculto), então o modo administrador libera direto, como se a senha tivesse sido aceita. */
+    try { sessionStorage.setItem(ADM_KEY, ADM_HASH); } catch(e){ window.__admOk = true; }
+    admChanged(); renderPlenario();
+    if (depois) depois();
+    return;
     admDepois = depois || null;
     $("#admPass").val("").attr("type", "password"); $("#admVer").text("Mostrar"); $("#admErr").text("");
     $("#adm").addClass("open");
@@ -1604,7 +1610,7 @@ function sha256(ascii){
     if (isAdmin()) { try { sessionStorage.removeItem(ADM_KEY); } catch(e){} window.__admOk = false; admChanged(); renderPlenario(); }
   }
   function openNav(){
-    if (!isAdmin()) { pedirAdmin(); return; }
+    if (!isAdmin()) pedirAdmin();   /* sem senha: libera e continua */
     closeMesa();
     $("#sidenav").addClass("open").attr("aria-hidden","false"); $("#scrimNav").addClass("open"); $("#btnMenu").attr("aria-expanded","true");
     setTimeout(function(){ $(".nav-item.on").first().trigger("focus"); }, 50);
@@ -1615,7 +1621,7 @@ function sha256(ascii){
   $(".nav-item[data-tipo]").on("click", function(){
     var t = $(this).data("tipo");
     if (!canWrite) { toast("Seu acesso é somente leitura.", "err"); return; }
-    if (!isAdmin()) { closeNav(); pedirAdmin(); return; }
+    if (!isAdmin()) pedirAdmin();   /* sem senha: libera e continua */
     closeNav();
     if (state.sessao.tipo === t) return;
     sessao({ tipo: t }); $("#fTipo").val(t);
@@ -1625,7 +1631,7 @@ function sha256(ascii){
   $(document).on("click", ".modo[data-modo]", function(){
     var t = $(this).data("modo");
     if (!canWrite) { toast("Seu acesso é somente leitura.", "err"); return; }
-    if (!isAdmin()) { pedirAdmin(); return; }
+    if (!isAdmin()) pedirAdmin();   /* sem senha: libera e continua */
     if (state.sessao.tipo === t) { toast("Sessão " + t + " já está selecionada."); return; }
     sessao({ tipo: t });
     toast("Sessão " + t + " selecionada.", "ok");
