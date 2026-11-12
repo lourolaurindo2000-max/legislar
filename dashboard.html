@@ -147,6 +147,55 @@
             line-height: 1.2;
         }
 
+        /* ===== Visual novo (só aparência, 11/11/2026) ===== */
+        /* 3) Fundo com profundidade: degradê azul-marinho + pontos de luz que flutuam devagar */
+        html, body {
+            background-color: #1d3a63;
+            background-image: -webkit-radial-gradient(20% 15%, circle, #34609a 0%, rgba(52,96,154,0) 55%), -webkit-linear-gradient(top, #1d3a63 0%, #13284a 100%);
+            background-image: radial-gradient(circle at 20% 15%, #34609a 0%, rgba(52,96,154,0) 55%), linear-gradient(160deg, #24487a 0%, #1a3459 55%, #11233f 100%);
+            background-attachment: fixed;
+        }
+        body { position: relative; overflow-x: hidden; }
+        .luzes { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .luzes span { position: absolute; display: block; border-radius: 50%;
+            background: -webkit-radial-gradient(center, circle, rgba(144,205,244,.55) 0%, rgba(144,205,244,0) 70%);
+            background: radial-gradient(circle, rgba(144,205,244,.55) 0%, rgba(144,205,244,0) 70%);
+            -webkit-animation: luzFlutua 18s ease-in-out infinite; animation: luzFlutua 18s ease-in-out infinite; }
+        .luzes span:nth-child(1) { width: 260px; height: 260px; left: 8%; top: 62%; opacity: .35; }
+        .luzes span:nth-child(2) { width: 180px; height: 180px; left: 58%; top: 8%; opacity: .3; -webkit-animation-duration: 22s; animation-duration: 22s; -webkit-animation-delay: -6s; animation-delay: -6s; }
+        .luzes span:nth-child(3) { width: 120px; height: 120px; left: 85%; top: 70%; opacity: .35; -webkit-animation-duration: 16s; animation-duration: 16s; -webkit-animation-delay: -3s; animation-delay: -3s; }
+        .luzes span:nth-child(4) { width: 70px; height: 70px; left: 40%; top: 80%; opacity: .45; -webkit-animation-duration: 14s; animation-duration: 14s; -webkit-animation-delay: -9s; animation-delay: -9s; }
+        .luzes span:nth-child(5) { width: 90px; height: 90px; left: 30%; top: 12%; opacity: .3; -webkit-animation-duration: 20s; animation-duration: 20s; -webkit-animation-delay: -12s; animation-delay: -12s; }
+        .luzes span:nth-child(6) { width: 40px; height: 40px; left: 70%; top: 45%; opacity: .5; -webkit-animation-duration: 12s; animation-duration: 12s; -webkit-animation-delay: -4s; animation-delay: -4s; }
+        @-webkit-keyframes luzFlutua { 0%, 100% { -webkit-transform: translate(0, 0); } 33% { -webkit-transform: translate(40px, -50px); } 66% { -webkit-transform: translate(-30px, 30px); } }
+        @keyframes luzFlutua { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(40px, -50px); } 66% { transform: translate(-30px, 30px); } }
+        .container { position: relative; z-index: 1; }
+
+        /* 2) Brasão da Câmara acima do título */
+        .hero-brasao { display: inline-block; background: #fff; border-radius: 18px; padding: 8px 12px; margin-bottom: 18px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.25), 0 0 0 3px rgba(212,175,55,.75); }
+        .hero-brasao img { display: block; height: 78px; width: auto; }
+
+        /* 1) Cartões do celular: azul em degradê, ícones dourados, levantam com brilho no mouse */
+        .phone-mockup { box-shadow: 0 25px 60px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.6); }
+        .card {
+            background-color: #2c5282;
+            background-image: -webkit-linear-gradient(315deg, #3567a3 0%, #1e3a66 100%);
+            background-image: linear-gradient(135deg, #3567a3 0%, #1e3a66 100%);
+            border: 1px solid rgba(212,175,55,.35);
+            box-shadow: 0 4px 10px rgba(30,58,102,.25);
+            -webkit-transition: -webkit-transform .2s, box-shadow .2s, border-color .2s;
+            transition: transform .2s, box-shadow .2s, border-color .2s;
+        }
+        .card i { color: #f6c453; text-shadow: 0 0 8px rgba(246,196,83,.35); }
+        .card span { font-weight: 600; }
+        .card:hover {
+            -webkit-transform: translateY(-4px); transform: translateY(-4px);
+            filter: none;
+            border-color: rgba(246,196,83,.9);
+            box-shadow: 0 10px 22px rgba(30,58,102,.45), 0 0 14px rgba(246,196,83,.45);
+        }
+
         /* Responsividade */
         @media (max-width: 768px) {
             .container {
@@ -337,9 +386,11 @@
 </head>
 <body>
 
+    <div class="luzes" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
 
     <div class="container">
         <div class="hero-text">
+            <div class="hero-brasao"><img src="img/brasao.png" alt="Brasão de Almadina-BA"></div>
             <h1>O plenário digital na palma da sua mão.</h1>
             <div class="divider"></div>
             <div class=""></div>
