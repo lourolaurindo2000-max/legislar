@@ -457,6 +457,12 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 .tv .tvmain{grid-template-columns:minmax(0,1fr) minmax(0,1.62fr)}
 .tv .tvmat{padding:32px 34px}
 .tv .tvmat h2{font-size:3rem;-webkit-line-clamp:7}
+/* matéria em destaque (2026-11-14): quadro da matéria mais largo (cresce para a direita) e tipo/nº, ementa e autor maiores */
+.tv .tvmain{grid-template-columns:minmax(0,1.22fr) minmax(0,1.62fr)}
+.tv .tvmat .mtipo{font-size:2.15rem;font-weight:800;color:#e3b450;letter-spacing:.05em}
+.tv .tvmat h2{font-size:3.35rem}
+.tv .tvmat .autor{font-size:2.05rem;font-weight:600;color:#e6eaf3}
+.tv .tvres + .tvmain .tvmat h2{font-size:2.9rem}
 .tv .tvq div + div{margin-left:30px}
 .tv .tvq b{font-size:3.1rem}
 .tv .tvgrid{grid-gap:16px;gap:16px}
