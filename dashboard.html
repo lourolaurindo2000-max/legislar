@@ -770,7 +770,7 @@
             if (tv) {
                 document.body.classList.add('modo-tv');
                 // Smart TV (controle remoto): só exibe. Os sistemas do plenário são abertos pelo notebook do operador
-                ['controle_de_fala.html', 'sistema_sorteio.html', 'votacao.html', 'presenca_plenaria.html'].forEach(function (arq) {
+                ['sistema_sorteio.html', 'votacao.html', 'presenca_plenaria.html'].forEach(function (arq) {   // Controle de Fala fica liberado (a tela da TV não tem comandos)
                     Array.prototype.forEach.call(document.querySelectorAll('.grid-menu a.card[href^="' + arq + '"]'), function (c) {
                         c.style.opacity = '.45';
                         c.style.cursor = 'not-allowed';
