@@ -644,7 +644,7 @@ html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador n
         </div>
         <div class="panel stack">
           <h2>Relatório para a ata</h2>
-          <p class="muted" style="margin:0">Gera o relatório das matérias votadas no dia, com o placar e o voto de cada vereador. Na janela que abrir, escolha <b>Salvar como PDF</b> ou imprima.</p>
+          <p class="muted" style="margin:0">Gera o relatório só das matérias votadas nesta sessão (as arquivadas não entram), com o placar e o voto de cada vereador. Na janela que abrir, escolha <b>Salvar como PDF</b> ou imprima.</p>
           <div class="row">
             <div class="field" style="flex:1;min-width:160px"><label for="relData">Data da sessão</label><input type="date" id="relData"></div>
             <button class="btn brass" type="button" id="btnRelatorio" style="align-self:flex-end">Gerar relatório (PDF)</button>
@@ -1391,7 +1391,7 @@ $('#pautaList').addEventListener('click', ev => {
   if(ap){ const p = S.pauta.find(x=>x.id===ap.dataset.apagar); if(p) apagarArquivada(p); return; }
   if(rs){ const p = S.pauta.find(x=>x.id===rs.dataset.rest); if(p){ write('pauta/'+p.id, Object.assign(stripId(p), {arquivado:false})); toast('Matéria restaurada na pauta.'); } return; }
   if(d){ const p = S.pauta.find(x=>x.id===d.dataset.del); if(p && p.status==='votado'){
-    confirmBox({titulo:'Arquivar matéria votada?', texto:`${p.tipo} Nº ${p.numero} sai da lista da pauta. O resultado continua guardado e no Relatório para a ata; dá para restaurar em "Arquivadas".`, ok:'Arquivar', onOk:() => { write('pauta/'+p.id, Object.assign(stripId(p), {arquivado:true})); if(E().pautaId===p.id) setEstado({pautaId:null}); toast('Matéria arquivada.'); }});
+    confirmBox({titulo:'Arquivar matéria votada?', texto:`${p.tipo} Nº ${p.numero} sai da lista da pauta. O resultado continua guardado, mas não entra mais no Relatório para a ata; dá para restaurar em "Arquivadas".`, ok:'Arquivar', onOk:() => { write('pauta/'+p.id, Object.assign(stripId(p), {arquivado:true})); if(E().pautaId===p.id) setEstado({pautaId:null}); toast('Matéria arquivada.'); }});
     return; } }
   if(s){ if(emCurso(E())) return; setEstado({pautaId:s.dataset.sel, votacao:'livre', resultado:null, pautaConcluida:false}); }
   if(d){ const p = S.pauta.find(x=>x.id===d.dataset.del); if(!p) return;
@@ -1416,9 +1416,9 @@ const horaBR = t => { const d = new Date(t); return pad2(d.getHours()) + ':' + p
 (function(){ const el = $('#relData'); if(el) el.value = diaDe(Date.now()); })();
 function gerarRelatorio(){
   const dia = $('#relData').value || diaDe(agora());
-  const materias = pautaOrdenada().filter(p => p.status === 'votado' && p.resultado && p.resultado.em && diaDe(p.resultado.em) === dia)
+  const materias = pautaOrdenada().filter(p => !p.arquivado && p.status === 'votado' && p.resultado && p.resultado.em && diaDe(p.resultado.em) === dia)
     .sort((a, b) => a.resultado.em - b.resultado.em);
-  if(!materias.length) return toast('Nenhuma matéria votada em ' + dataBR(dia) + '.');
+  if(!materias.length) return toast('Nenhuma matéria votada (fora as arquivadas) em ' + dataBR(dia) + '.');
   const logo = new URL('img/brasao.png', location.href).href;
   const NOME_VOTO = {sim:'SIM', nao:'NÃO', abs:'ABSTENÇÃO'};
   const blocos = materias.map((m, i) => {
