@@ -1742,7 +1742,7 @@ function toast(msg){
 }
 /* Apagar matéria ARQUIVADA definitivamente (pedido do usuário, 09/11/2026): só pelo Operador, com senha própria.
    A senha não fica no código: só o SHA-256('vp-apagar:' + senha). Apaga a matéria, os votos dela e o desempate. */
-const APAGAR_HASH = 'b5068f80a924e847d2d0dc22ac24ed098251ec011331a869e7e67722e91775f4';
+const APAGAR_HASH = '54c6f34bcecf09d839ea7d535c4b51812b7272ae59d0fbb543a056cb0d8b7f99';
 function apagarArquivada(alvo){
   const lista = Array.isArray(alvo) ? alvo : [alvo], p = lista[0], varias = lista.length > 1;
   const root = $('#modalRoot');
