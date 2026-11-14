@@ -1076,22 +1076,30 @@ function render(){
   automacao();
 }
 
-/* EMPATE: o tablet do Presidente da Mesa entra sozinho na tela de voto (sem "Toque no seu nome"), só para desempatar.
-   Tablet do Presidente = vinculado a ele (fora do ensaio) ou, no ensaio, o último a entrar com o nome dele.
-   Uma vez por votação: se o Presidente apertar Sair, não entra de novo sozinho. */
+/* ENTRADA AUTOMÁTICA: com a votação aberta, o tablet entra sozinho na tela de voto do seu dono (sem "Toque no seu nome").
+   No EMPATE, só o tablet do Presidente da Mesa entra sozinho, para desempatar.
+   Dono do tablet = vereador vinculado a ele (fora do ensaio) ou, no ensaio, o último a entrar neste tablet.
+   Uma vez por votação: depois de votar (ou se apertar Sair), o tablet fica em "Toque no seu nome" e não entra de novo sozinho. */
 var autoPresFeito = '';
+const chaveAuto = (e, m) => (e.votacao === 'desempate' ? 'd|' : 'a|') + m.id + '|' + (e.inicioVotacao || '');
 function autoPresidente(){
   if(!EH_TABLET) return false;
-  const e = E(), m = pautaAtual(), p = e.presidente;
-  if(e.votacao !== 'desempate' || !p || !m) return false;
-  const chave = m.id + '|' + (e.inicioVotacao || '');
+  const e = E(), m = pautaAtual();
+  if(!e.aberta || !m || (e.votacao !== 'aberta' && e.votacao !== 'desempate')) return false;
+  const chave = chaveAuto(e, m);
   if(autoPresFeito === chave) return false;
-  if(current === 'v-vereador'){ if(ls.get('vp_vid') === p) autoPresFeito = chave; return false; }   /* já está na tela */
-  const meu = ENSAIO ? ls.get('vp_ult') === p : !!(S.apLoaded && S.aparelhos[p] && S.aparelhos[p].dev === DEV);
+  const alvo = e.votacao === 'desempate' ? e.presidente : (ENSAIO ? ls.get('vp_ult') : donoDoTablet());
+  if(!alvo || !VEREADORES.some(x => x.id === alvo)) return false;
+  if(current === 'v-vereador'){ if(ls.get('vp_vid') === alvo) autoPresFeito = chave; return false; }   /* já está na tela */
+  const meu = ENSAIO ? ls.get('vp_ult') === alvo : !!(S.apLoaded && S.aparelhos[alvo] && S.aparelhos[alvo].dev === DEV);
   if(!meu) return false;
+  if(e.votacao === 'aberta'){
+    if(!(S.presenca[alvo] && S.presenca[alvo].presente)) return false;          /* ausente não vota */
+    if(S.votos.some(x => x.pid === m.id && x.vid === alvo)){ autoPresFeito = chave; return false; }   /* já votou */
+  }
   autoPresFeito = chave;
-  ls.set('vp_vid', p); ls.set('vp_ult', p); selVid = null;
-  write('login/'+p, {logado:true, ts:agora()});
+  ls.set('vp_vid', alvo); ls.set('vp_ult', alvo); selVid = null;
+  write('login/'+alvo, {logado:true, ts:agora()});
   route();
   return true;
 }
@@ -1607,7 +1615,7 @@ async function votar(voto){
     clearTimeout(saidaVotoT);
     saidaVotoT = setTimeout(() => { saidaVotoT = null;
       const e2 = E();
-      if(e2.votacao === 'desempate' && e2.presidente === vid){ const m2 = pautaAtual(); if(m2) autoPresFeito = m2.id + '|' + (e2.inicioVotacao || ''); return; }   /* empate: o Presidente fica na tela para desempatar */
+      if(e2.votacao === 'desempate' && e2.presidente === vid){ const m2 = pautaAtual(); if(m2) autoPresFeito = chaveAuto(e2, m2); return; }   /* empate: o Presidente fica na tela para desempatar */
       if(ls.get('vp_vid') === vid) sairVereador(); }, 3000);
   } finally { voting = false; }
 }
