@@ -453,6 +453,40 @@ html.tablet #verLoginForm .btn.primary{min-height:64px!important;font-size:1.3re
 .tv .tvv .pres{margin-bottom:4px}
 .tv .tvv .st{grid-column:1 / -1;margin-top:12px;justify-self:start;font-size:1.5rem;white-space:nowrap}
 .tv .tvv.aus .tvfoto{filter:grayscale(1)}
+/* ===== Telão sofisticado (2026-11-14): quadro dos 9 vereadores mais largo (ocupa o espaço da esquerda) e fotos grandes ===== */
+.tv .tvmain{grid-template-columns:minmax(0,1fr) minmax(0,1.62fr)}
+.tv .tvmat{padding:32px 34px}
+.tv .tvmat h2{font-size:3rem;-webkit-line-clamp:7}
+.tv .tvq div + div{margin-left:30px}
+.tv .tvq b{font-size:3.1rem}
+.tv .tvgrid{grid-gap:16px;gap:16px}
+.tv .tvv{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:16px 14px 0;
+  border:1px solid rgba(216,168,69,.28);border-radius:16px;
+  background:radial-gradient(ellipse at 50% 0,rgba(216,168,69,.16),rgba(216,168,69,0) 62%),linear-gradient(180deg,#18223f,#0f1730);
+  box-shadow:0 10px 26px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+.tv .tvv > *{margin-top:0}
+.tv .tvv .tvfoto{flex:none;width:150px;height:150px;font-size:2.6rem;border:5px solid #d8a845;background:#1a2550;color:#d8a845;
+  box-shadow:0 0 0 4px rgba(216,168,69,.18),0 8px 22px rgba(0,0,0,.55)}
+.tv .tvv .tvnm{display:block;width:100%;margin-top:10px}
+.tv .tvv .nm{display:block;font-size:1.75rem;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
+.tv .tvv .pres{position:absolute;top:12px;left:12px;margin:0;padding:4px 10px;border-radius:99px;background:#d8a845;color:#1b1405;font-size:.8rem;font-weight:800;letter-spacing:.12em}
+.tv .tvv .st{display:block;align-self:stretch;margin:12px -14px 0;padding:7px 10px;border-radius:0 0 15px 15px;text-align:center;font-size:1.45rem;letter-spacing:.14em}
+.tv .tvv .st.wait{background:rgba(255,255,255,.06);color:#c9cfdd}
+.tv .tvv.v-sim{border:2px solid var(--sim);background:radial-gradient(ellipse at 50% 0,rgba(60,194,119,.28),rgba(60,194,119,0) 65%),linear-gradient(180deg,#14283a,#0f1730)}
+.tv .tvv.v-nao{border:2px solid var(--nao);background:radial-gradient(ellipse at 50% 0,rgba(238,100,83,.28),rgba(238,100,83,0) 65%),linear-gradient(180deg,#2a1a2c,#0f1730)}
+.tv .tvv.v-abs{border:2px solid var(--abs);background:radial-gradient(ellipse at 50% 0,rgba(231,173,60,.28),rgba(231,173,60,0) 65%),linear-gradient(180deg,#2a2330,#0f1730)}
+.tv .tvv.v-sim .tvfoto{border-color:var(--sim);box-shadow:0 0 0 5px rgba(60,194,119,.25),0 0 28px rgba(60,194,119,.55)}
+.tv .tvv.v-nao .tvfoto{border-color:var(--nao);box-shadow:0 0 0 5px rgba(238,100,83,.25),0 0 28px rgba(238,100,83,.55)}
+.tv .tvv.v-abs .tvfoto{border-color:var(--abs);box-shadow:0 0 0 5px rgba(231,173,60,.25),0 0 28px rgba(231,173,60,.55)}
+.tv .tvv.aus{opacity:.5}
+.tv .tvv.aus .tvfoto{border-color:#4a5470;box-shadow:none}
+/* com o resultado em cima (menos altura): foto à esquerda, nome e voto à direita */
+.tv .tvres + .tvmain .tvv{flex-direction:row;justify-content:flex-start;text-align:left;padding:12px 16px}
+.tv .tvres + .tvmain .tvv .tvfoto{width:128px;height:128px}
+.tv .tvres + .tvmain .tvv .tvnm{flex:1;min-width:0;width:auto;margin:0 0 0 16px}
+.tv .tvres + .tvmain .tvv .nm{white-space:normal;font-size:1.6rem}
+.tv .tvres + .tvmain .tvv .st{position:absolute;right:14px;bottom:12px;margin:0;border-radius:8px;padding:5px 12px;font-size:1.3rem}
+.tv .tvres + .tvmain .tvv .tvnm{padding-bottom:40px}
 .btn-tela{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-weight:700;font-size:.85rem;margin-right:8px}
 .btn-tela[hidden]{display:none}
 html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador não sai da tela cheia */
