@@ -986,6 +986,9 @@ function route(){
   let h = (location.hash || '#inicio').slice(1);
   if(EH_TABLET && h !== 'vereador'){ h = 'vereador'; history.replaceState(null, '', '#vereador'); }
   let view = 'v-inicio';
+  /* Sem senha (pedido do usuário, 14/11/2026): só o notebook do operador de confiança abre esta tela
+     (tablets já são mandados para #vereador acima), então clicar em Operador entra direto no painel. */
+  if(h === 'operador' && !EH_TABLET) OP_OK = true;
   if(h === 'operador') view = OP_OK ? 'v-operador' : 'v-op-login';
   else if(h === 'vereador') view = ls.get('vp_vid') ? 'v-vereador' : 'v-ver-login';
   else if(h === 'telao') view = 'v-telao';
