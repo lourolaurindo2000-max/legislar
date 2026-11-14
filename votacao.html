@@ -693,7 +693,7 @@ html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador n
         <div class="brand"><small>Câmara Municipal de Almadina · Plenário Jonas Plínio</small><b>Votação Plenária</b><i class="traco traco-tv" aria-hidden="true"></i></div>
         <div class="sp"></div>
         <span class="tvoff" id="tvOff" hidden>Reconectando…</span>
-        <span class="tvstate" id="tvState">Sessão fechada</span>
+        <span class="tvstate" id="tvState">Aguardando votação</span>
         <span class="clock" id="tvClock">--:--</span>
       </div>
       <div id="tvBody"></div>
@@ -1667,7 +1667,7 @@ async function votar(voto){
 function renderTelao(){
   const e = E(), m = pautaAtual(), stEl = $('#tvState');
   stEl.className = 'tvstate' + (e.votacao==='aberta' ? ' live' : e.votacao==='desempate' ? ' emp' : '');
-  stEl.textContent = !e.aberta ? (encerradaRecente(e) ? 'Sessão encerrada' : 'Sessão fechada') : e.votacao==='aberta' ? 'Votação aberta' : e.votacao==='desempate' ? 'Empate' : e.votacao==='encerrada' ? 'Votação encerrada' : !e.chamada ? 'Sessão aberta' : 'Aguardando pauta';
+  stEl.textContent = !e.aberta ? (encerradaRecente(e) ? 'Sessão encerrada' : 'Aguardando votação') : e.votacao==='aberta' ? 'Votação aberta' : e.votacao==='desempate' ? 'Empate' : e.votacao==='encerrada' ? 'Votação encerrada' : !e.chamada ? 'Sessão aberta' : 'Aguardando pauta';
   const pres = presentes().length;
   $('#tvFootL').textContent = (ENSAIO ? 'ENSAIO · ' : '') + (e.aberta ? `Quórum: ${pres} presentes de 9 · mínimo ${QUORUM}${e.presidente?' · Presidente: '+vName(e.presidente):''}` : 'Câmara Municipal de Almadina — Bahia');
   const body = $('#tvBody');
