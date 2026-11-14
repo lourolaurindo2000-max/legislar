@@ -769,6 +769,19 @@
 
             if (tv) {
                 document.body.classList.add('modo-tv');
+                // Smart TV (controle remoto): só exibe. Os sistemas do plenário são abertos pelo notebook do operador
+                ['controle_de_fala.html', 'sistema_sorteio.html', 'votacao.html', 'presenca_plenaria.html'].forEach(function (arq) {
+                    Array.prototype.forEach.call(document.querySelectorAll('.grid-menu a.card[href^="' + arq + '"]'), function (c) {
+                        c.style.opacity = '.45';
+                        c.style.cursor = 'not-allowed';
+                        c.removeAttribute('target');
+                        c.setAttribute('tabindex', '-1');
+                        c.addEventListener('click', function (e) {
+                            e.preventDefault(); e.stopImmediatePropagation();
+                            alert('A Smart TV só exibe o sistema. Quem abre e controla é o notebook do operador.');
+                        }, true);
+                    });
+                });
                 var aviso = document.getElementById('avisoFullscreen');
                 if (aviso) aviso.innerHTML = '<i class="fas fa-tv"></i> Smart TV conectada · toque na tela para tela cheia';
                 refTela.on('value', function (s) {

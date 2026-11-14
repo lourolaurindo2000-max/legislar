@@ -969,6 +969,19 @@ const VIEWS = ['v-inicio','v-op-login','v-operador','v-ver-login','v-vereador','
 /* Tablet / celular (tela de toque sem mouse ou touchpad): só a parte do vereador (Aprovar, Reprovar, Abster).
    O Operador é só o notebook; o Telão é só a Smart TV. */
 const EH_TABLET = (() => { try{ return navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(navigator.userAgent || '')); }catch(e){ return false; } })();
+/* Smart TV (pedido do usuário, 14/11/2026): o controle remoto não acessa Operador nem Vereador — só o Telão.
+   TV = dentro do quadro da TV no painel, navegador de TV, ou marcada como TV (pld_tv) sem toque e sem mouse. */
+const EH_TV = (() => {
+  if(EH_TABLET) return false;
+  try{ if(window.self !== window.top) return true; }catch(e){ return true; }
+  if(/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|AFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) return true;
+  try{ if(localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0) && !matchMedia('(any-pointer: fine)').matches) return true; }catch(e){}
+  return false;
+})();
+if(EH_TV){
+  const tirar = () => document.querySelectorAll('.role[data-go="operador"], .role[data-go="vereador"], #homeLink').forEach(b => b.remove());
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tirar); else tirar();
+}
 let semTelaCheia = false;   // o vereador saiu da tela cheia pelo botão: não volta sozinha
 // instalado como aplicativo (manifest.json, display fullscreen) = já está sempre em tela cheia
 const comoApp = () => { try{ return matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }catch(e){ return false; } };
@@ -1028,10 +1041,11 @@ if(EH_TABLET){
 function route(){
   let h = (location.hash || '#inicio').slice(1);
   if(EH_TABLET && h !== 'vereador'){ h = 'vereador'; history.replaceState(null, '', '#vereador'); }
+  if(EH_TV && h !== 'telao'){ h = 'telao'; history.replaceState(null, '', '#telao'); }   /* Smart TV: só o Telão */
   let view = 'v-inicio';
   /* Sem senha (pedido do usuário, 14/11/2026): só o notebook do operador de confiança abre esta tela
      (tablets já são mandados para #vereador acima), então clicar em Operador entra direto no painel. */
-  if(h === 'operador' && !EH_TABLET) OP_OK = true;
+  if(h === 'operador' && !EH_TABLET && !EH_TV) OP_OK = true;
   if(h === 'operador') view = OP_OK ? 'v-operador' : 'v-op-login';
   else if(h === 'vereador') view = ls.get('vp_vid') ? 'v-vereador' : 'v-ver-login';
   else if(h === 'telao') view = 'v-telao';
