@@ -215,6 +215,16 @@
         /* Moldura da foto: sem vereador escolhido (ou foto que não carregou) mostra o brasão da Câmara */
         #display-photo.foto-brasao { object-fit: contain; padding: 12%; background: radial-gradient(circle at center, rgba(212,175,55,.18), transparent 70%); }
         #tv-espera.saindo { opacity: 0; }
+        /* Tela de espera: bolinha neon piscando + "Online" no canto superior (conexão real com o servidor) */
+        #tv-online { position: absolute; top: 3vh; right: 2.5vw; z-index: 2; display: -webkit-box; display: -webkit-flex; display: flex;
+            -webkit-box-align: center; -webkit-align-items: center; align-items: center; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+            font-size: 2.4vh; font-size: clamp(0.9rem, 2.4vh, 1.8rem); color: #39ff14; text-shadow: 0 0 8px rgba(57,255,20,.55); }
+        #tv-online i { display: inline-block; width: .75em; height: .75em; border-radius: 50%; margin-right: .6em; background: #39ff14;
+            box-shadow: 0 0 6px #39ff14, 0 0 16px rgba(57,255,20,.8); -webkit-animation: tvOnlinePisca 1.1s ease-in-out infinite; animation: tvOnlinePisca 1.1s ease-in-out infinite; }
+        #tv-online.off { color: #ff3b3b; text-shadow: 0 0 8px rgba(255,59,59,.55); }
+        #tv-online.off i { background: #ff3b3b; box-shadow: 0 0 6px #ff3b3b, 0 0 16px rgba(255,59,59,.8); }
+        @-webkit-keyframes tvOnlinePisca { 0%, 100% { opacity: 1; } 50% { opacity: .2; } }
+        @keyframes tvOnlinePisca { 0%, 100% { opacity: 1; } 50% { opacity: .2; } }
         /* Tela de espera: faixa de créditos com rolagem (efeito marquee) */
         #tv-espera { padding-top: 2vh; padding-bottom: 7vh; }
         /* espaçamentos proporcionais à altura: cabe inteiro de 540p a 4K, sem cobrir a faixa */
@@ -620,6 +630,7 @@
     <!-- TELA DE ESPERA DA SMART TV (aparece só na TV até o notebook escolher o orador) -->
     <div id="tv-espera" class="fixed inset-0 z-40 hidden flex-col items-center justify-center text-center px-6 bg-gradient-to-b from-governo-blue via-governo-dark to-governo-dark overflow-hidden">
         <div class="absolute inset-x-0 top-0 h-1.5 bg-governo-gold"></div>
+        <div id="tv-online" role="status"><i></i><span>Online</span></div>
         <div class="absolute -right-24 -bottom-24 opacity-5 pointer-events-none"><i class="fa-solid fa-landmark text-[420px] text-white"></i></div>
         <img id="tv-espera-brasao" alt="" aria-hidden="true" style="visibility:hidden" class="tv-espera-brasao w-auto drop-shadow-2xl mb-6">
         <script>(function(){var t=document.getElementById('tv-espera-brasao'),b=document.querySelector('header img');if(!t||!b)return;
@@ -1174,6 +1185,17 @@
             try { ehTV = window.self !== window.top || (localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0)); } catch (e) { ehTV = true; }
             if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) ehTV = true;   // navegador de Smart TV (Samsung, LG, Sony, Android/Google TV, Fire TV, Roku…)
             if (ehTV) { $('#btn-admin').remove(); $('#btn-tv-tela').remove(); $('#cf-sair').remove(); }
+
+            // Tela de espera da TV: "Online" (verde) quando conectado ao servidor, "Offline" (vermelho) se a internet cair
+            (function () {
+                var el = document.getElementById('tv-online'); if (!el) return;
+                var txt = el.getElementsByTagName('span')[0];
+                db.ref('.info/connected').on('value', function (s) {
+                    var on = s.val() === true;
+                    el.className = on ? '' : 'off';
+                    txt.textContent = on ? 'Online' : 'Offline';
+                });
+            })();
 
             // Tablets (js/fala-tablet.js): só mostram o vereador enquanto o Controle de Fala está aberto no notebook.
             // O notebook marca "aberto"; ao sair, fechar a aba ou cair a conexão, o banco apaga sozinho (onDisconnect).
