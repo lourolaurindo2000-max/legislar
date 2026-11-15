@@ -724,6 +724,9 @@ const VEREADORES = [
   {id:'v7', nome:'Sylas Souza',       ap:8, foto:'https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=240'},
   {id:'v8', nome:'José Lindomar',     ap:9, foto:'https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=240'},
 ];
+/* Cargos fixos da Mesa (pedido do usuário, 14/11/2026) — aparecem em amarelo como o "Presidente" */
+const CARGO_MESA = {v3:'Vice-Presidente', v2:'1º Secretário', v9:'2º Secretário'};
+const cargoMesa = (e, id) => e.presidente === id ? 'Presidente' : (CARGO_MESA[id] || '');
 const QUORUM = 5;               // maioria absoluta de 9
 // vereador entra só tocando no nome (sem senha)
 /* Senha do Operador: o arquivo guarda só o código SHA-256 de ('vp-operador:' + senha), nunca a senha.
@@ -1727,7 +1730,7 @@ function renderTelao(){
       else { st = 'PRESENTE'; cls = 'wait'; }
     }
     const novo = vt && !TV_VISTOS.has(vt.id); if(vt) TV_VISTOS.add(vt.id);
-    return `<div class="tvv ${!p?'aus':''} ${vt?'voted v-'+vt.voto:''} ${novo&&TV_PRONTO?'flash':''}"><span class="av tvfoto">${avInner(v)}</span><span class="tvnm">${e.presidente===v.id?'<span class="pres">Presidente</span>':''}<span class="nm">${esc(v.nome)}</span></span><span class="st ${cls}">${st}</span></div>`;
+    return `<div class="tvv ${!p?'aus':''} ${vt?'voted v-'+vt.voto:''} ${novo&&TV_PRONTO?'flash':''}"><span class="av tvfoto">${avInner(v)}</span><span class="tvnm">${cargoMesa(e, v.id)?'<span class="pres">'+cargoMesa(e, v.id)+'</span>':''}<span class="nm">${esc(v.nome)}</span></span><span class="st ${cls}">${st}</span></div>`;
   }).join('');
   const mat = m ? `<span class="mtipo">${esc(m.tipo)} Nº ${esc(m.numero)}</span><h2>${esc(m.ementa)}</h2><span class="autor">Autor: ${esc(m.autor||'—')}</span>`
                 : `<span class="mtipo">ORDEM DO DIA</span><h2>${e.chamada ? 'Aguardando a próxima matéria' : 'Chamada em andamento'}</h2>`;
