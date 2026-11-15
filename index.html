@@ -484,6 +484,27 @@
 
             const URL_DESTINO = "dashboard.html";
 
+            // TABLETS DOS VEREADORES: usuário "Vereador" com a senha já gravada — entram sem digitar.
+            const TABLET = !!(window.PldLogin && PldLogin.tablet && PldLogin.tablet());
+            function usuarioOk(u) {
+                u = u.toLowerCase();
+                return u === CREDENCIAIS_VALIDAS.usuario || (TABLET && u === 'vereador');
+            }
+            function irDestino() {
+                var volta = (location.search.match(/[?&]volta=([^&]*)/) || [])[1];
+                try { volta = volta ? decodeURIComponent(volta) : ''; } catch (e2) { volta = ''; }
+                if (!/^[\w-]+\.html([?#].*)?$/.test(volta)) volta = URL_DESTINO;
+                window.location.href = volta;
+            }
+            if (TABLET) {
+                $('#username').val('Vereador');
+                $('#password').val('••••••••');
+                $('#alert-message').removeClass('alert-error').addClass('alert-success')
+                    .html('<i class="fa-solid fa-circle-check"></i> Vereador — senha gravada neste tablet. Entrando...').fadeIn();
+                if (window.PldLogin) PldLogin.entrar();
+                setTimeout(irDestino, 600);
+            }
+
             // Texto volta ao normal quando o usuário edita os campos pré-preenchidos
             $('#username, #password').on('input', function() {
                 $(this).removeClass('credencial-preenchida');
@@ -498,7 +519,7 @@
                 const $alert = $('#alert-message');
 
                 hashSenha(passInput).then(function (h) {
-                if (userInput.toLowerCase() === CREDENCIAIS_VALIDAS.usuario && h === CREDENCIAIS_VALIDAS.hash) {
+                if (usuarioOk(userInput) && h === CREDENCIAIS_VALIDAS.hash) {
                     $alert.removeClass('alert-error').addClass('alert-success')
                           .html('<i class="fa-solid fa-circle-check"></i> Autenticado com sucesso! Redirecionando...')
                           .fadeIn();

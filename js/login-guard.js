@@ -26,6 +26,14 @@
     } catch (e) { return false; }
   }
 
+  // Tablet (toque, sem mouse, não é celular): usuário "Vereador", login fica gravado sem expirar
+  function ehTablet() {
+    try {
+      if (!(navigator.maxTouchPoints > 0) || ehCelular() || ehSmartTV()) return false;
+      return !(W.matchMedia && W.matchMedia('(any-pointer: fine)').matches);
+    } catch (e) { return false; }
+  }
+
   // No celular o login NÃO fica guardado: vale só enquanto o Legislar está aberto.
   // Saiu do aplicativo (outro app, tela bloqueada, fechou, reiniciou) → pede usuário e senha de novo.
   var CEL = ehCelular() && !ehSmartTV();
@@ -38,7 +46,7 @@
   function logado() {
     try {
       var t = parseInt((CEL ? sessionStorage : localStorage).getItem(CHAVE), 10);
-      return t > 0 && (agora() - t) < VALIDADE;
+      return t > 0 && (ehTablet() || (agora() - t) < VALIDADE);
     } catch (e) { return false; }
   }
 
@@ -50,6 +58,7 @@
   W.PldLogin = {
     smartTV: ehSmartTV,
     celular: ehCelular,
+    tablet: ehTablet,
     logado: logado,
     entrar: function () {
       try {
