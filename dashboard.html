@@ -767,21 +767,24 @@
             }
             window.__tvInicio = function () { mostrarPagina(''); };
 
+            // Cartão bloqueado (Smart TV e tablets): em vez de apagar, marca de verificação branca no canto (pedido do usuário)
+            var seloBloqueio = function (c) {
+                if (c.querySelector('.selo-tv')) return;
+                if (!c.style.position) c.style.position = 'relative';
+                var selo = document.createElement('span');
+                selo.className = 'selo-tv';
+                selo.setAttribute('aria-hidden', 'true');
+                selo.style.cssText = 'position:absolute;top:8px;right:8px;width:30px;height:30px;line-height:0;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))';
+                selo.innerHTML = '<svg width="30" height="30" viewBox="0 0 24 24"><path d="M7 12.5l3.2 3.2L17.2 8.7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                c.appendChild(selo);
+            };
+
             if (tv) {
                 document.body.classList.add('modo-tv');
                 // Smart TV (controle remoto): só exibe. Os sistemas do plenário são abertos pelo notebook do operador
                 ['sistema_sorteio.html', 'votacao.html', 'presenca_plenaria.html'].forEach(function (arq) {   // Controle de Fala fica liberado (a tela da TV não tem comandos)
                     Array.prototype.forEach.call(document.querySelectorAll('.grid-menu a.card[href^="' + arq + '"]'), function (c) {
-                        // em vez de apagar o cartão: selo azul de verificação no canto (pedido do usuário)
-                        if (!c.querySelector('.selo-tv')) {
-                            if (!c.style.position) c.style.position = 'relative';
-                            var selo = document.createElement('span');
-                            selo.className = 'selo-tv';
-                            selo.setAttribute('aria-hidden', 'true');
-                            selo.style.cssText = 'position:absolute;top:8px;right:8px;width:30px;height:30px;line-height:0;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))';
-                            selo.innerHTML = '<svg width="30" height="30" viewBox="0 0 24 24"><path d="M7 12.5l3.2 3.2L17.2 8.7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-                            c.appendChild(selo);
-                        }
+                        seloBloqueio(c);
                         c.style.cursor = 'not-allowed';
                         c.removeAttribute('target');
                         c.setAttribute('tabindex', '-1');
@@ -805,7 +808,7 @@
                 if (ehTablet) {
                     var cardVot = document.querySelector('.grid-menu a.card[href^="votacao.html"]');
                     if (cardVot) {
-                        cardVot.style.opacity = '.45';
+                        seloBloqueio(cardVot);
                         cardVot.style.cursor = 'not-allowed';
                         cardVot.removeAttribute('target');
                         cardVot.addEventListener('click', function (e) {
@@ -817,7 +820,7 @@
                     // (só o notebook controla a Smart TV)
                     ['controle_de_fala.html', 'sistema_sorteio.html', 'presenca_plenaria.html'].forEach(function (arq) {
                         Array.prototype.forEach.call(document.querySelectorAll('.grid-menu a.card[href^="' + arq + '"]'), function (c) {
-                            c.style.opacity = '.45';
+                            seloBloqueio(c);
                             c.style.cursor = 'not-allowed';
                             c.removeAttribute('target');
                             c.addEventListener('click', function (e) {
