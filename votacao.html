@@ -328,6 +328,13 @@ img.seal{border:0;border-radius:0;background:none;object-fit:contain;padding:0}
 .tv .splash h2{font-size:5.6rem}
 .tv .splash p{font-size:2.3rem}
 .tv .splash h2.sessenc{font-size:7rem;letter-spacing:.06em;color:var(--brass)}
+/* Nome da sessão no topo do telão (Aguardando a votação) */
+.splash.comnome{justify-content:flex-start}
+.splash .sessnome{display:inline-block;padding:10px 28px;border:2px solid var(--brass);border-radius:12px;background:var(--brass-soft);color:var(--brass);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:clamp(1.3rem,3vw,2.6rem)}
+.splash .spcentro{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.tv .splash .sessnome{font-size:4.4rem;padding:18px 60px;border-width:4px;border-radius:18px;color:#e3b450;background:rgba(201,149,47,.14);text-shadow:0 0 24px rgba(227,180,80,.45)}
+.tv .splash .spcentro{margin-top:0}
+.tv .splash .spcentro > * + *{margin-top:22px}
 .tv .tvfoot{font-size:1.1rem;gap:0;flex-wrap:nowrap}
 .tv .tvfoot .row{gap:0}
 .tv .tvfoot .row > * + *{margin-left:12px}
@@ -615,6 +622,7 @@ html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador n
           <div class="qtxt"><span><span class="big-num" id="qPres">0</span> de 9 presentes</span><span id="qMsg" class="muted">Mínimo: 5 (maioria absoluta)</span></div>
         </div>
         <div class="field"><label for="selPres">Presidente da Mesa</label><select id="selPres"></select></div>
+        <div class="field"><label for="txtSessaoNome">Nome da sessão no telão</label><div class="row" style="flex-wrap:nowrap"><input id="txtSessaoNome" maxlength="60" placeholder="Ex.: VIGÉSIMA SESSÃO ORDINÁRIA" style="flex:1"><button class="btn brass" id="btnSessaoNome">Salvar</button></div></div>
         <label class="ensaio-chave"><input type="checkbox" id="chkEnsaio"><span><b>Modo de ensaio</b><small>Ligado: qualquer nome entra em qualquer tablet (para testar). Desligue antes da sessão real.</small></span></label>
         <div class="chamada" id="chamadaList"></div>
         <button class="btn stop" id="btnFecharSessao">Encerrar sessão</button>
@@ -948,6 +956,7 @@ const DEV = (() => { let d = ls.get('vp_dev'); if(!d){ d = 'd' + Date.now().toSt
 const donoDoTablet = () => ENSAIO ? null : Object.keys(S.aparelhos).find(vid => S.aparelhos[vid] && S.aparelhos[vid].dev === DEV) || null;
 /* MODO DE ENSAIO (ligado pelo Operador): os tablets não ficam presos a um vereador — igual a antes do vínculo */
 let ENSAIO = false;
+let SESSAO_NOME = 'VIGÉSIMA SESSÃO ORDINÁRIA';   /* padrão até o Operador salvar outro em config/sessaoNome */
 const vinculoOutro = vid => !ENSAIO && !!(S.aparelhos[vid] && S.aparelhos[vid].dev !== DEV);
 const defEstado = () => ({aberta:false, abertaEm:null, chamada:false, presidente:'', pautaId:null, votacao:'livre', inicioVotacao:null, resultado:null, apuracao:null, pautaConcluida:false});
 const PRESIDENTE_PADRAO = 'v6';   // Aparelho 5 (Rogério Gotado) — Presidente da Mesa (desempata)
@@ -1131,6 +1140,7 @@ function render(){
   if(sl) sl.hidden = !off || current !== 'v-telao';
   salvarCache();
   const chk = $('#chkEnsaio'); if(chk && document.activeElement !== chk) chk.checked = ENSAIO;
+  const tsn = $('#txtSessaoNome'); if(tsn && document.activeElement !== tsn) tsn.value = SESSAO_NOME;
   if(current === 'v-operador') renderOperador();
   if(current === 'v-vereador') renderVereador();
   if(current === 'v-telao') renderTelao();
@@ -1310,6 +1320,14 @@ $('#chamadaList').addEventListener('click', ev => {
   if(!E().chamada) setEstado({chamada:true});
 });
 $('#selPres').addEventListener('change', ev => setEstado({presidente:ev.target.value}));
+function salvarSessaoNome(){
+  const t = ($('#txtSessaoNome').value || '').replace(/\s+/g, ' ').trim().toUpperCase();
+  SESSAO_NOME = t; render();
+  write('config/sessaoNome', {texto:t, em:agora()});
+  toast(t ? 'Nome da sessão no telão: ' + t : 'Nome da sessão removido do telão.');
+}
+$('#btnSessaoNome').addEventListener('click', salvarSessaoNome);
+$('#txtSessaoNome').addEventListener('keydown', ev => { if(ev.key === 'Enter'){ ev.preventDefault(); $('#txtSessaoNome').blur(); salvarSessaoNome(); } });
 $('#chkEnsaio').addEventListener('change', ev => {
   const ligar = ev.target.checked;
   ENSAIO = ligar; render();
@@ -1693,10 +1711,12 @@ function renderTelao(){
   const body = $('#tvBody');
   if(!e.aberta){
     /* Sessão encerrada: traço azul animado sob o título. Só redesenha se mudar (não reinicia a animação a cada atualização) */
-    const spKey = encerradaRecente(e) ? 'enc' + (e.encerradaEm || '') : 'agu';
+    const spKey = encerradaRecente(e) ? 'enc' + (e.encerradaEm || '') : 'agu' + SESSAO_NOME;
     const spAtual = body.firstElementChild;
     if(spAtual && spAtual.getAttribute('data-sp') === spKey) return;
-    body.innerHTML = `<div class="splash" data-sp="agu"><img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>Aguardando a votação</p></div>`;
+    body.innerHTML = SESSAO_NOME
+      ? `<div class="splash comnome" data-sp="${spKey}"><div class="sessnome">${esc(SESSAO_NOME)}</div><div class="spcentro"><img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>Aguardando a votação</p></div></div>`
+      : `<div class="splash" data-sp="${spKey}"><img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina"><h2>Plenário Jonas Plínio</h2><p>Aguardando a votação</p></div>`;
     if(encerradaRecente(e)) body.innerHTML = `<div class="splash" data-sp="${spKey}"><img class="seal" src="img/brasao.png" alt="Câmara Municipal de Almadina"><h2 class="sessenc">SESSÃO ENCERRADA</h2><i class="traco traco-tv traco-enc" aria-hidden="true"></i><p>Plenário Jonas Plínio</p></div>`;
     return;
   }
@@ -1962,6 +1982,7 @@ const Mensagens = (() => {
   Store.watchCol('presenca', list => { S.presenca = porId(list); render(); });
   Store.watchCol('votos', list => { S.votos = list; render(); });
   Store.watchCol('aparelhos', list => { S.aparelhos = porId(list); S.apLoaded = true; render(); });
+  Store.watchDoc('config/sessaoNome', v => { if(v && typeof v.texto === 'string') SESSAO_NOME = v.texto; render(); });
   Store.watchDoc('config/ensaio', v => { ENSAIO = !!(v && v.ligado); if(window.CapaTablet) CapaTablet.set(ENSAIO); render(); });
   Store.watchCol('pauta', list => { S.pauta = list; render(); });
   Mensagens.init();
