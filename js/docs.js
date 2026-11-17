@@ -188,6 +188,7 @@
   function ordenar(l) {
     l.sort(function (a, b) {
       if (anoData) { var ka = chave(a), kb = chave(b); if (ka !== kb) return ka < kb ? 1 : -1; }
+      if (pessoal) return a.criadoEm - b.criadoEm;   // Leitura do Expediente: ordem de envio (1º enviado fica em 1º, o próximo em 2º...)
       return b.criadoEm - a.criadoEm;
     });
     return l;
