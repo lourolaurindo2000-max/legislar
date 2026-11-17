@@ -18,7 +18,7 @@
 <link rel="manifest" href="manifest.json">
 <title>Anotações do Vereador — Câmara de Almadina</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Source+Sans+3:wght@400;600;700&display=swap">
 <style>
 :root{
   --bg:#0a1022; --bg2:#111a35; --card:#151f3f; --card2:#1b2750; --line:#2a3766; --ink:#eef2fb; --muted:#9aa6c6;
@@ -93,6 +93,45 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
 .lin h3{font-family:var(--f-display);font-size:calc(var(--fs,24px)*1.4);margin:0 0 6px;color:var(--gold);overflow-wrap:anywhere}
 .lin time{color:var(--muted);font-size:14px}
 .lin div{font-size:var(--fs,24px);line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:14px}
+/* Abertura da sessão: cartão do Presidente + leitor em forma de página */
+.abcard{display:flex;align-items:center;background:linear-gradient(135deg,#1d2a57,#141d3d);border:1px solid var(--gold);border-radius:18px;padding:18px 20px;margin:6px 0 18px;box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+.abcard .ico{flex:none;width:56px;height:56px;border-radius:14px;background:rgba(230,185,85,.14);display:flex;align-items:center;justify-content:center;margin-right:16px;color:var(--gold)}
+.abcard .tx{flex:1;min-width:0}
+.abcard b{display:block;font-family:var(--f-display);font-size:26px;color:var(--gold);letter-spacing:.02em;line-height:1.05}
+.abcard small{display:block;color:var(--muted);font-size:14px;margin-top:3px}
+.abcard .btn{padding:14px 20px;font-size:18px;margin-left:12px;white-space:nowrap}
+.ableitor{position:fixed;top:0;right:0;bottom:0;left:0;z-index:45;display:flex;flex-direction:column;background:radial-gradient(120% 90% at 50% 0%,#18224a 0%,#070b18 75%)}
+.abbar{display:flex;align-items:center;padding:10px 14px;background:rgba(10,16,34,.82);border-bottom:1px solid rgba(230,185,85,.35);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.abbar .t{flex:1;min-width:0;font-family:var(--f-display);font-size:22px;color:var(--gold);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.abbar .btn{margin-left:8px;padding:11px 15px;font-size:16px}
+.abbar .btn-sec{background:var(--card2);color:var(--ink);border:1px solid var(--line)}
+.abrolo{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:clamp(14px,3.5vw,40px) clamp(10px,3vw,36px) 70px}
+.folha{position:relative;max-width:900px;margin:0 auto;background:linear-gradient(180deg,#fffdf7 0%,#fbf5e6 55%,#f6edd6 100%);color:#2a2112;border-radius:6px;
+  padding:clamp(34px,6.5vw,76px) clamp(26px,6.5vw,84px) clamp(40px,6vw,70px);box-shadow:0 30px 70px rgba(0,0,0,.55),0 2px 0 rgba(255,255,255,.4) inset;overflow:hidden}
+.folha:before{content:"";position:absolute;top:14px;right:14px;bottom:14px;left:14px;border:1px solid rgba(176,134,48,.55);outline:3px double rgba(176,134,48,.35);outline-offset:5px;pointer-events:none;border-radius:2px}
+.folha .marca{position:absolute;left:50%;top:50%;width:min(62%,460px);transform:translate(-50%,-42%);opacity:.055;pointer-events:none;filter:grayscale(1)}
+.folha .cab{position:relative;text-align:center}
+.folha .cab img{width:clamp(64px,10vw,96px);height:auto;filter:drop-shadow(0 3px 6px rgba(0,0,0,.18))}
+.folha .casa{font-family:"Cormorant Garamond",Georgia,serif;font-weight:700;font-size:clamp(14px,2vw,19px);letter-spacing:.28em;text-transform:uppercase;color:#7b5a17;margin-top:10px}
+.folha .orn{display:flex;align-items:center;justify-content:center;margin:16px auto 14px;color:#b08630;max-width:420px}
+.folha .orn i{flex:1;height:1px;background:linear-gradient(90deg,transparent,#b08630)}
+.folha .orn i:last-child{background:linear-gradient(90deg,#b08630,transparent)}
+.folha .orn span{margin:0 12px;font-size:18px;line-height:1}
+.folha h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:700;font-size:clamp(34px,6vw,58px);line-height:1.05;margin:0;color:#1d2a57;letter-spacing:.01em}
+.folha .data{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:clamp(17px,2.4vw,22px);color:#6b5a35;margin-top:8px}
+.folha .corpo{position:relative;font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:var(--afs,34px);line-height:1.62;margin-top:clamp(22px,4vw,40px);text-align:justify;-webkit-hyphens:auto;hyphens:auto;overflow-wrap:anywhere}
+.folha .corpo p{margin:0 0 .75em;text-indent:1.6em}
+.folha .corpo p:first-child{text-indent:0}
+.folha .corpo p:first-child:first-letter{float:left;font-size:3.1em;line-height:.82;font-weight:700;color:#9a7322;margin:.06em .1em 0 0}
+.folha textarea{display:block;width:100%;min-height:52vh;background:rgba(255,255,255,.55);border:1px dashed #b08630;border-radius:8px;padding:16px 18px;color:#2a2112;
+  font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:var(--afs,34px);line-height:1.55;resize:vertical;margin-top:clamp(22px,4vw,40px)}
+.folha textarea:focus{outline:2px solid #b08630;outline-offset:2px}
+.folha .ass{position:relative;text-align:center;margin-top:clamp(30px,5vw,54px)}
+.folha .ass i{display:block;width:min(60%,320px);height:1px;background:#b08630;margin:0 auto 10px;opacity:.7}
+.folha .ass b{display:block;font-family:"Cormorant Garamond",Georgia,serif;font-size:clamp(20px,2.8vw,26px);color:#1d2a57}
+.folha .ass small{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:clamp(15px,2vw,19px);color:#6b5a35;letter-spacing:.06em}
+.folha .ed{position:relative;text-align:center;margin-top:18px;font-size:13px;color:#8a7a55;font-family:var(--f-body)}
+@media (max-width:560px){.abbar .lbl{display:none}.abcard{flex-wrap:wrap}.abcard .btn{width:100%;margin:12px 0 0}}
 /* Escolha do dono do tablet */
 .grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));grid-gap:12px;margin-top:12px}
 .ver{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 10px;text-align:center;font-weight:700;font-size:18px}
@@ -169,6 +208,11 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
 
   <!-- Tablet do vereador -->
   <section id="vTablet" hidden>
+    <div class="abcard" id="abCard" hidden>
+      <div class="ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-1.5z"/><path d="M8 7h6M8 11h6"/></svg></div>
+      <div class="tx"><b>Abertura da Sessão</b><small>Texto para o Presidente da Mesa ler · só você vê</small></div>
+      <button class="btn btn-ouro" type="button" id="abAbrir">📖 Ler abertura</button>
+    </div>
     <h2>Da Mesa <span class="n" id="nNovas" hidden></span></h2>
     <div id="listaMesa"><div class="vazio">Carregando…</div></div>
 
@@ -224,6 +268,17 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
       <div class="prog" id="abProg" hidden><i></i></div>
       <div class="nota-info">🔒 Aparece somente no tablet (e no celular) do vereador escolhido, em Anotações do Vereador → Da Mesa. Os outros vereadores não veem.</div>
     </form>
+    <h2>Texto da abertura <small style="font-size:14px;color:var(--muted);font-weight:400;margin-left:6px">· leitor do Presidente</small></h2>
+    <form class="envio" id="formAbTexto">
+      <textarea id="abTexto" maxlength="20000" style="min-height:160px;font-size:18px;line-height:1.5" placeholder="Digite ou cole aqui a fala do Presidente na abertura da sessão"></textarea>
+      <div class="linha">
+        <span id="abTextoInfo">Carregando…</span>
+        <button class="btn btn-sec" type="button" id="abColarNb">📋 Colar</button>
+        <button class="btn btn-sec" type="button" id="abVer">📖 Ver no leitor</button>
+        <button class="btn btn-ouro" type="submit" id="abSalvar">Salvar texto</button>
+      </div>
+      <div class="nota-info">Aparece em forma de página no tablet do Presidente da Mesa (Anotações do Vereador → Abertura da Sessão). O Presidente também pode editar pelo tablet.</div>
+    </form>
     <h2>Enviadas</h2>
     <div id="listaEnviadas"><div class="vazio">Carregando…</div></div>
     <h2>Senhas dos vereadores</h2>
@@ -251,6 +306,34 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   <div class="lcorpo"><div class="lin" id="lin"><h3 id="lTit"></h3><time id="lData"></time><div id="lTxt"></div></div></div>
 </div>
 
+<div class="ableitor" id="abLeitor" hidden>
+  <div class="abbar">
+    <span class="t">Abertura da Sessão</span>
+    <button class="btn btn-sec" id="abMenos" type="button" aria-label="Diminuir letra">A−</button>
+    <button class="btn btn-sec" id="abMais" type="button" aria-label="Aumentar letra">A+</button>
+    <button class="btn btn-sec" id="abEditar" type="button">✎ <span class="lbl">Editar</span></button>
+    <button class="btn btn-sec" id="abColar" type="button" hidden>📋 <span class="lbl">Colar</span></button>
+    <button class="btn btn-sec" id="abCanc" type="button" hidden>Cancelar</button>
+    <button class="btn btn-ouro" id="abGuardar" type="button" hidden>Salvar</button>
+    <button class="btn btn-ouro" id="abFechar" type="button">Fechar</button>
+  </div>
+  <div class="abrolo" id="abRolo">
+    <article class="folha">
+      <img class="marca" src="img/brasao.png" alt="" onerror="this.style.display='none'">
+      <header class="cab">
+        <img src="img/brasao.png" alt="" onerror="this.style.display='none'">
+        <div class="casa">Câmara Municipal de Almadina</div>
+        <div class="orn"><i></i><span>❖</span><i></i></div>
+        <h1>Abertura da Sessão</h1>
+        <div class="data" id="abData"></div>
+      </header>
+      <div class="corpo" id="abCorpo"></div>
+      <textarea id="abEdTxt" maxlength="20000" placeholder="Digite ou cole aqui a fala do Presidente…" hidden></textarea>
+      <footer class="ass"><i></i><b id="abAssNome"></b><small>Presidente da Mesa</small></footer>
+      <div class="ed" id="abEd"></div>
+    </article>
+  </div>
+</div>
 <div class="modal" id="modal" hidden><div class="mbox"><b id="mdTit"></b><p id="mdTxt"></p>
   <button class="btn btn-ouro" id="mdOk" type="button">Confirmar</button><button class="btn btn-sec" id="mdCanc" type="button">Cancelar</button></div></div>
 <div class="toast" id="toast" hidden></div>
@@ -437,6 +520,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
       }).then(function () { b.disabled = false; b.textContent = 'Enviar para os tablets'; prog.hidden = true; });
     };
     iniciarAbertura(ler);
+    iniciarTextoAbertura();
     document.addEventListener('click', function (e) {
       var t = e.target && e.target.closest ? e.target.closest('[data-apagar]') : null; if (!t) return;
       var id = t.getAttribute('data-apagar');
@@ -486,6 +570,116 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
         refArq.child(id).remove().catch(function () {});
         toast('Não foi possível enviar. Verifique a internet.', true);
       }).then(function () { b.disabled = false; b.textContent = 'Enviar só para ele'; prog.hidden = true; });
+    };
+  }
+
+  // ---------- Abertura da sessão: texto em legislar/anotacoes/abertura = {texto, editadoEm, por} ----------
+  // Tablet: só o Presidente da Mesa (votacao/sessao/atual/presidente; padrão v6) vê e edita. Notebook: edita e pré-visualiza.
+  var AB_PADRAO = 'Boa noite! Sejam todos bem-vindos à Casa da Cidadania.';
+  var abDados = null, abPres = 'v6', abEditando = false;
+  var refAbTexto = db.ref(BASE + '/abertura');
+  var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  var DIAS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+  function abTexto() { return abDados && typeof abDados.texto === 'string' && abDados.texto.replace(/\s/g, '') ? abDados.texto : AB_PADRAO; }
+  function ehPresidente() { return EH_TABLET && !!dono && liberado === dono && dono === abPres; }
+  function renderAbCard() {
+    var ok = ehPresidente();
+    $('abCard').hidden = !ok;
+    if (EH_TABLET && !ok && !$('abLeitor').hidden) fecharLeitorAb();
+  }
+  function abParagrafos(t) {
+    return t.replace(/\r/g, '').split(/\n+/).map(function (l) { return l.replace(/^\s+|\s+$/g, ''); })
+      .filter(function (l) { return l; }).map(function (l) { return '<p>' + esc(l) + '</p>'; }).join('');
+  }
+  function renderLeitorAb() {
+    var d = new Date();
+    $('abData').textContent = DIAS[d.getDay()] + ', ' + d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear();
+    $('abAssNome').textContent = NOME[EH_TABLET ? dono : abPres] || '';
+    if (!abEditando) $('abCorpo').innerHTML = abParagrafos(abTexto());
+    $('abEd').textContent = abDados && abDados.editadoEm ? 'Texto atualizado em ' + quando(abDados.editadoEm) + (abDados.por && NOME[abDados.por] ? ' por ' + NOME[abDados.por] : ' pela Mesa') : '';
+  }
+  var abFs = +ls('ab_fs') || (Math.min(window.innerWidth, window.innerHeight) < 600 ? 26 : 34);
+  function aplicarFs() { $('abLeitor').style.setProperty('--afs', abFs + 'px'); }
+  $('abMenos').onclick = function () { abFs = Math.max(20, abFs - 3); ls('ab_fs', String(abFs)); aplicarFs(); };
+  $('abMais').onclick = function () { abFs = Math.min(64, abFs + 3); ls('ab_fs', String(abFs)); aplicarFs(); };
+  var abLock = null;
+  function manterTelaLigada(on) {
+    try {
+      if (on && navigator.wakeLock && !abLock) navigator.wakeLock.request('screen').then(function (l) { abLock = l; }, function () {});
+      if (!on && abLock) { abLock.release(); abLock = null; }
+    } catch (e) {}
+  }
+  function modoEdicaoAb(on) {
+    abEditando = on;
+    $('abCorpo').hidden = on; $('abEdTxt').hidden = !on;
+    $('abEditar').hidden = on; $('abFechar').hidden = on; $('abCanc').hidden = !on; $('abGuardar').hidden = !on; $('abColar').hidden = !on;
+    if (on) { $('abEdTxt').value = abTexto(); setTimeout(function () { try { $('abEdTxt').focus(); } catch (e) {} }, 50); }
+    else renderLeitorAb();
+  }
+  function abrirLeitorAb() {
+    aplicarFs(); modoEdicaoAb(false);
+    $('abLeitor').hidden = false; $('abRolo').scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+    manterTelaLigada(true);
+  }
+  function fecharLeitorAb() {
+    $('abLeitor').hidden = true; document.body.style.overflow = '';
+    abEditando = false; manterTelaLigada(false);
+  }
+  function salvarAb(texto) {
+    texto = String(texto || '').replace(/^\s+|\s+$/g, '');
+    if (!texto) { toast('Escreva o texto da abertura.', true); return Promise.reject(new Error('vazio')); }
+    return refAbTexto.set({ texto: texto, editadoEm: firebase.database.ServerValue.TIMESTAMP, por: EH_TABLET ? dono : 'mesa' })
+      .then(function () { toast('Texto da abertura salvo.'); }, function (e) { toast('Não foi possível salvar. Verifique a internet.', true); throw e; });
+  }
+  $('abAbrir').onclick = abrirLeitorAb;
+  $('abFechar').onclick = fecharLeitorAb;
+  $('abEditar').onclick = function () { modoEdicaoAb(true); };
+  $('abCanc').onclick = function () { modoEdicaoAb(false); };
+  // Colar: insere o que estiver copiado no lugar do cursor (ou segure no texto e use "Colar" do teclado)
+  function colarEm(ta) {
+    if (!navigator.clipboard || !navigator.clipboard.readText) { ta.focus(); toast('Toque e segure no texto e escolha "Colar".'); return; }
+    navigator.clipboard.readText().then(function (t) {
+      if (!t) { toast('Não há texto copiado.', true); return; }
+      var a = ta.selectionStart || 0, b = ta.selectionEnd || 0;
+      ta.value = ta.value.slice(0, a) + t + ta.value.slice(b);
+      ta.focus(); ta.selectionStart = ta.selectionEnd = a + t.length;
+      try { ta.dispatchEvent(new Event('input')); } catch (e) {}
+      toast('Texto colado.');
+    }, function () { ta.focus(); toast('Toque e segure no texto e escolha "Colar".'); });
+  }
+  $('abColar').onclick = function () { colarEm($('abEdTxt')); };
+  $('abGuardar').onclick = function () {
+    var b = this; b.disabled = true;
+    salvarAb($('abEdTxt').value).then(function () { modoEdicaoAb(false); }, function () {}).then(function () { b.disabled = false; });
+  };
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('abLeitor').hidden && !abEditando) fecharLeitorAb(); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && !$('abLeitor').hidden) { abLock = null; manterTelaLigada(true); } });
+  refAbTexto.on('value', function (s) {
+    abDados = s.val();
+    if (!$('abLeitor').hidden) renderLeitorAb();
+    if (window.__abNotebook) window.__abNotebook();
+  });
+  db.ref(RAIZ + '/votacao/sessao/atual/presidente').on('value', function (s) { var v = s.val(); abPres = v && NOME[v] ? v : 'v6'; renderAbCard(); });
+
+  // NOTEBOOK: editar o texto da abertura
+  function iniciarTextoAbertura() {
+    var mexido = false, ta = $('abTexto');
+    ta.oninput = function () { mexido = true; $('abTextoInfo').textContent = 'Alterações ainda não salvas.'; };
+    window.__abNotebook = function () {
+      if (!mexido) ta.value = abTexto();
+      if (!mexido) $('abTextoInfo').textContent = abDados && abDados.editadoEm ? 'Salvo em ' + quando(abDados.editadoEm) + (abDados.por && NOME[abDados.por] ? ' por ' + NOME[abDados.por] : ' pela Mesa') : 'Texto padrão (ainda não salvo).';
+    };
+    window.__abNotebook();
+    $('formAbTexto').onsubmit = function (ev) {
+      ev.preventDefault();
+      var b = $('abSalvar'); b.disabled = true;
+      salvarAb(ta.value).then(function () { mexido = false; window.__abNotebook(); }, function () {}).then(function () { b.disabled = false; });
+    };
+    $('abColarNb').onclick = function () { colarEm(ta); };
+    $('abVer').onclick = function () {
+      if (mexido) { toast('Salve o texto para ver a versão nova no leitor.'); }
+      abrirLeitorAb();
     };
   }
 
@@ -552,6 +746,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     $('sub').textContent = dono ? NOME[dono] + (EH_CEL ? ' · celular' : ensaio ? ' · modo de ensaio' : '') : 'Escolha o seu nome';
     if (!dono) renderGrade();
     renderMesa();
+    renderAbCard();
   }
   function renderGrade() {
     var h = '';
