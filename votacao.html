@@ -803,6 +803,12 @@ function sairConcluido(){
   if(saindo) return; saindo = true;
   setTimeout(() => { const e = E(); if(e.pautaConcluida && !emCurso(e)) location.href = 'dashboard.html'; else saindo = false; }, 5000);
 }
+/* sessão encerrada pelo Operador: o tablet volta para a página do Legislar (cartões) */
+let saindoEnc = false;
+function sairEncerrada(){
+  if(saindoEnc) return; saindoEnc = true;
+  setTimeout(() => { if(encerradaRecente(E()) && !emCurso(E())) location.href = 'dashboard.html'; else saindoEnc = false; }, 3000);
+}
 function voltarAoDashboard(){
   if(TELA_OK) return;
   if(emCurso(E())) return;            // não tira o vereador no meio de uma votação (nem no desempate)
@@ -1334,9 +1340,31 @@ $('#chkEnsaio').addEventListener('change', ev => {
   write('config/ensaio', {ligado:ligar, em:agora()});
   toast(ligar ? 'Modo de ensaio LIGADO: os tablets não ficam presos a um vereador.' : 'Modo de ensaio desligado: cada tablet volta a ser de um só vereador.');
 });
+/* Encerrar sessão também finaliza a Presença Plenária: se ela está aberta no notebook, ela mesma gera o relatório e zera;
+   senão, a Votação marca a sessão da Presença como encerrada e todos como ausentes. */
+function encerrarPresenca(){
+  try{
+    if(!(window.firebase && firebase.apps.length)) return;
+    const rt = firebase.database(), B = 'legislar/presenca', t = Date.now();
+    rt.ref(B + '/notebookAberto').once('value').then(s => {
+      if(s.val()) return rt.ref(B + '/pedidoFinalizar').set({em:t});
+      return rt.ref(B + '/sessao/atual').once('value').then(ss => {
+        const ps = ss.val() || {}, upd = {};
+        if(ps.estado === 'aberta' || ps.estado === 'suspensa'){
+          let ac = ps.acumulado || 0; if(ps.estado === 'aberta' && ps.retomadaEm) ac += Math.floor((t - ps.retomadaEm) / 1000);
+          upd['sessao/atual/estado'] = 'encerrada'; upd['sessao/atual/fim'] = t; upd['sessao/atual/retomadaEm'] = 0; upd['sessao/atual/acumulado'] = ac;
+        }
+        return rt.ref(B + '/vereadores').once('value').then(vs => {
+          vs.forEach(c => { upd['vereadores/' + c.key + '/status'] = 'ausente'; upd['vereadores/' + c.key + '/atualizadoEm'] = t; });
+          return rt.ref(B).update(upd);
+        });
+      });
+    }).catch(() => {});
+  }catch(e){}
+}
 $('#btnFecharSessao').addEventListener('click', () => confirmBox({
   titulo:'Encerrar a sessão?', texto:'A presença será zerada e os tablets voltarão para a tela de espera.', ok:'Encerrar sessão', cls:'stop',
-  onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:true,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado(Object.assign(defEstado(), {presidente:E().presidente, sessaoEncerrada:true, encerradaEm:agora()})); toast('Sessão encerrada.'); }
+  onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:true,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado(Object.assign(defEstado(), {presidente:E().presidente, sessaoEncerrada:true, encerradaEm:agora()})); encerrarPresenca(); toast('Sessão encerrada.'); }
 }));
 $('#opCurrent').addEventListener('click', ev => {
   // "Marcar ausente" no aviso "Faltam votar": tira o vereador dos presentes durante a votação aberta
@@ -2001,7 +2029,7 @@ const Mensagens = (() => {
   if(Store.db) carregarCache();   /* sem internet: começa com o último estado conhecido deste aparelho */
   CACHE_PRONTO = true;
   render();
-  Store.watchDoc('sessao/atual', d => { S.estado = d; render(); if(EH_TABLET && !TELA_OK) voltarAoDashboard(); if(EH_TABLET && d && d.pautaConcluida) sairConcluido(); });
+  Store.watchDoc('sessao/atual', d => { S.estado = d; render(); if(EH_TABLET && !TELA_OK) voltarAoDashboard(); if(EH_TABLET && d && d.pautaConcluida) sairConcluido(); if(EH_TABLET && d && encerradaRecente(d)) sairEncerrada(); });
   Store.watchCol('login', list => { S.login = porId(list); render(); });
   Store.watchCol('presenca', list => { S.presenca = porId(list); render(); });
   Store.watchCol('votos', list => { S.votos = list; render(); });

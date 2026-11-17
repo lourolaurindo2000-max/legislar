@@ -1235,6 +1235,13 @@ function sha256(ascii){
   // Ao encerrar: registra o fim, gera o arquivo do GlobalTec com a presença real da sessão
   // (os dados são copiados na hora) e só então marca todos os vereadores como ausentes.
   function zerarPresenca(){ lista().forEach(function(v){ setStatus(v.id, "ausente"); }); }
+  // "Encerrar sessão" da Votação pede para finalizar a Presença também (relatório + todos ausentes)
+  window.__presFinalizar = function(){
+    var e = state.sessao.estado;
+    if (e !== "aberta" && e !== "suspensa") return false;
+    $("#confirmFinalSim").trigger("click");
+    return true;
+  };
   $("#confirmFinalSim").on("click", function(){
     $("#confirmFinal").prop("hidden", true);
     finalizar();
@@ -1892,6 +1899,17 @@ function sha256(ascii){
       if (s.val() !== true) return;
       refAberto.onDisconnect().remove();
       refAberto.set(firebase.database.ServerValue.TIMESTAMP);
+    });
+    var CARREGOU = Date.now();
+    rt.ref(BASE + "/pedidoFinalizar").on("value", function(s){
+      var p = s.val();
+      if (!p || !p.em || p.em < CARREGOU - 5000) return;
+      var tentar = function(n){
+        if (window.__presFinalizar && window.__presFinalizar()) { rt.ref(BASE + "/pedidoFinalizar").remove(); toast("Sessão encerrada pela Votação: presença finalizada.", "ok"); }
+        else if (n > 0) setTimeout(function(){ tentar(n - 1); }, 1000);
+        else rt.ref(BASE + "/pedidoFinalizar").remove();
+      };
+      tentar(8);
     });
     function fechar(){ try { refAberto.remove(); } catch (e) {} }
     window.addEventListener("pagehide", fechar);

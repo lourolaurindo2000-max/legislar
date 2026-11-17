@@ -831,14 +831,15 @@
                     });
                     // Quando o notebook abre a Votação, o tablet entra sozinho na tela do vereador
                     // (não entra se a pauta já foi toda votada — o tablet acabou de sair dela)
-                    var telaV = null, concluida = null;
+                    var telaV = null, concluida = null, encEm = 0;
                     function avaliarVotacao() {
                         if (telaV === null || concluida === null) return;
-                        if (telaV.pagina === 'votacao.html' && telaV.em && (agora() - telaV.em < VALIDADE) && !concluida)
+                        var encerrou = encEm && telaV.em && encEm > telaV.em;   // Operador encerrou a sessão depois de abrir a Votação
+                        if (telaV.pagina === 'votacao.html' && telaV.em && (agora() - telaV.em < VALIDADE) && !concluida && !encerrou)
                             location.href = 'votacao.html?v=' + Date.now() + '#vereador';
                     }
                     refTela.on('value', function (s) { telaV = s.val() || {}; avaliarVotacao(); });
-                    rt.ref('legislar/votacao/sessao/atual').on('value', function (s) { var e = s.val() || {}; concluida = !!e.pautaConcluida; avaliarVotacao(); });
+                    rt.ref('legislar/votacao/sessao/atual').on('value', function (s) { var e = s.val() || {}; concluida = !!e.pautaConcluida; encEm = e.sessaoEncerrada && e.encerradaEm ? e.encerradaEm : 0; avaliarVotacao(); });
                     // Modo de ensaio desligado = sessão real: o tablet mostra a capa "Toque para começar" (tela cheia)
                     rt.ref('legislar/votacao/config/ensaio').on('value', function (s) { var v = s.val(); if (window.CapaTablet) CapaTablet.set(!!(v && v.ligado)); });
                 }
