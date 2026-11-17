@@ -132,6 +132,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
 .vrow input{flex:1;min-width:140px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin:4px 8px 4px 0}
 @media (max-width:560px){.tb .lbl{display:none}.tit b{font-size:22px}}
 </style>
+    <script src="js/sair-aba.js"></script>
 </head>
 <body>
 <div class="top">
@@ -283,7 +284,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   function confirmar(tit, txt, okTxt, fn) { $('mdTit').textContent = tit; $('mdTxt').textContent = txt; $('mdOk').textContent = okTxt || 'Confirmar'; mdOk = fn; $('modal').hidden = false; }
   $('mdCanc').onclick = function () { $('modal').hidden = true; mdOk = null; };
   $('mdOk').onclick = function () { $('modal').hidden = true; var f = mdOk; mdOk = null; if (f) f(); };
-  $('btnVoltar').onclick = function () { location.href = EH_CEL ? 'arquivos_diversos.html' : 'dashboard.html'; };
+  $('btnVoltar').onclick = function () { if (EH_CEL) location.href = 'arquivos_diversos.html'; else window.pldSairAba(); };
   if (EH_CEL) {
     $('btnVoltar').innerHTML = '📁 <span class="lbl">Arquivos</span>';
     $('vEscolha').querySelector('h2').textContent = 'Quem é você?';

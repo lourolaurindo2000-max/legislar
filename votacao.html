@@ -549,6 +549,7 @@ html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador n
 @-webkit-keyframes tracoRespEnc{0%,100%{width:120px}50%{width:320px}}
 @keyframes tracoRespEnc{0%,100%{width:120px}50%{width:320px}}
 </style>
+    <script src="js/sair-aba.js"></script>
 </head>
 <body>
 
@@ -1293,7 +1294,7 @@ $('#opLoginForm').addEventListener('submit', async ev => {
 /* Sair do Operador: volta para a página do Legislar (dashboard); a Smart TV continua mostrando o telão (ex.: "Sessão encerrada") */
 $('#opLogout').addEventListener('click', () => {
   if(emCurso(E())) return toast('Há uma votação em andamento. Termine a votação antes de sair.');
-  OP_OK = false; location.href = 'dashboard.html';
+  OP_OK = false; window.pldSairAba();
 });
 // Abrir votação: todos os vereadores já entram como PRESENTES (pedido do usuário, 09/11/2026) — dá tempo de
 // cada um entrar no tablet. Quem faltar, o operador marca como Ausente na lista da chamada.
@@ -1851,7 +1852,7 @@ $('#tvFull').addEventListener('click', () => {
   if(!quadro && !tvUA && !EH_TABLET && fino) document.documentElement.classList.add('nb');
   $('#tvSair').addEventListener('click', () => {
     try{ if(document.fullscreenElement) document.exitFullscreen(); else if(document.webkitFullscreenElement) document.webkitExitFullscreen(); }catch(e){}
-    location.href = 'dashboard.html';   /* volta para a página do Legislar */
+    window.pldSairAba();   /* fecha esta aba e volta para a aba do Legislar */
   });
 })();
 /* Smart TV: qualquer tecla do controle remoto ou clique no telão coloca a TV em tela cheia */
