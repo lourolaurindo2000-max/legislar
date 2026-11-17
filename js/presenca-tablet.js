@@ -224,6 +224,8 @@
   function render() {
     if (!raiz) return;
     var ver = !!tela && carregouVer;
+    // Sessão encerrada (depois que o notebook abriu a Presença): o tablet fica na página inicial (cartões), sem voltar para a Presença
+    if (ver && sess && sess.estado === 'encerrada' && sess.fim && sess.fim >= tela.em) ver = false;
     // Depois que o vereador deste tablet registra a presença, o tablet volta sozinho para a página inicial (cartões do Legislar).
     if (ver && !escolhido) {
       var dd0 = dono();
