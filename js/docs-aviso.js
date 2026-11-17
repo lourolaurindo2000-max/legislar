@@ -66,6 +66,7 @@
         var v = s.val() || {};
         if (!pronto || !v.criadoEm || !v.nome) return;
         if (Date.now() + offset - v.criadoEm > 5 * 60000) return;   // sinal antigo
+        if (sec.id === 'diversos' && v.por && v.por !== 'mesa') return;   // arquivo pessoal do vereador: não avisa os outros
         if (sec.pessoal && !(v.dono === 'todos' || (meuVid && v.dono === meuVid))) return;
         if (sec.pessoal && v.por === meuVid) return;   // o próprio vereador enviou
         mostrar(sec, v);

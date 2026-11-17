@@ -165,6 +165,7 @@
   var MESA = !EH_TABLET;
   var dono = null, liberado = null;   // tablet pessoal: dono do tablet e se já digitou a senha
   function podeVer(d) {
+    if (!MESA && CFG.ordemEnvio && d.por && d.por !== 'mesa') return false;   // arquivos pessoais do vereador (Anotações) não aparecem para todos
     if (!pessoal || MESA) return true;
     return !!liberado && (d.dono === 'todos' || d.dono === liberado);
   }

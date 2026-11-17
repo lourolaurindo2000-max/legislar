@@ -183,10 +183,10 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
 
     <div class="barra">
       <h2>Meus arquivos</h2>
-      <label class="btn btn-ouro" for="mArq" style="cursor:pointer">📎 Enviar arquivo</label>
+      <label class="btn btn-ouro" for="mArq" id="mArqEnviar" style="cursor:pointer">📎 Enviar arquivo</label>
       <input type="file" id="mArq" accept="application/pdf,.pdf,image/*" multiple hidden>
     </div>
-    <p style="color:var(--muted);margin:0 0 10px;font-size:14px">PDF ou foto, até 20 MB. Só você vê — no celular e no seu tablet.</p>
+    <p id="mArqDica" style="color:var(--muted);margin:0 0 10px;font-size:14px">PDF ou foto, até 20 MB. Só você vê — no celular e no seu tablet.</p>
     <div class="prog" id="mProg" hidden><span id="mProgTxt"></span><div class="pb"><i id="mProgBar"></i></div></div>
     <div id="mLista"></div>
   </section>
@@ -295,6 +295,9 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   // Tela cheia (tablet)
   function emTela() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
   if (EH_TABLET && !EH_CEL) {
+    // Tablets: sem envio de arquivos (só nos celulares Android/iPhone). Os arquivos continuam aparecendo para ver.
+    $('mArqEnviar').hidden = true;
+    $('mArqDica').textContent = 'Seus arquivos. Para enviar um PDF ou foto, use o seu celular.';
     $('btnTela').hidden = false;
     $('btnTela').onclick = function () { try { var el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) {} };
     document.addEventListener('click', function () { if (!emTela()) { try { var el = document.documentElement; var p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if (p && p.catch) p.catch(function () {}); } catch (e) {} } }, true);
@@ -658,6 +661,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   $('mArq').onchange = function () {
     var vid = mVid, fs = Array.prototype.slice.call(this.files || []); this.value = '';
     if (!vid || liberado !== vid) return;
+    if (EH_TABLET && !EH_CEL) return;   // tablet não envia
     fs = fs.filter(function (f) { return /\.pdf$/i.test(f.name) || f.type === 'application/pdf' || /^image\//.test(f.type); });
     if (!fs.length) { toast('Escolha um PDF ou uma foto.', true); return; }
     if (mEnviando) { toast('Aguarde o envio anterior terminar.', true); return; }
