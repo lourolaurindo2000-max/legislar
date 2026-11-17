@@ -295,17 +295,10 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   // Tela cheia (tablet)
   function emTela() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
   if (EH_TABLET && !EH_CEL) {
-    // Tablets: sem envio de arquivos (só nos celulares Android/iPhone). Os arquivos continuam aparecendo para ver.
-    $('mArqEnviar').hidden = true;
-    // No lugar do "Enviar arquivo": atalho para os documentos da sessão (Leitura do Expediente)
-    (function () {
-      var bt = document.createElement('a');
-      bt.className = 'btn btn-ouro'; bt.id = 'mAtalhoExp'; bt.href = 'arquivos_diversos.html';
-      bt.style.cssText = 'cursor:pointer;text-decoration:none;display:inline-block';
-      bt.textContent = '📄 Leitura do Expediente';
-      $('mArqEnviar').parentNode.insertBefore(bt, $('mArqEnviar'));
-    })();
-    $('mArqDica').hidden = true;   // sem frase no tablet (pedido do usuário)
+    // Tablets: sem a parte "Meus arquivos" (título, envio, frase e lista) — pedido do usuário. Celular continua com ela.
+    $('mArqEnviar').parentNode.hidden = true;
+    $('mArqDica').hidden = true; $('mProg').hidden = true; $('mLista').hidden = true;
+    $('mLista').style.display = 'none';
     $('btnTela').hidden = false;
     $('btnTela').onclick = function () { try { var el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) {} };
     document.addEventListener('click', function () { if (!emTela()) { try { var el = document.documentElement; var p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if (p && p.catch) p.catch(function () {}); } catch (e) {} } }, true);
