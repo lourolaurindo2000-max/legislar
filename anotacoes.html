@@ -119,10 +119,26 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
 .folha .orn span{margin:0 12px;font-size:18px;line-height:1}
 .folha h1{font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:clamp(34px,6vw,58px);line-height:1.05;margin:0;color:#1d2a57;letter-spacing:.01em}
 .folha .data{font-family:Arial,Helvetica,sans-serif;font-style:italic;font-size:clamp(17px,2.4vw,22px);color:#6b5a35;margin-top:8px}
-.folha .corpo{position:relative;font-family:Arial,Helvetica,sans-serif;font-weight:400;font-size:var(--afs,34px);line-height:1.62;margin-top:clamp(22px,4vw,40px);text-align:justify;-webkit-hyphens:auto;hyphens:auto;overflow-wrap:anywhere}
-.folha .corpo p{margin:0 0 .75em;text-indent:1.6em}
-.folha .corpo p:first-child{text-indent:0}
-.folha .corpo p:first-child:first-letter{float:left;font-size:3.1em;line-height:.82;font-weight:700;color:#9a7322;margin:.06em .1em 0 0}
+.folha .corpo{position:relative;font-family:Arial,Helvetica,sans-serif;font-weight:400;font-size:var(--afs,34px);line-height:1.55;margin-top:clamp(22px,4vw,40px);text-align:left;overflow-wrap:anywhere}
+.folha .corpo p{margin:0 0 .7em}
+.folha .corpo h2.sec{display:flex;align-items:center;font-family:Arial,Helvetica,sans-serif;font-size:max(15px,.56em);font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7b5a17;margin:1.5em 0 .6em;padding-bottom:.35em;border-bottom:1px solid rgba(176,134,48,.45)}
+.folha .corpo h2.sec:first-child{margin-top:0}
+.folha .corpo h2.sec span{flex:none;display:inline-flex;align-items:center;justify-content:center;width:1.9em;height:1.9em;border-radius:50%;background:#1d2a57;color:#fff;letter-spacing:0;margin-right:.7em;font-size:.9em}
+.folha .corpo p.inst{font-style:italic;color:#8a6d2f;font-size:max(15px,.58em);margin:-.2em 0 .8em;padding-left:.7em;border-left:3px solid #e6b955}
+.folha .corpo mark{background:#fff3c4;color:#1d2a57;font-weight:700;padding:0 .25em;border-radius:5px}
+.folha .corpo mark[data-m]{border-bottom:2px dashed #c99a2e;cursor:pointer}
+.folha .corpo mark.ok{background:#e3f4e9;border-bottom:2px solid #2f9e62;color:#14532d}
+.folha .dica{position:relative;font-size:14px;color:#6b5a35;background:#fbf5e3;border:1px solid #ecdcae;border-radius:8px;padding:10px 12px;margin-top:clamp(18px,3vw,30px);line-height:1.5}
+.folha .dica code{background:#fff;border:1px solid #ecdcae;border-radius:4px;padding:0 5px;font-weight:700;color:#7b5a17}
+.abesc{position:fixed;top:0;right:0;bottom:0;left:0;z-index:48;background:rgba(5,8,18,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.abesc .cx{background:#fff;color:#1d2a57;border-radius:16px;padding:20px;width:100%;max-width:560px;box-shadow:0 20px 60px rgba(0,0,0,.5);font-family:Arial,Helvetica,sans-serif}
+.abesc b{display:block;font-size:20px;margin-bottom:12px}
+.abesc .gr{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));grid-gap:10px}
+.abesc .gr button{border:1px solid #d9c690;background:#fffaf0;border-radius:10px;padding:14px 10px;font-size:17px;font-weight:700;color:#1d2a57;font-family:inherit}
+.abesc .gr button:active{background:#fff0c2}
+.abesc .rod{display:flex;justify-content:space-between;margin-top:14px}
+.abesc .rod button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;font-size:16px;font-family:inherit}
+.folha .corpo p.cap:first-letter{float:left;font-size:3.1em;line-height:.82;font-weight:700;color:#9a7322;margin:.06em .1em 0 0}
 .folha textarea{display:block;width:100%;min-height:52vh;background:#fff;border:1px dashed #b08630;border-radius:8px;padding:16px 18px;color:#222;
   font-family:Arial,Helvetica,sans-serif;font-weight:400;font-size:var(--afs,34px);line-height:1.55;resize:vertical;margin-top:clamp(22px,4vw,40px)}
 .folha textarea:focus{outline:2px solid #b08630;outline-offset:2px}
@@ -270,14 +286,14 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     </form>
     <h2>Texto da abertura <small style="font-size:14px;color:var(--muted);font-weight:400;margin-left:6px">· leitor do Presidente</small></h2>
     <form class="envio" id="formAbTexto">
-      <textarea id="abTexto" maxlength="20000" style="min-height:160px;font-size:18px;line-height:1.5" placeholder="Digite ou cole aqui a fala do Presidente na abertura da sessão"></textarea>
+      <textarea id="abTexto" maxlength="20000" style="min-height:360px;font-size:17px;line-height:1.5" placeholder="Digite ou cole aqui a fala do Presidente na abertura da sessão"></textarea>
       <div class="linha">
         <span id="abTextoInfo">Carregando…</span>
         <button class="btn btn-sec" type="button" id="abColarNb">📋 Colar</button>
         <button class="btn btn-sec" type="button" id="abVer">📖 Ver no leitor</button>
         <button class="btn btn-ouro" type="submit" id="abSalvar">Salvar texto</button>
       </div>
-      <div class="nota-info">Aparece em forma de página no tablet do Presidente da Mesa (Anotações do Vereador → Abertura da Sessão). O Presidente também pode editar pelo tablet.</div>
+      <div class="nota-info">Aparece em forma de página no tablet do Presidente da Mesa (Anotações do Vereador → Abertura da Sessão). O Presidente também pode editar pelo tablet.<br>Como organizar: <b>#</b> no começo da linha = título da etapa · <b>&gt;</b> = instrução para o Presidente · <b>[ ]</b> = destaque para completar, ex.: [nome do vereador] (no tablet, ele toca no destaque e escolhe o vereador).</div>
     </form>
     <h2>Enviadas</h2>
     <div id="listaEnviadas"><div class="vazio">Carregando…</div></div>
@@ -328,12 +344,18 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
         <div class="data" id="abData"></div>
       </header>
       <div class="corpo" id="abCorpo"></div>
+      <div class="dica" id="abDica" hidden>Como organizar: <code>#</code> no começo da linha = título da etapa · <code>&gt;</code> = instrução para o Presidente (aparece em itálico) · <code>[ ]</code> = destaque para completar, ex.: <code>[nome do vereador]</code> — no leitor, toque no destaque para escolher o vereador.</div>
       <textarea id="abEdTxt" maxlength="20000" placeholder="Digite ou cole aqui a fala do Presidente…" hidden></textarea>
       <footer class="ass"><i></i><b id="abAssNome"></b><small>Presidente da Mesa</small></footer>
       <div class="ed" id="abEd"></div>
     </article>
   </div>
 </div>
+<div class="abesc" id="abEsc" hidden><div class="cx">
+  <b>Escolha o vereador</b>
+  <div class="gr" id="abEscGr"></div>
+  <div class="rod"><button type="button" id="abEscLimpar" style="background:#f1f1f1;color:#555">Deixar em branco</button><button type="button" id="abEscFechar" style="background:#e6b955;color:#0a1022">Fechar</button></div>
+</div></div>
 <div class="modal" id="modal" hidden><div class="mbox"><b id="mdTit"></b><p id="mdTxt"></p>
   <button class="btn btn-ouro" id="mdOk" type="button">Confirmar</button><button class="btn btn-sec" id="mdCanc" type="button">Cancelar</button></div></div>
 <div class="toast" id="toast" hidden></div>
@@ -575,7 +597,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
 
   // ---------- Abertura da sessão: texto em legislar/anotacoes/abertura = {texto, editadoEm, por} ----------
   // Tablet: só o Presidente da Mesa (votacao/sessao/atual/presidente; padrão v6) vê e edita. Notebook: edita e pré-visualiza.
-  var AB_PADRAO = 'Boa noite! Sejam todos bem-vindos à Casa da Cidadania.';
+  var AB_PADRAO = "# Abertura\nBoa noite! Sejam todos bem-vindos à Casa da Cidadania.\nDeclaro aberta a [VIGÉSIMA] SESSÃO ORDINÁRIA do SEGUNDO PERÍODO LEGISLATIVO do SEGUNDO ANO LEGISLATIVO da DÉCIMA SEXTA LEGISLATURA da CÂMARA MUNICIPAL DE ALMADINA.\n\n# Leitura Bíblica\nTODOS DE PÉ PARA PROCLAMARMOS A LEITURA BÍBLICA, que será proclamada pelo(a) Vereador(a) [nome do vereador].\n\n# Verificação de Quórum\nSolicito ao Segundo Secretário, o senhor Wilson de Jesus Freitas, a verificação de quórum.\n\n# Leitura do Expediente\nConvido o Primeiro Secretário, o senhor Dilson Alves de Souza Junior, para a leitura do Expediente.\n\n# Pequeno Expediente\nPassamos para o PEQUENO EXPEDIENTE.\nFranqueada a palavra ao(à) Vereador(a) [nome do vereador]. Vossa Excelência dispõe de 05 minutos.\n> Repita para cada vereador inscrito.\n\n# Grande Expediente\nPassamos para o GRANDE EXPEDIENTE.\nFranqueada a palavra ao(à) Vereador(a) [nome do vereador]. Vossa Excelência dispõe de 20 minutos.\n> Repita para cada vereador inscrito.\n\n# Ordem do Dia\nPassamos para a ORDEM DO DIA.\n\n# Votação\n> Se houver matéria para votação:\nEm votação. Os vereadores que forem favoráveis permaneçam sentados; os contrários se manifestem.";
   var abDados = null, abPres = 'v6', abEditando = false, abSessaoEm = 0;
   var refAbTexto = db.ref(BASE + '/abertura');
   var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -587,10 +609,40 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     $('abCard').hidden = !ok;
     if (EH_TABLET && !ok && !$('abLeitor').hidden) fecharLeitorAb();
   }
+  // Formato: "# Título" = etapa numerada · "> texto" = instrução · "[...]" = destaque (toque para escolher o vereador)
+  var abEscolhas = {}, abEscTexto = null, abEscI = -1;
   function abParagrafos(t) {
-    return t.replace(/\r/g, '').split(/\n+/).map(function (l) { return l.replace(/^\s+|\s+$/g, ''); })
-      .filter(function (l) { return l; }).map(function (l) { return '<p>' + esc(l) + '</p>'; }).join('');
+    if (t !== abEscTexto) { abEscolhas = {}; abEscTexto = t; }   // texto mudou: limpa os nomes escolhidos
+    var h = '', n = 0, mi = 0, cap = false;
+    function marcas(l) {
+      return esc(l).replace(/\[([^\]]+)\]/g, function (x, dentro) {
+        var i = mi++, v = abEscolhas[i];
+        var ehNome = /vereador|secret|nome/i.test(dentro) || VERS.some(function (x) { return esc(x.nome) === dentro; });
+        if (!ehNome) return '<mark>' + dentro + '</mark>';   // ex.: [VIGÉSIMA]: só destaque (muda no Editar)
+        return '<mark data-m="' + i + '"' + (v ? ' class="ok"' : '') + '>' + (v ? esc(v) : dentro) + '</mark>';
+      });
+    }
+    t.replace(/\r/g, '').split('\n').forEach(function (l) {
+      l = l.replace(/^\s+|\s+$/g, ''); if (!l) return;
+      if (/^#/.test(l)) { n++; h += '<h2 class="sec"><span>' + n + '</span>' + marcas(l.replace(/^#+\s*/, '')) + '</h2>'; return; }
+      if (/^>/.test(l)) { h += '<p class="inst">' + marcas(l.replace(/^>+\s*/, '')) + '</p>'; return; }
+      h += '<p' + (cap ? '' : ' class="cap"') + '>' + marcas(l) + '</p>'; cap = true;
+    });
+    return h;
   }
+  $('abEscGr').innerHTML = VERS.map(function (v) { return '<button type="button" data-nome="' + esc(v.nome) + '">' + esc(v.nome) + '</button>'; }).join('');
+  $('abCorpo').addEventListener('click', function (e) {
+    var m = e.target && e.target.closest ? e.target.closest('mark[data-m]') : null; if (!m) return;
+    abEscI = +m.getAttribute('data-m'); $('abEsc').hidden = false;
+  });
+  function escolherAb(nome) {
+    if (abEscI >= 0) { if (nome) abEscolhas[abEscI] = nome; else delete abEscolhas[abEscI]; }
+    $('abEsc').hidden = true; abEscI = -1;
+    var y = $('abRolo').scrollTop; renderLeitorAb(); $('abRolo').scrollTop = y;
+  }
+  $('abEscGr').onclick = function (e) { var b = e.target && e.target.closest ? e.target.closest('[data-nome]') : null; if (b) escolherAb(b.getAttribute('data-nome')); };
+  $('abEscLimpar').onclick = function () { escolherAb(null); };
+  $('abEscFechar').onclick = function () { $('abEsc').hidden = true; abEscI = -1; };
   function renderLeitorAb() {
     // Data da sessão aberta na Votação (sessao/atual.abertaEm); sem sessão aberta, a data de hoje
     var d = new Date(abSessaoEm || Date.now());
@@ -612,7 +664,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   }
   function modoEdicaoAb(on) {
     abEditando = on;
-    $('abCorpo').hidden = on; $('abEdTxt').hidden = !on;
+    $('abCorpo').hidden = on; $('abEdTxt').hidden = !on; $('abDica').hidden = !on;
     $('abEditar').hidden = on; $('abFechar').hidden = on; $('abCanc').hidden = !on; $('abGuardar').hidden = !on; $('abColar').hidden = !on;
     if (on) { $('abEdTxt').value = abTexto(); setTimeout(function () { try { $('abEdTxt').focus(); } catch (e) {} }, 50); }
     else renderLeitorAb();
@@ -668,7 +720,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     renderAbCard();
     if (!$('abLeitor').hidden && !abEditando) renderLeitorAb();
   });
-  setInterval(function () { if (!$('abLeitor').hidden && !abEditando) renderLeitorAb(); }, 60000);   // vira o dia com o leitor aberto
+  setInterval(function () { if (!$('abLeitor').hidden && !abEditando) { var y = $('abRolo').scrollTop; renderLeitorAb(); $('abRolo').scrollTop = y; } }, 60000);   // vira o dia com o leitor aberto
 
   // NOTEBOOK: editar o texto da abertura
   function iniciarTextoAbertura() {
