@@ -662,7 +662,7 @@ html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador n
         </div>
         <div class="panel stack">
           <h2>Relatório para a ata</h2>
-          <p class="muted" style="margin:0">Gera o relatório só das matérias votadas nesta sessão (as arquivadas não entram), com o placar e o voto de cada vereador. Ao finalizar a votação (pauta concluída ou Encerrar sessão) ele vai sozinho para as <b>Anotações do Vereador</b> dos 9 tablets, com aviso; gerar aqui também envia. Na janela que abrir, escolha <b>Salvar como PDF</b> ou imprima.</p>
+          <p class="muted" style="margin:0">Gera o relatório só das matérias votadas nesta sessão (as arquivadas não entram), com o placar e o voto de cada vereador. Ao finalizar a votação (pauta concluída ou Encerrar sessão) ele vai sozinho, sem as votações de ensaio, para as <b>Anotações do Vereador</b> dos 9 tablets, com aviso; gerar aqui também envia. Na janela que abrir, escolha <b>Salvar como PDF</b> ou imprima.</p>
           <div class="row">
             <div class="field" style="flex:1;min-width:160px"><label for="relData">Data da sessão</label><input type="date" id="relData"></div>
             <button class="btn brass" type="button" id="btnRelatorio" style="align-self:flex-end">Gerar relatório (PDF)</button>
@@ -1519,7 +1519,10 @@ function gerarRelatorio(){
   const materias = materiasDoDia(dia);
   if(!materias.length) return toast('Nenhuma matéria votada (fora as arquivadas) em ' + dataBR(dia) + '.');
   const html = montarRelatorio(dia, materias);
-  enviarRelatorioAnotacoes(dia, html, materias, false);
+  // votações de ensaio não vão para os vereadores (o PDF continua com elas)
+  const reais = materias.filter(m => !m.resultado.ensaio);
+  if(reais.length) enviarRelatorioAnotacoes(dia, reais.length === materias.length ? html : montarRelatorio(dia, reais), reais, false);
+  else toast('Só votações de ensaio: o relatório não foi enviado aos vereadores.');
   const w = window.open('', '_blank');
   if(!w) return toast('O navegador bloqueou a janela. Permita pop-ups para este site e tente de novo.');
   w.document.open(); w.document.write(html); w.document.close();
@@ -1529,10 +1532,10 @@ function gerarRelatorio(){
 function enviarRelatorioAuto(){
   try{
     if(EH_TABLET || !OP_OK) return;
-    const ult = pautaOrdenada().filter(p => !p.arquivado && p.status === 'votado' && p.resultado && p.resultado.em)
+    const ult = pautaOrdenada().filter(p => !p.arquivado && p.status === 'votado' && p.resultado && p.resultado.em && !p.resultado.ensaio)
       .sort((a, b) => b.resultado.em - a.resultado.em)[0];
     if(!ult) return;
-    const dia = diaDe(ult.resultado.em), materias = materiasDoDia(dia);
+    const dia = diaDe(ult.resultado.em), materias = materiasDoDia(dia).filter(m => !m.resultado.ensaio);   // ensaio não vai
     if(materias.length) enviarRelatorioAnotacoes(dia, montarRelatorio(dia, materias), materias, true);
   }catch(e){ console.warn('relatório automático', e); }
 }
