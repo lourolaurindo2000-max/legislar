@@ -14,7 +14,7 @@
   var SECOES = [
     { id: 'ordem', nome: 'Ordem do Dia', pag: 'ordem_do_dia.html' },
     { id: 'atas', nome: 'Atas / Proposições', pag: 'atas.html' },
-    { id: 'diversos', nome: 'Leitura do Expediente', pag: 'arquivos_diversos.html', pessoal: true }
+    { id: 'diversos', nome: 'Leitura do Expediente', pag: 'arquivos_diversos.html' }   // sem senha: avisa todos os tablets
   ];
 
   var caixa = null, offset = 0, meuVid = null, destino = '';
