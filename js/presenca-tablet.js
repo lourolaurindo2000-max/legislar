@@ -213,22 +213,12 @@
       abrir(id);
     });
     el('pt-reg').addEventListener('click', registrar);
-    el('pt-canc').addEventListener('click', function () {
-      // "Fechar" depois da presença registrada: volta para a página inicial (cartões do Legislar). "Voltar" só fecha a janela.
-      var id = escolhido, reg = id && vers[id] && norm(vers[id].status) === 'presente' && !enviando;
-      fecharModal();
-      if (reg && tela) { saiuEm = tela.em; render(); window.scrollTo(0, 0); }
-    });
+    el('pt-canc').addEventListener('click', fecharModal);
   }
 
   function render() {
     if (!raiz) return;
     var ver = !!tela && carregouVer;
-    // Depois que o vereador deste tablet registra a presença, o tablet volta sozinho para a página inicial (cartões do Legislar).
-    if (ver && !escolhido) {
-      var dd0 = dono();
-      if ((saiuEm && tela.em === saiuEm) || (dd0 && dd0.fixo && vers[dd0.id] && norm(vers[dd0.id].status) === 'presente')) ver = false;
-    }
     if (!ver) {
       if (mostrando) { mostrando = false; raiz.className = ''; fecharModal(); document.documentElement.style.overflow = ''; }
       return;
@@ -353,6 +343,7 @@
       if (escolhido === id) {
         m.textContent = '✓ Presença registrada'; m.className = 'pt-msg ok';
         renderModal();
+        fecharT = setTimeout(function () { if (escolhido === id) fecharModal(); }, 2500);
       }
       render();
     }, function () {
@@ -361,7 +352,6 @@
     });
   }
 
-  var saiuEm = 0;
   function avaliarTela(v) {
     v = v || {};
     var ok = notebookAberto && v.pagina === 'presenca_plenaria.html' && v.em && (agora() - v.em < VALIDADE);
