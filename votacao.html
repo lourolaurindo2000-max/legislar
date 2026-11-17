@@ -662,7 +662,7 @@ html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador n
         </div>
         <div class="panel stack">
           <h2>Relatório para a ata</h2>
-          <p class="muted" style="margin:0">Gera o relatório só das matérias votadas nesta sessão (as arquivadas não entram), com o placar e o voto de cada vereador. Ele também vai automaticamente para as <b>Anotações do Vereador</b> dos 9 tablets, com aviso. Na janela que abrir, escolha <b>Salvar como PDF</b> ou imprima.</p>
+          <p class="muted" style="margin:0">Gera o relatório só das matérias votadas nesta sessão (as arquivadas não entram), com o placar e o voto de cada vereador. Ao finalizar a votação (pauta concluída ou Encerrar sessão) ele vai sozinho para as <b>Anotações do Vereador</b> dos 9 tablets, com aviso; gerar aqui também envia. Na janela que abrir, escolha <b>Salvar como PDF</b> ou imprima.</p>
           <div class="row">
             <div class="field" style="flex:1;min-width:160px"><label for="relData">Data da sessão</label><input type="date" id="relData"></div>
             <button class="btn brass" type="button" id="btnRelatorio" style="align-self:flex-end">Gerar relatório (PDF)</button>
@@ -1122,6 +1122,7 @@ function automacao(){
       } else if(!prox){
         setEstado({pautaConcluida:true});
         toast('Pauta concluída. Os tablets voltam ao início.');
+        enviarRelatorioAuto();
       }
     };
   }
@@ -1365,7 +1366,7 @@ function encerrarPresenca(){
 }
 $('#btnFecharSessao').addEventListener('click', () => confirmBox({
   titulo:'Encerrar a sessão?', texto:'A presença será zerada e os tablets voltarão para a tela de espera.', ok:'Encerrar sessão', cls:'stop',
-  onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:true,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado(Object.assign(defEstado(), {presidente:E().presidente, sessaoEncerrada:true, encerradaEm:agora()})); encerrarPresenca(); toast('Sessão encerrada.'); }
+  onOk: () => { VEREADORES.forEach(v => { S.presenca[v.id]={presente:true,ts:agora()}; write('presenca/'+v.id, S.presenca[v.id]); }); setEstado(Object.assign(defEstado(), {presidente:E().presidente, sessaoEncerrada:true, encerradaEm:agora()})); encerrarPresenca(); toast('Sessão encerrada.'); enviarRelatorioAuto(); }
 }));
 $('#opCurrent').addEventListener('click', ev => {
   // "Marcar ausente" no aviso "Faltam votar": tira o vereador dos presentes durante a votação aberta
@@ -1511,11 +1512,31 @@ const diaDe = t => { const d = new Date(t); return d.getFullYear() + '-' + pad2(
 const dataBR = iso => { const p = iso.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; };
 const horaBR = t => { const d = new Date(t); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
 (function(){ const el = $('#relData'); if(el) el.value = diaDe(Date.now()); })();
+const materiasDoDia = dia => pautaOrdenada().filter(p => !p.arquivado && p.status === 'votado' && p.resultado && p.resultado.em && diaDe(p.resultado.em) === dia)
+    .sort((a, b) => a.resultado.em - b.resultado.em);
 function gerarRelatorio(){
   const dia = $('#relData').value || diaDe(agora());
-  const materias = pautaOrdenada().filter(p => !p.arquivado && p.status === 'votado' && p.resultado && p.resultado.em && diaDe(p.resultado.em) === dia)
-    .sort((a, b) => a.resultado.em - b.resultado.em);
+  const materias = materiasDoDia(dia);
   if(!materias.length) return toast('Nenhuma matéria votada (fora as arquivadas) em ' + dataBR(dia) + '.');
+  const html = montarRelatorio(dia, materias);
+  enviarRelatorioAnotacoes(dia, html, materias, false);
+  const w = window.open('', '_blank');
+  if(!w) return toast('O navegador bloqueou a janela. Permita pop-ups para este site e tente de novo.');
+  w.document.open(); w.document.write(html); w.document.close();
+  setTimeout(() => { try{ w.focus(); w.print(); }catch(e){} }, 700);
+}
+// Ao finalizar a votação (pauta concluída ou Encerrar sessão): envia sozinho o relatório do dia da última matéria votada
+function enviarRelatorioAuto(){
+  try{
+    if(EH_TABLET || !OP_OK) return;
+    const ult = pautaOrdenada().filter(p => !p.arquivado && p.status === 'votado' && p.resultado && p.resultado.em)
+      .sort((a, b) => b.resultado.em - a.resultado.em)[0];
+    if(!ult) return;
+    const dia = diaDe(ult.resultado.em), materias = materiasDoDia(dia);
+    if(materias.length) enviarRelatorioAnotacoes(dia, montarRelatorio(dia, materias), materias, true);
+  }catch(e){ console.warn('relatório automático', e); }
+}
+function montarRelatorio(dia, materias){
   const logo = new URL('img/brasao.png', location.href).href;
   const NOME_VOTO = {sim:'SIM', nao:'NÃO', abs:'ABSTENÇÃO'};
   const blocos = materias.map((m, i) => {
@@ -1577,16 +1598,15 @@ ${blocos}
 <div class="ass"><div>Presidente da Mesa</div><div>Secretário(a)</div></div>
 <footer>Gerado pelo Sistema (PLD) Plenário Legislativo Digital em ${dataBR(diaDe(Date.now()))} às ${horaBR(Date.now())}.</footer>
 </body></html>`;
-  enviarRelatorioAnotacoes(dia, html, materias.length);
-  const w = window.open('', '_blank');
-  if(!w) return toast('O navegador bloqueou a janela. Permita pop-ups para este site e tente de novo.');
-  w.document.open(); w.document.write(html); w.document.close();
-  setTimeout(() => { try{ w.focus(); w.print(); }catch(e){} }, 700);
+  return html;
 }
 // Envia o relatório para "Da Mesa" em Anotações do Vereador (os 9 tablets recebem aviso).
 // Se gerar de novo o relatório do mesmo dia, o anterior é trocado (sem duplicar).
-function enviarRelatorioAnotacoes(dia, html, qtd){
+function enviarRelatorioAnotacoes(dia, html, materias, auto){
   if(!Store.db) return toast('Sem conexão: o relatório não foi enviado às Anotações dos vereadores.');
+  const qtd = materias.length;
+  // assinatura: mesmas matérias com os mesmos resultados = mesmo relatório (não reenvia nem repete o aviso)
+  const ass = materias.map(m => m.id + ':' + m.resultado.em + ':' + m.resultado.veredito + ':' + (m.resultado.desempate || '')).join('|');
   const AN = RAIZ.replace(/\/votacao$/, '/anotacoes'), rt = Store.db;
   const doc = html.replace(/<div class="barra">[\s\S]*?<\/div>\n/, '')
     .replace('<meta charset="utf-8">', '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">')
@@ -1594,18 +1614,21 @@ function enviarRelatorioAnotacoes(dia, html, qtd){
   let b64; try{ b64 = btoa(unescape(encodeURIComponent(doc))); }catch(e){ return toast('Não foi possível preparar o relatório para os tablets.'); }
   const nome = 'Relatório de votação — Sessão de ' + dataBR(dia);
   const msgs = rt.ref(AN + '/mesa/mensagens'), arqs = rt.ref(AN + '/mesa/arquivos');
+  let igual = false;
   msgs.orderByChild('relDia').equalTo(dia).once('value').then(s => {
-    const velhas = []; s.forEach(c => { velhas.push(c.key); });
+    const velhas = []; s.forEach(c => { const v = c.val() || {}; if(v.relAss === ass) igual = true; else velhas.push(c.key); });
+    if(igual) return;
     return Promise.all(velhas.map(k => Promise.all([msgs.child(k).remove(), arqs.child(k).remove()])));
   }).then(() => {
+    if(igual) return;
     const id = msgs.push().key;
     return arqs.child(id).set({0: b64}).then(() => msgs.child(id).set({
       texto: 'Relatório da votação da sessão de ' + dataBR(dia) + ' (' + qtd + ' matéria' + (qtd > 1 ? 's' : '') + '). Toque em Ver para abrir.',
-      de: 'Mesa', tipo: 'relatorio', relDia: dia,
+      de: 'Mesa', tipo: 'relatorio', relDia: dia, relAss: ass,
       arquivo: {nome: nome, tipo: 'text/html', tamanho: doc.length, partes: 1},
       criadoEm: firebase.database.ServerValue.TIMESTAMP
     }));
-  }).then(() => toast('Relatório enviado para as Anotações dos 9 vereadores.'))
+  }).then(() => { if(!igual) toast((auto ? 'Votação finalizada: relatório' : 'Relatório') + ' enviado para as Anotações dos 9 vereadores.'); else if(!auto) toast('O relatório já estava nas Anotações dos vereadores.'); })
     .catch(() => toast('Não foi possível enviar o relatório às Anotações dos vereadores.'));
 }
 $('#btnRelatorio').addEventListener('click', gerarRelatorio);
