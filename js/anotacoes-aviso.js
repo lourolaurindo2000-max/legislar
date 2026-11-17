@@ -35,7 +35,7 @@
   function mostrar(m) {
     if (!caixa) montar();
     var a = m.arquivo;
-    caixa.innerHTML = '<b>📩 Nova ' + (a ? 'mensagem com arquivo' : 'mensagem') + ' da Mesa</b>' +
+    caixa.innerHTML = '<b>' + (m.tipo === 'relatorio' ? '📊 Relatório da votação chegou' : '📩 Nova ' + (a ? 'mensagem com arquivo' : 'mensagem') + ' da Mesa') + '</b>' +
       '<p>' + esc(m.texto || '') + (a ? (m.texto ? '\n' : '') + '📎 ' + esc(a.nome) : '') + '</p>' +
       '<div class="an-l"><button type="button" class="an-fechar">Fechar</button><button type="button" class="an-abrir">Abrir Anotações</button></div>';
     caixa.style.display = 'block';

@@ -52,6 +52,10 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
 .msg .rod{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:13px}
 .msg.priv{border-color:#e6b955}
 .msg .tag.priv{background:#e6b955}
+#relCaixa{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9000;background:#0a1022;display:none;flex-direction:column}
+#relCaixa .relTopo{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;color:#e6b955;font-size:17px}
+#relCaixa .relTopo b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:12px}
+#relCaixa iframe{flex:1;width:100%;border:0;background:#fff}
 .msg .tag{font-size:11px;font-weight:800;letter-spacing:.08em;color:#0a1022;background:var(--novo);border-radius:6px;padding:2px 6px;margin-right:8px}
 .arq{display:flex;align-items:center;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
 .arq svg{flex:none;color:var(--gold);margin-right:10px}
@@ -467,8 +471,23 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
       var v = s.val() || {}, d = '';
       for (var i = 0; i < (m.arquivo.partes || 0); i++) d += (v[i] || v[String(i)] || '');
       if (!d) throw new Error('vazio');
-      VerDoc.abrir(d, m.arquivo.nome, m.arquivo.tipo);
+      if (m.arquivo.tipo === 'text/html') verRelatorio(d, m.arquivo.nome);
+      else VerDoc.abrir(d, m.arquivo.nome, m.arquivo.tipo);
     }).catch(function () { toast('Não foi possível abrir o arquivo.', true); }).then(function () { if (b) b.disabled = false; });
+  }
+  // Relatório da votação (HTML gerado pelo Operador da Votação) em tela cheia
+  function verRelatorio(b64, nome) {
+    var html; try { html = decodeURIComponent(escape(atob(b64))); } catch (e) { throw new Error('vazio'); }
+    var cx = $('relCaixa');
+    if (!cx) {
+      cx = document.createElement('div'); cx.id = 'relCaixa';
+      cx.innerHTML = '<div class="relTopo"><b id="relNome"></b><button class="btn" type="button" id="relFechar">✕ Fechar</button></div><iframe id="relFrame" title="Relatório da votação"></iframe>';
+      document.body.appendChild(cx);
+      $('relFechar').onclick = function () { cx.style.display = 'none'; $('relFrame').removeAttribute('srcdoc'); };
+    }
+    $('relNome').textContent = nome || 'Relatório da votação';
+    $('relFrame').setAttribute('srcdoc', html);
+    cx.style.display = 'flex';
   }
   document.addEventListener('click', function (e) {
     var t = e.target && e.target.closest ? e.target.closest('[data-ver]') : null;
@@ -490,7 +509,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   var vistoNaAbertura = +ls(VISTO) || 0;
   // Mensagem com "para" (ex.: Abertura da sessão) é só daquele vereador
   function pareMim(m) { return !m.para || m.para === dono; }
-  function tagPriv(m) { return m.para ? '<span class="tag priv">🔒 ' + (m.tipo === 'abertura' ? 'ABERTURA DA SESSÃO · SÓ PARA VOCÊ' : 'SÓ PARA VOCÊ') + '</span>' : ''; }
+  function tagPriv(m) { if (m.tipo === 'relatorio') return '<span class="tag priv">📊 RELATÓRIO DA VOTAÇÃO</span>'; return m.para ? '<span class="tag priv">🔒 ' + (m.tipo === 'abertura' ? 'ABERTURA DA SESSÃO · SÓ PARA VOCÊ' : 'SÓ PARA VOCÊ') + '</span>' : ''; }
   function renderMesa() {
     if (!EH_TABLET || !carregou || !dono || liberado !== dono) return;
     var n = 0, h = '', vistoMax = 0;

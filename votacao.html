@@ -662,7 +662,7 @@ html.sessao-real #btnTela{display:none!important}  /* sessão real: o vereador n
         </div>
         <div class="panel stack">
           <h2>Relatório para a ata</h2>
-          <p class="muted" style="margin:0">Gera o relatório só das matérias votadas nesta sessão (as arquivadas não entram), com o placar e o voto de cada vereador. Na janela que abrir, escolha <b>Salvar como PDF</b> ou imprima.</p>
+          <p class="muted" style="margin:0">Gera o relatório só das matérias votadas nesta sessão (as arquivadas não entram), com o placar e o voto de cada vereador. Ele também vai automaticamente para as <b>Anotações do Vereador</b> dos 9 tablets, com aviso. Na janela que abrir, escolha <b>Salvar como PDF</b> ou imprima.</p>
           <div class="row">
             <div class="field" style="flex:1;min-width:160px"><label for="relData">Data da sessão</label><input type="date" id="relData"></div>
             <button class="btn brass" type="button" id="btnRelatorio" style="align-self:flex-end">Gerar relatório (PDF)</button>
@@ -1577,10 +1577,36 @@ ${blocos}
 <div class="ass"><div>Presidente da Mesa</div><div>Secretário(a)</div></div>
 <footer>Gerado pelo Sistema (PLD) Plenário Legislativo Digital em ${dataBR(diaDe(Date.now()))} às ${horaBR(Date.now())}.</footer>
 </body></html>`;
+  enviarRelatorioAnotacoes(dia, html, materias.length);
   const w = window.open('', '_blank');
   if(!w) return toast('O navegador bloqueou a janela. Permita pop-ups para este site e tente de novo.');
   w.document.open(); w.document.write(html); w.document.close();
   setTimeout(() => { try{ w.focus(); w.print(); }catch(e){} }, 700);
+}
+// Envia o relatório para "Da Mesa" em Anotações do Vereador (os 9 tablets recebem aviso).
+// Se gerar de novo o relatório do mesmo dia, o anterior é trocado (sem duplicar).
+function enviarRelatorioAnotacoes(dia, html, qtd){
+  if(!Store.db) return toast('Sem conexão: o relatório não foi enviado às Anotações dos vereadores.');
+  const AN = RAIZ.replace(/\/votacao$/, '/anotacoes'), rt = Store.db;
+  const doc = html.replace(/<div class="barra">[\s\S]*?<\/div>\n/, '')
+    .replace('<meta charset="utf-8">', '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">')
+    .replace('padding:24px;', 'padding:16px;');
+  let b64; try{ b64 = btoa(unescape(encodeURIComponent(doc))); }catch(e){ return toast('Não foi possível preparar o relatório para os tablets.'); }
+  const nome = 'Relatório de votação — Sessão de ' + dataBR(dia);
+  const msgs = rt.ref(AN + '/mesa/mensagens'), arqs = rt.ref(AN + '/mesa/arquivos');
+  msgs.orderByChild('relDia').equalTo(dia).once('value').then(s => {
+    const velhas = []; s.forEach(c => { velhas.push(c.key); });
+    return Promise.all(velhas.map(k => Promise.all([msgs.child(k).remove(), arqs.child(k).remove()])));
+  }).then(() => {
+    const id = msgs.push().key;
+    return arqs.child(id).set({0: b64}).then(() => msgs.child(id).set({
+      texto: 'Relatório da votação da sessão de ' + dataBR(dia) + ' (' + qtd + ' matéria' + (qtd > 1 ? 's' : '') + '). Toque em Ver para abrir.',
+      de: 'Mesa', tipo: 'relatorio', relDia: dia,
+      arquivo: {nome: nome, tipo: 'text/html', tamanho: doc.length, partes: 1},
+      criadoEm: firebase.database.ServerValue.TIMESTAMP
+    }));
+  }).then(() => toast('Relatório enviado para as Anotações dos 9 vereadores.'))
+    .catch(() => toast('Não foi possível enviar o relatório às Anotações dos vereadores.'));
 }
 $('#btnRelatorio').addEventListener('click', gerarRelatorio);
 
