@@ -223,7 +223,7 @@
             box-shadow: 0 0 6px #39ff14, 0 0 16px rgba(57,255,20,.8); -webkit-animation: tvOnlinePisca 1.1s ease-in-out infinite; animation: tvOnlinePisca 1.1s ease-in-out infinite; }
         /* Tela de espera: nome da sessão no topo, destacado como no telão da Votação (mesmo dado: legislar/votacao/config/sessaoNome) */
         #tv-espera-sessao { position: absolute; top: 4.5vh; left: 0; right: 0; z-index: 1; text-align: center; }
-        #tv-espera-sessao > span { display: inline-block; max-width: 72vw; padding: 1.6vh 3.2vw; border: 0;
+        #tv-espera-sessao > span { display: inline-block; max-width: 96vw; padding: 1.6vh 0; border: 0; white-space: nowrap; overflow: hidden;
             background: none; color: #e3b450; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; line-height: 1.15;
             font-size: 5.8vh; font-size: clamp(1.6rem, 5.8vh, 8rem); text-shadow: 0 0 24px rgba(227,180,80,.45); }
         #tv-espera.com-sessao { padding-top: 17vh; }
@@ -1216,8 +1216,19 @@
             (function () {
                 var nome = 'VIGÉSIMA SESSÃO ORDINÁRIA';
                 var refNome = db.ref('legislar/votacao/config/sessaoNome');
+                // Tudo em uma linha: diminui a letra só se o nome não couber na largura da tela
+                function ajustarNome() {
+                    var el = document.getElementById('tv-espera-sessao-txt');
+                    if (!el) return;
+                    var w = window.innerWidth || 1280, h = window.innerHeight || 720;
+                    var px = h * 0.058, n = (nome || '').length;
+                    if (n) px = Math.min(px, (w * 0.92) / (n * 0.8));
+                    el.style.fontSize = Math.round(px) + 'px';
+                }
+                $(window).on('resize', ajustarNome);
                 function mostrar() {
                     $('#tv-espera-sessao-txt').text(nome);
+                    ajustarNome();
                     $('#tv-espera-sessao').css('display', nome ? 'block' : 'none');
                     $('#tv-espera').toggleClass('com-sessao', !!nome);
                 }
