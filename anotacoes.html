@@ -471,7 +471,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
       var v = s.val() || {}, d = '';
       for (var i = 0; i < (m.arquivo.partes || 0); i++) d += (v[i] || v[String(i)] || '');
       if (!d) throw new Error('vazio');
-      if (m.arquivo.tipo === 'text/html') verRelatorio(d, m.arquivo.nome);
+      if (m.arquivo.tipo === 'text/html') { verRelatorio(d, m.arquivo.nome); try { localStorage.setItem('an_rel_ok', m.id); } catch (e) {} }
       else VerDoc.abrir(d, m.arquivo.nome, m.arquivo.tipo);
     }).catch(function () { toast('Não foi possível abrir o arquivo.', true); }).then(function () { if (b) b.disabled = false; });
   }
