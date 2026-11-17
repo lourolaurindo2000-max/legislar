@@ -1822,12 +1822,14 @@ function sha256(ascii){
       if (got.feito || !got.v || !got.s || !got.p) return;
       got.feito = true;
       var e = state.sessao.estado;
-      if (!canWrite || e === "aberta" || e === "suspensa") return;
-      lista().forEach(function(v){ if (normStatus(v.status) !== "ausente") setStatus(v.id, "ausente"); });
-      // Sessão iniciada automaticamente ao abrir a Presença no notebook (pedido do usuário: sem precisar ir em Configurações > Iniciar sessão)
       var tvAqui = false;
       try { tvAqui = window.self !== window.top || (localStorage.getItem("pld_tv") === "1" && !(navigator.maxTouchPoints > 0)); } catch (x) { tvAqui = true; }
       if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|AFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || "")) tvAqui = true;
+      // Sessão de outro dia que ficou aberta (não foi finalizada): no notebook, começa uma nova do zero, com todos ausentes
+      var velha = (e === "aberta" || e === "suspensa") && state.sessao.inicio && new Date(state.sessao.inicio).toDateString() !== new Date().toDateString();
+      if (!canWrite || ((e === "aberta" || e === "suspensa") && !(velha && !tvAqui))) return;
+      lista().forEach(function(v){ if (normStatus(v.status) !== "ausente") setStatus(v.id, "ausente"); });
+      // Sessão iniciada automaticamente ao abrir a Presença no notebook (pedido do usuário: sem precisar ir em Configurações > Iniciar sessão)
       if (!tvAqui) { sessao({ estado: "aberta", acumulado: 0, retomadaEm: Date.now(), inicio: Date.now() }); toast("Sessão iniciada automaticamente.", "ok"); }
     }
     check.then(function(w){ if (w === false) canWrite = false; applyPerms(); conn("ok", canWrite ? "Sincronizado em tempo real" : "Sincronizado · somente leitura"); got.p = true; zerarAoAbrir(); });
