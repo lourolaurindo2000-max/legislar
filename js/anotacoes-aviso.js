@@ -55,7 +55,14 @@
       var v = s.val() || {};
       if (!pronto || !v.criadoEm) return;
       if (Date.now() + offset - v.criadoEm > 5 * 60000) return;   // sinal antigo
-      mostrar(v);
+      if (!v.para) { mostrar(v); return; }
+      // Só para um vereador (ex.: Abertura da sessão): avisa apenas no tablet dele
+      var meu = null, dev = null;
+      try { meu = localStorage.getItem('an_meu'); dev = localStorage.getItem('vp_dev'); } catch (e) {}
+      db.ref(RAIZ + '/votacao/aparelhos/' + v.para).once('value', function (a) {
+        var ap = a.val();
+        if ((ap && dev && ap.dev === dev) || (!ap && meu === v.para)) mostrar(v);
+      });
     });
     q.once('value', function () { pronto = true; });
   }

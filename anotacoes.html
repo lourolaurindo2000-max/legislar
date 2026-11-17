@@ -50,6 +50,8 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
 .msg.novo{border-color:var(--novo);box-shadow:inset 4px 0 0 var(--novo)}
 .msg p{margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:18px}
 .msg .rod{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:13px}
+.msg.priv{border-color:#e6b955}
+.msg .tag.priv{background:#e6b955}
 .msg .tag{font-size:11px;font-weight:800;letter-spacing:.08em;color:#0a1022;background:var(--novo);border-radius:6px;padding:2px 6px;margin-right:8px}
 .arq{display:flex;align-items:center;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
 .arq svg{flex:none;color:var(--gold);margin-right:10px}
@@ -206,6 +208,22 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
       <div class="prog" id="mProg" hidden><i></i></div>
       <div class="nota-info">Chega na hora em todos os tablets, em Anotações do Vereador. Não aparece na Smart TV.</div>
     </form>
+    <h2>Abertura da sessão <small style="font-size:14px;color:var(--muted);font-weight:400">· só para o Presidente da Mesa</small></h2>
+    <form class="envio" id="formAb">
+      <div class="linha" style="margin-top:0">
+        <label for="abPara" style="margin-right:8px">Para:</label>
+        <select id="abPara" style="background:var(--bg);color:inherit;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 10px 6px 0;font-size:16px"></select>
+      </div>
+      <div class="linha">
+        <input type="file" id="abArq" accept="application/pdf,.pdf,image/*" hidden>
+        <button class="btn btn-sec" type="button" id="abArqBtn">📎 Escolher arquivo</button>
+        <span id="abArqNome">Nenhum arquivo. Até 10 MB.</span>
+        <button class="btn btn-sec" type="button" id="abArqTirar" hidden>Tirar</button>
+        <button class="btn btn-ouro" type="submit" id="abEnviar">Enviar só para ele</button>
+      </div>
+      <div class="prog" id="abProg" hidden><i></i></div>
+      <div class="nota-info">🔒 Aparece somente no tablet (e no celular) do vereador escolhido, em Anotações do Vereador → Da Mesa. Os outros vereadores não veem.</div>
+    </form>
     <h2>Enviadas</h2>
     <div id="listaEnviadas"><div class="vazio">Carregando…</div></div>
     <h2>Senhas dos vereadores</h2>
@@ -326,6 +344,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   }
   function abrirArquivo(id, b) {
     var m = porId[id]; if (!m || !m.arquivo) return;
+    if (EH_TABLET && m.para && m.para !== dono) return;
     if (b) b.disabled = true; toast('Abrindo ' + m.arquivo.nome + '…');
     refArq.child(id).once('value').then(function (s) {
       var v = s.val() || {}, d = '';
@@ -348,20 +367,26 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     msgs = l; porId = {}; l.forEach(function (m) { porId[m.id] = m; });
     carregou = true;
     renderMesa(); renderEnviadas();
+    novas = novas.filter(pareMim);
     if (novas.length && EH_TABLET && dono && liberado === dono) toast(novas.length > 1 ? novas.length + ' novas mensagens da Mesa' : 'Nova mensagem da Mesa');
   });
   var vistoNaAbertura = +ls(VISTO) || 0;
+  // Mensagem com "para" (ex.: Abertura da sessão) é só daquele vereador
+  function pareMim(m) { return !m.para || m.para === dono; }
+  function tagPriv(m) { return m.para ? '<span class="tag priv">🔒 ' + (m.tipo === 'abertura' ? 'ABERTURA DA SESSÃO · SÓ PARA VOCÊ' : 'SÓ PARA VOCÊ') + '</span>' : ''; }
   function renderMesa() {
     if (!EH_TABLET || !carregou || !dono || liberado !== dono) return;
-    var n = 0, h = '';
+    var n = 0, h = '', vistoMax = 0;
     msgs.forEach(function (m) {
+      if (!pareMim(m)) return;
+      if (m.criadoEm > vistoMax) vistoMax = m.criadoEm;
       var novo = m.criadoEm > vistoNaAbertura; if (novo) n++;
-      h += '<div class="msg' + (novo ? ' novo' : '') + '">' + (m.texto ? '<p>' + esc(m.texto) + '</p>' : '') + arqHtml(m) +
-        '<div class="rod"><span>' + (novo ? '<span class="tag">NOVO</span>' : '') + esc(m.de || 'Mesa') + '</span><span>' + quando(m.criadoEm) + '</span></div></div>';
+      h += '<div class="msg' + (novo ? ' novo' : '') + (m.para ? ' priv' : '') + '">' + (m.texto ? '<p>' + esc(m.texto) + '</p>' : '') + arqHtml(m) +
+        '<div class="rod"><span>' + (novo ? '<span class="tag">NOVO</span>' : '') + tagPriv(m) + esc(m.de || 'Mesa') + '</span><span>' + quando(m.criadoEm) + '</span></div></div>';
     });
     $('listaMesa').innerHTML = h || '<div class="vazio">Nenhuma mensagem ou arquivo da Mesa ainda.</div>';
     $('nNovas').hidden = !n; $('nNovas').textContent = n === 1 ? '1 nova' : n + ' novas';
-    if (msgs.length && dono) ls(VISTO, String(Math.max(+ls(VISTO) || 0, msgs[0].criadoEm)));   // marcado como visto neste tablet
+    if (vistoMax && dono) ls(VISTO, String(Math.max(+ls(VISTO) || 0, vistoMax)));   // marcado como visto neste tablet
   }
 
   // ---------- NOTEBOOK: enviar para os tablets ----------
@@ -370,8 +395,8 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     if (EH_TABLET || !carregou) return;
     var h = '';
     msgs.forEach(function (m) {
-      h += '<div class="msg">' + (m.texto ? '<p>' + esc(m.texto) + '</p>' : '') + arqHtml(m) +
-        '<div class="rod"><span>' + quando(m.criadoEm) + '</span><button class="btn btn-del" type="button" data-apagar="' + esc(m.id) + '">Apagar</button></div></div>';
+      h += '<div class="msg' + (m.para ? ' priv' : '') + '">' + (m.texto ? '<p>' + esc(m.texto) + '</p>' : '') + arqHtml(m) +
+        '<div class="rod"><span>' + (m.para ? '<span class="tag priv">🔒 SÓ PARA ' + esc((NOME[m.para] || m.para).toUpperCase()) + '</span>' : '<span class="tag">TODOS</span>') + quando(m.criadoEm) + '</span><button class="btn btn-del" type="button" data-apagar="' + esc(m.id) + '">Apagar</button></div></div>';
     });
     $('listaEnviadas').innerHTML = h || '<div class="vazio">Nada enviado ainda.</div>';
   }
@@ -411,6 +436,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
         toast('Não foi possível enviar. Verifique a internet.', true);
       }).then(function () { b.disabled = false; b.textContent = 'Enviar para os tablets'; prog.hidden = true; });
     };
+    iniciarAbertura(ler);
     document.addEventListener('click', function (e) {
       var t = e.target && e.target.closest ? e.target.closest('[data-apagar]') : null; if (!t) return;
       var id = t.getAttribute('data-apagar');
@@ -419,6 +445,48 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
           .then(function () { toast('Apagado.'); }).catch(function () { toast('Não foi possível apagar.', true); });
       });
     });
+  }
+
+  // ---------- NOTEBOOK: Abertura da sessão (só para um vereador — o Presidente da Mesa) ----------
+  function iniciarAbertura(ler) {
+    var sel = $('abPara'), pres = 'v6', mexeu = false, abSel = null;   // v6 = PRESIDENTE_PADRAO da Votação
+    function opcoes() {
+      var atual = mexeu ? sel.value : pres;
+      sel.innerHTML = VERS.map(function (v) { return '<option value="' + v.id + '">' + esc(v.nome) + (v.id === pres ? ' — Presidente da Mesa' : '') + '</option>'; }).join('');
+      sel.value = atual;
+    }
+    opcoes();
+    sel.onchange = function () { mexeu = true; };
+    db.ref(RAIZ + '/votacao/sessao/atual/presidente').on('value', function (s) { pres = (s.val() && NOME[s.val()]) ? s.val() : 'v6'; opcoes(); });
+    function limpar() { abSel = null; $('abArqNome').textContent = 'Nenhum arquivo. Até 10 MB.'; $('abArqTirar').hidden = true; }
+    $('abArqBtn').onclick = function () { $('abArq').click(); };
+    $('abArqTirar').onclick = limpar;
+    $('abArq').onchange = function () {
+      var f = this.files && this.files[0]; this.value = ''; if (!f) return;
+      if (f.size > LIMITE) { toast('O arquivo tem mais de 10 MB. Escolha um menor.', true); return; }
+      abSel = f; $('abArqNome').textContent = f.name + ' · ' + tamanho(f.size); $('abArqTirar').hidden = false;
+    };
+    $('formAb').onsubmit = function (ev) {
+      ev.preventDefault();
+      var f = abSel, para = sel.value;
+      if (!f) { toast('Escolha o arquivo da abertura da sessão.', true); return; }
+      if (!NOME[para]) { toast('Escolha o vereador.', true); return; }
+      var id = refMsgs.push().key, b = $('abEnviar'), prog = $('abProg'), barra = prog.firstChild;
+      b.disabled = true; b.textContent = 'Enviando…';
+      ler(f).then(function (d) {
+        var partes = Math.ceil(d.length / PARTE), feitas = 0, envios = [];
+        prog.hidden = false; barra.style.width = '0';
+        for (var i = 0; i < partes; i++) envios.push(refArq.child(id).child(String(i)).set(d.slice(i * PARTE, (i + 1) * PARTE)).then(function () { feitas++; barra.style.width = Math.round(feitas / partes * 100) + '%'; }));
+        return Promise.all(envios).then(function () { return { nome: f.name, tipo: f.type || '', tamanho: f.size, partes: partes }; });
+      }).then(function (arquivo) {
+        return refMsgs.child(id).set({ texto: 'Abertura da sessão', de: 'Mesa', para: para, tipo: 'abertura', arquivo: arquivo, criadoEm: firebase.database.ServerValue.TIMESTAMP });
+      }).then(function () {
+        limpar(); toast('Abertura da sessão enviada só para ' + NOME[para] + '.');
+      }).catch(function () {
+        refArq.child(id).remove().catch(function () {});
+        toast('Não foi possível enviar. Verifique a internet.', true);
+      }).then(function () { b.disabled = false; b.textContent = 'Enviar só para ele'; prog.hidden = true; });
+    };
   }
 
   // ---------- NOTEBOOK: senhas dos vereadores (só com a senha do administrador) ----------
