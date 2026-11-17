@@ -366,7 +366,7 @@
     var d = calcDono();
     if (d !== dono) { dono = d; trancar(); }
     var aberto = !!dono && liberado === dono;
-    $('vEscolha').hidden = !!dono; $('vSenha').hidden = !dono || aberto; $('vLista').hidden = !aberto; $('vEnvio').hidden = !aberto;
+    $('vEscolha').hidden = !!dono; $('vSenha').hidden = !dono || aberto; $('vLista').hidden = !aberto; $('vEnvio').hidden = !aberto || !EH_CEL;   // tablet: sem envio (a Mesa/secretário envia pelo notebook); celular continua enviando
     $('btnSairV').hidden = !aberto; $('sTroca').hidden = !(ensaio || EH_CEL);
     if (dono && !aberto) $('sNome').textContent = NOME[dono];
     if (EH_CEL && dono) $('sTroca').textContent = 'Não é ' + NOME[dono] + '? Escolher outro nome';
