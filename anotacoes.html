@@ -138,6 +138,11 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
 .abesc .gr button:active{background:#fff0c2}
 .abesc .rod{display:flex;justify-content:space-between;margin-top:14px}
 .abesc .rod button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;font-size:16px;font-family:inherit}
+.folha .corpo mark[data-e]{border-bottom:2px dashed #c99a2e;cursor:pointer}
+.abesc input{width:100%;background:#fff;color-scheme:light;border:2px solid #d9c690;border-radius:10px;padding:14px;font-size:20px;font-weight:700;color:#1d2a57;font-family:inherit;text-transform:none}
+.abesc .ordb{display:flex;align-items:center;margin-top:12px}
+.abesc .ordb button{flex:1;border:1px solid #d9c690;background:#fffaf0;border-radius:10px;padding:14px 10px;font-size:17px;font-weight:700;color:#1d2a57;font-family:inherit}
+.abesc .ordb span{flex:none;min-width:70px;text-align:center;font-size:15px;color:#6b5a35;font-weight:700}
 .folha .corpo p.cap:first-letter{float:left;font-size:3.1em;line-height:.82;font-weight:700;color:#9a7322;margin:.06em .1em 0 0}
 .folha textarea{display:block;width:100%;min-height:52vh;background:#fff;border:1px dashed #b08630;border-radius:8px;padding:16px 18px;color:#222;
   font-family:Arial,Helvetica,sans-serif;font-weight:400;font-size:var(--afs,34px);line-height:1.55;resize:vertical;margin-top:clamp(22px,4vw,40px)}
@@ -351,6 +356,13 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     </article>
   </div>
 </div>
+<div class="abesc" id="abVal" hidden><div class="cx">
+  <b id="abValTit">Alterar</b>
+  <div class="gr" id="abValGr" style="margin-bottom:12px" hidden></div>
+  <input id="abValIn" maxlength="120" autocomplete="off">
+  <div class="ordb" id="abValOrd" hidden><button type="button" id="abValMenos">◀ Anterior</button><span id="abValNum"></span><button type="button" id="abValMais">Próxima ▶</button></div>
+  <div class="rod"><button type="button" id="abValCanc" style="background:#f1f1f1;color:#555">Cancelar</button><button type="button" id="abValOk" style="background:#e6b955;color:#0a1022">Salvar</button></div>
+</div></div>
 <div class="abesc" id="abEsc" hidden><div class="cx">
   <b>Escolha o vereador</b>
   <div class="gr" id="abEscGr"></div>
@@ -612,13 +624,14 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   // Formato: "# Título" = etapa numerada · "> texto" = instrução · "[...]" = destaque (toque para escolher o vereador)
   var abEscolhas = {}, abEscTexto = null, abEscI = -1;
   function abParagrafos(t) {
-    if (t !== abEscTexto) { abEscolhas = {}; abEscTexto = t; }   // texto mudou: limpa os nomes escolhidos
+    var qtd = (t.match(/\[[^\]]+\]/g) || []).length;
+    if (qtd !== abEscTexto) { abEscolhas = {}; abEscTexto = qtd; }   // destaques mudaram: limpa os nomes escolhidos
     var h = '', n = 0, mi = 0, cap = false;
     function marcas(l) {
       return esc(l).replace(/\[([^\]]+)\]/g, function (x, dentro) {
         var i = mi++, v = abEscolhas[i];
         var ehNome = /vereador|secret|nome/i.test(dentro) || VERS.some(function (x) { return esc(x.nome) === dentro; });
-        if (!ehNome) return '<mark>' + dentro + '</mark>';   // ex.: [VIGÉSIMA]: só destaque (muda no Editar)
+        if (!ehNome) return '<mark data-e="' + i + '">' + dentro + '</mark>';   // ex.: [VIGÉSIMA], [horário]: toque para alterar (fica salvo)
         return '<mark data-m="' + i + '"' + (v ? ' class="ok"' : '') + '>' + (v ? esc(v) : dentro) + '</mark>';
       });
     }
@@ -643,6 +656,57 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   $('abEscGr').onclick = function (e) { var b = e.target && e.target.closest ? e.target.closest('[data-nome]') : null; if (b) escolherAb(b.getAttribute('data-nome')); };
   $('abEscLimpar').onclick = function () { escolherAb(null); };
   $('abEscFechar').onclick = function () { $('abEsc').hidden = true; abEscI = -1; };
+
+  // Destaques que não são nome (número da sessão, data, horário): toque → altera e SALVA no texto
+  var U = ['', 'PRIMEIRA', 'SEGUNDA', 'TERCEIRA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÉTIMA', 'OITAVA', 'NONA'];
+  var D = ['', 'DÉCIMA', 'VIGÉSIMA', 'TRIGÉSIMA', 'QUADRAGÉSIMA', 'QUINQUAGÉSIMA', 'SEXAGÉSIMA', 'SEPTUAGÉSIMA', 'OCTOGÉSIMA', 'NONAGÉSIMA'];
+  function ordinal(n) {
+    var c = Math.floor(n / 100), d = Math.floor(n % 100 / 10), u = n % 10, r = [];
+    if (c) r.push('CENTÉSIMA'); if (d) r.push(D[d]); if (u) r.push(U[u]);
+    return r.join(' ');
+  }
+  function numOrdinal(t) {
+    t = String(t).toUpperCase().replace(/\s+/g, ' ').replace(/^\s|\s$/g, '');
+    for (var n = 1; n < 200; n++) if (ordinal(n) === t) return n;
+    return 0;
+  }
+  function destaques(t) { var l = [], re = /\[([^\]]+)\]/g, m; while ((m = re.exec(t))) l.push({ ini: m.index, fim: m.index + m[0].length, txt: m[1] }); return l; }
+  var abValI = -1, abValN = 0;
+  function mostrarOrd() {
+    $('abValNum').textContent = abValN ? abValN + 'ª' : '';
+    if (!abValN) return;
+    var ini = Math.max(1, abValN - 2), h = '';
+    for (var n = ini; n < ini + 9; n++) h += '<button type="button" data-ord="' + n + '"' + (n === abValN ? ' style="background:#1d2a57;color:#fff;border-color:#1d2a57"' : '') + '><small style="display:block;font-size:12px;opacity:.7">' + n + 'ª sessão</small>' + ordinal(n) + '</button>';
+    $('abValGr').innerHTML = h;
+  }
+  $('abValGr').onclick = function (e) {   // toque numa opção: escolhe e salva
+    var b = e.target && e.target.closest ? e.target.closest('[data-ord]') : null; if (!b) return;
+    abValN = +b.getAttribute('data-ord'); $('abValIn').value = ordinal(abValN); $('abValOk').click();
+  };
+  $('abCorpo').addEventListener('click', function (e) {
+    var m = e.target && e.target.closest ? e.target.closest('mark[data-e]') : null; if (!m) return;
+    var i = +m.getAttribute('data-e'), d = destaques(abTexto())[i]; if (!d) return;
+    abValI = i; abValN = numOrdinal(d.txt);
+    $('abValTit').textContent = abValN ? 'Escolha a sessão' : 'Alterar';
+    $('abValIn').value = d.txt; $('abValOrd').hidden = !abValN; $('abValGr').hidden = !abValN; mostrarOrd();
+    $('abVal').hidden = false;
+    if (!abValN) setTimeout(function () { try { $('abValIn').focus(); } catch (e) {} }, 50);
+  });
+  function passoOrd(k) { abValN = Math.min(199, Math.max(1, (abValN || numOrdinal($('abValIn').value) || 1) + k)); $('abValIn').value = ordinal(abValN); mostrarOrd(); }
+  $('abValMenos').onclick = function () { passoOrd(-1); };
+  $('abValMais').onclick = function () { passoOrd(1); };
+  $('abValIn').oninput = function () { abValN = numOrdinal(this.value); if (abValN) mostrarOrd(); else $('abValNum').textContent = ''; };
+  $('abValCanc').onclick = function () { $('abVal').hidden = true; abValI = -1; };
+  $('abValOk').onclick = function () {
+    var v = $('abValIn').value.replace(/[\[\]]/g, '').replace(/^\s+|\s+$/g, '');
+    if (!v) { toast('Escreva o texto.', true); return; }
+    var t = abTexto(), d = destaques(t)[abValI]; if (!d) { $('abVal').hidden = true; return; }
+    var b = this; b.disabled = true;
+    var y = $('abRolo').scrollTop;
+    salvarAb(t.slice(0, d.ini) + '[' + v + ']' + t.slice(d.fim)).then(function () { $('abVal').hidden = true; abValI = -1; $('abRolo').scrollTop = y; }, function () {})
+      .then(function () { b.disabled = false; });
+  };
+  $('abValIn').onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); $('abValOk').click(); } };
   function renderLeitorAb() {
     // Data da sessão aberta na Votação (sessao/atual.abertaEm); sem sessão aberta, a data de hoje
     var d = new Date(abSessaoEm || Date.now());
