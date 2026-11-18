@@ -56,7 +56,7 @@
     if (document.getElementById('natalCamada')) return;
     var camada = document.createElement('div');
     camada.className = 'natal-camada'; camada.id = 'natalCamada'; camada.setAttribute('aria-hidden', 'true');
-    var h = cordao();
+    var h = '';   // sem cordão de luzes no topo (pedido do usuário)
     if (!calmo) {
       for (var i = 0; i < 14; i++) {
         var tam = 8 + (i * 7) % 9, esq = (i * 73) % 100, dur = 16 + (i * 5) % 12, atr = (i * 2.3) % dur;
@@ -71,7 +71,7 @@
       var msg = document.createElement('div');
       msg.className = 'natal-msg'; msg.id = 'natalMsg';
       msg.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.6 6.1 6.6.5-5 4.3 1.6 6.4L12 16.4l-5.8 3.4 1.6-6.4-5-4.3 6.6-.5z" fill="#f6d77a"/></svg>' +
-        '<span><em>Boas Festas!</em> Feliz Natal e um próspero Ano Novo.</span>';
+        '<span><em>Boas Festas</em> e um próspero Ano Novo!</span>';
       alvo.appendChild(msg);
     }
   }
