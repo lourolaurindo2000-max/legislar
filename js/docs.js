@@ -53,6 +53,11 @@
     '.lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));grid-gap:12px}' +
     '.doc{display:flex;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0;flex-wrap:wrap}' +
     '.doc.novo{border-color:var(--novo);box-shadow:inset 4px 0 0 var(--novo)}' +
+    '.doc.lida{border-color:rgba(52,211,153,.55);box-shadow:inset 4px 0 0 var(--ok)}.doc.lida .inf b{color:var(--muted)}' +
+    '.ico{position:relative}.selo{position:absolute;right:-9px;bottom:-9px;width:26px;height:26px;border-radius:50%;background:var(--ok);color:#0a1022;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--card)}.selo svg{width:16px;height:16px}' +
+    '.tag.lida{background:rgba(52,211,153,.16);color:var(--ok)}' +
+    '.btn-lida{display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--line);color:var(--ink);white-space:nowrap}.btn-lida svg{width:18px;height:18px;margin-right:6px;flex:none}' +
+    '.btn-lida.on{background:rgba(52,211,153,.16);border-color:var(--ok);color:var(--ok)}' +
     '.ico{flex:none;width:44px;height:54px;border-radius:6px 13px 6px 6px;background:var(--pdf);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:7px;margin-right:12px;letter-spacing:.05em}' +
     '.inf{flex:1;min-width:0}.inf b{display:block;overflow-wrap:anywhere;font-size:17px;line-height:1.3}' +
     '.inf small{display:block;color:var(--muted);font-size:13px;margin-top:3px}' +
@@ -218,6 +223,8 @@
     if (pessoal && MESA) h += '<label>Para quem<select data-f="dono">' + opcoesDono(d.dono || '', true) + '</select></label>';
     return h + '<button class="btn btn-ouro" type="button" data-salvar="' + esc(d.id) + '">Salvar</button><button class="btn btn-sec" type="button" data-cancelar="1">Cancelar</button></div>';
   }
+  var SVG_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  var SVG_CIRC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16.2 9.5"/></svg>';
   function render() {
     if (!carregou || !listaAberta()) return;
     var q = $('q').value.replace(/^\s+|\s+$/g, '').toLowerCase();
@@ -238,10 +245,13 @@
       if (anoData && d.data) meta.push('📅 Sessão de ' + dataBr(d.data));
       meta.push(tamanho(d.tamanho)); meta.push('enviado em ' + quando(d.criadoEm));
       if (pessoal && d.por && NOME[d.por]) meta.push('por ' + NOME[d.por]);
-      var tags = (novo ? '<span class="tag">NOVO</span>' : '') + (anoData && d.ano ? '<span class="tag ano">' + esc(d.ano) + '</span>' : '');
+      var lida = CFG.marcarLida && !!d.lida;
+      if (lida) meta.push('lida em ' + quando(d.lida));
+      var tags = (lida ? '<span class="tag lida">LIDA</span>' : '') + (novo ? '<span class="tag">NOVO</span>' : '') + (anoData && d.ano ? '<span class="tag ano">' + esc(d.ano) + '</span>' : '');
       if (pessoal) tags += d.dono === 'todos' ? '<span class="tag para">Para todos</span>' : (MESA ? '<span class="tag para">' + esc(NOME[d.dono] || 'Sem destinatário (oculto)') + '</span>' : '');
-      h += '<div class="doc' + (novo ? ' novo' : '') + '"><div class="ico">' + (/^image\//.test(d.tipo || '') ? 'FOTO' : 'PDF') + '</div><div class="inf"><b>' + esc(d.nome) + '</b><small>' + tags + esc(meta.join(' · ')) + '</small></div>' +
+      h += '<div class="doc' + (lida ? ' lida' : (novo ? ' novo' : '')) + '"><div class="ico">' + (/^image\//.test(d.tipo || '') ? 'FOTO' : 'PDF') + (lida ? '<span class="selo" title="Lida">' + SVG_OK + '</span>' : '') + '</div><div class="inf"><b>' + esc(d.nome) + '</b><small>' + tags + esc(meta.join(' · ')) + '</small></div>' +
         '<div class="acs"><button class="btn btn-ouro" type="button" data-ver="' + esc(d.id) + '">Ver</button>' +
+        (CFG.marcarLida && MESA ? '<button class="btn btn-lida' + (lida ? ' on' : '') + '" type="button" data-lida="' + esc(d.id) + '" title="' + (lida ? 'Desmarcar leitura' : 'Marcar como lida') + '">' + (lida ? SVG_OK + 'Lida' : SVG_CIRC + 'Marcar lida') + '</button>' : '') +
         (MESA ? '<button class="btn btn-sec" type="button" data-editar="' + esc(d.id) + '">Editar</button>' : '') +
         (podeApagar(d) ? '<button class="btn btn-del" type="button" data-apagar="' + esc(d.id) + '">Apagar</button>' : '') + '</div>' +
         (editando === d.id ? edHtml(d) : '') + '</div>';
@@ -263,8 +273,14 @@
     }).catch(function () { toast('Não foi possível abrir o arquivo.', true); }).then(function () { if (b) b.disabled = false; });
   }
   $('lista').onclick = function (e) {
-    var t = e.target && e.target.closest ? e.target.closest('[data-ver],[data-editar],[data-apagar],[data-salvar],[data-cancelar]') : null; if (!t) return;
+    var t = e.target && e.target.closest ? e.target.closest('[data-ver],[data-lida],[data-editar],[data-apagar],[data-salvar],[data-cancelar]') : null; if (!t) return;
     if (t.hasAttribute('data-ver')) { abrir(t.getAttribute('data-ver'), t); return; }
+    if (t.hasAttribute('data-lida')) {
+      var il = t.getAttribute('data-lida'), dl = porId[il]; if (!dl) return;
+      var era = !!dl.lida; t.disabled = true;
+      refItens.child(il).update({ lida: era ? null : Date.now() }).then(function () { toast(era ? 'Leitura desmarcada.' : 'Marcada como lida.'); }, function () { t.disabled = false; toast('Não foi possível marcar.', true); });
+      return;
+    }
     if (t.hasAttribute('data-cancelar')) { editando = null; render(); return; }
     if (t.hasAttribute('data-editar')) { var ie = t.getAttribute('data-editar'); editando = editando === ie ? null : ie; render(); return; }
     if (t.hasAttribute('data-salvar')) {
