@@ -71,7 +71,9 @@
     W.__fb = function () {
         var v = fbModerno ? '10.12.2' : '8.10.1', suf = fbModerno ? '-compat' : '';
         D.write('<script src="https://www.gstatic.com/firebasejs/' + v + '/firebase-app' + suf + '.js"><\/script>' +
-                '<script src="https://www.gstatic.com/firebasejs/' + v + '/firebase-database' + suf + '.js"><\/script>');
+                '<script src="https://www.gstatic.com/firebasejs/' + v + '/firebase-database' + suf + '.js"><\/script>' +
+                '<script src="https://www.gstatic.com/firebasejs/' + v + '/firebase-auth' + suf + '.js"><\/script>' +
+                '<script src="' + base + 'fb-auth.js?v=1"><\/script>');   // login do aparelho no banco (Firebase Authentication)
     };
 
     // ---------- Tailwind: o cdn.tailwindcss.com só roda em navegador novo; nas TVs antigas usa o CSS pronto ----------
