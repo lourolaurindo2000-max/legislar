@@ -21,7 +21,7 @@
     vereadores: { email: 'vereadores' + DOMINIO, nome: 'Vereadores (tablets e celulares)', dica: 'a senha da conta dos vereadores' },
     tv: { email: 'tv' + DOMINIO, nome: 'Smart TV', dica: 'a senha da TV' }
   };
-  var PERMITIR_DEPOIS = true;   // enquanto o banco não estiver fechado, dá para adiar a liberação
+  var PERMITIR_DEPOIS = false;  // banco fechado (18/11/2026): todo aparelho precisa estar liberado
 
   function emQuadro() { try { return W.top !== W.self; } catch (e) { return true; } }
   function ehTV() {
@@ -82,7 +82,7 @@
   function esconderTela() { if (tela && tela.parentNode) tela.parentNode.removeChild(tela); tela = null; }
   function mostrarTela(auth) {
     if (tela || emQuadro()) return;
-    try { if (sessionStorage.getItem('pld_auth_depois') === '1') return; } catch (e) {}
+    if (PERMITIR_DEPOIS) { try { if (sessionStorage.getItem('pld_auth_depois') === '1') return; } catch (e) {} }
     if (!D.body) { D.addEventListener('DOMContentLoaded', function () { mostrarTela(auth); }); return; }
     var conta = contaPadrao();
     tela = D.createElement('div');
