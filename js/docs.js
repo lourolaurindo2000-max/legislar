@@ -140,7 +140,10 @@
   function confirmar(tit, txt, okTxt, fn) { $('mdTit').textContent = tit; $('mdTxt').textContent = txt; $('mdOk').textContent = okTxt || 'Confirmar'; mdOk = fn; $('modal').hidden = false; }
   $('mdCanc').onclick = function () { $('modal').hidden = true; mdOk = null; };
   $('mdOk').onclick = function () { $('modal').hidden = true; var f = mdOk; mdOk = null; if (f) f(); };
-  $('btnVoltar').onclick = function () { location.href = EH_CEL ? 'anotacoes.html' : 'dashboard.html'; };
+  $('btnVoltar').onclick = function () {   // notebook: fecha esta aba e volta para a aba do Legislar (sair-aba.js)
+    if (EH_CEL) { location.href = 'anotacoes.html'; return; }
+    if (window.pldSairAba) window.pldSairAba(); else location.href = 'dashboard.html';
+  };
   if (EH_CEL) {
     $('btnVoltar').innerHTML = '📝 <span class="lbl">Anotações</span>';
     $('vEscolha').querySelector('h2').textContent = 'Quem é você?';
