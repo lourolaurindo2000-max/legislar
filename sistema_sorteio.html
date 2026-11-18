@@ -595,6 +595,17 @@
                 }, 300);
             });
 
+            // Quantas sessões seguidas um vereador não pode abrir (ser o 1º sorteado) de novo
+            const EVITAR_PRIMEIROS = 3;
+            // Número aleatório de 0 a n-1 com o gerador seguro do navegador (sem viés); navegador antigo usa Math.random
+            function aleatorio(n) {
+                try {
+                    const lim = Math.floor(4294967296 / n) * n, b = new Uint32Array(1);
+                    do { crypto.getRandomValues(b); } while (b[0] >= lim);
+                    return b[0] % n;
+                } catch (err) { return Math.floor(Math.random() * n); }
+            }
+
             // Ação principal de Sorteio — grava no banco; todos os aparelhos acompanham
             $('#btn-sortear').on('click', function(e) {
                 e.preventDefault();
@@ -611,9 +622,13 @@
                     if (cur.fim && t < cur.fim) return;   // já há um sorteio em andamento
                     let usados = (expirado(cur) || !daSessao(cur)) ? [] : limpar(cur.sorteados);
                     if (usados.length >= TOTAL) usados = [];   // Novo ciclo automático após os 9
-                    const disponiveis = vereadoresOriginais.map((v, i) => i).filter(i => !usados.includes(i));
-                    const sorteado = disponiveis[Math.floor(Math.random() * disponiveis.length)];
-                    return { sorteados: [...usados, sorteado], fim: t + duracao, inicio: cur.inicio || null };
+                    let disponiveis = vereadoresOriginais.map((v, i) => i).filter(i => !usados.includes(i));
+                    // Quem abriu as últimas sessões não pode ser o 1º de novo (evita o mesmo vereador sempre em primeiro)
+                    const recentes = limpar(cur.primeiros).slice(0, EVITAR_PRIMEIROS);
+                    if (!usados.length) { const sem = disponiveis.filter(i => !recentes.includes(i)); if (sem.length) disponiveis = sem; }
+                    const sorteado = disponiveis[aleatorio(disponiveis.length)];
+                    const primeiros = usados.length ? recentes : [sorteado, ...recentes].slice(0, EVITAR_PRIMEIROS);
+                    return { sorteados: [...usados, sorteado], fim: t + duracao, inicio: cur.inicio || null, primeiros };
                 });
             });
 
@@ -748,7 +763,7 @@
 
             $('#admin-zerar-urna').on('click', function () {
                 if (!confirm('Devolver os 9 vereadores para a urna e apagar a lista de sorteados em todos os aparelhos?')) return;
-                refEstado.set({ sorteados: [], fim: 0 }).then(() => avisar('Urna zerada: 09 vereadores na urna'), erroSalvar);
+                refEstado.transaction(cur => ({ sorteados: [], fim: 0, primeiros: (cur && cur.primeiros) || null })).then(() => avisar('Urna zerada: 09 vereadores na urna'), erroSalvar);
             });
 
             $('#admin-restaurar-tudo').on('click', function () {
