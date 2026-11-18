@@ -57,6 +57,8 @@
     '.ico{position:relative}.selo{position:absolute;right:-9px;bottom:-9px;width:26px;height:26px;border-radius:50%;background:var(--ok);color:#0a1022;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--card)}.selo svg{width:16px;height:16px}' +
     '.tag.lida{background:rgba(52,211,153,.16);color:var(--ok)}' +
     '.btn-lida{display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--line);color:var(--ink);white-space:nowrap}.btn-lida svg{width:18px;height:18px;margin-right:6px;flex:none}' +
+    '.estado-lida{display:flex;align-items:center;justify-content:center;border-radius:10px;padding:9px 12px;margin-bottom:6px;font-weight:800;font-size:15px;background:rgba(52,211,153,.18);border:1px solid var(--ok);color:var(--ok);white-space:nowrap}.estado-lida svg{width:20px;height:20px;margin-right:6px;flex:none}' +
+    '.doc.lida .ico{opacity:.75}' +
     '.btn-lida.on{background:rgba(52,211,153,.16);border-color:var(--ok);color:var(--ok)}' +
     '.ico{flex:none;width:44px;height:54px;border-radius:6px 13px 6px 6px;background:var(--pdf);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:7px;margin-right:12px;letter-spacing:.05em}' +
     '.inf{flex:1;min-width:0}.inf b{display:block;overflow-wrap:anywhere;font-size:17px;line-height:1.3}' +
@@ -247,10 +249,10 @@
       if (pessoal && d.por && NOME[d.por]) meta.push('por ' + NOME[d.por]);
       var lida = CFG.marcarLida && !!d.lida;
       if (lida) meta.push('lida em ' + quando(d.lida));
-      var tags = (lida ? '<span class="tag lida">LIDA</span>' : '') + (novo ? '<span class="tag">NOVO</span>' : '') + (anoData && d.ano ? '<span class="tag ano">' + esc(d.ano) + '</span>' : '');
+      var tags = (lida ? '<span class="tag lida">LIDA</span>' : (novo ? '<span class="tag">NOVO</span>' : '')) + (anoData && d.ano ? '<span class="tag ano">' + esc(d.ano) + '</span>' : '');
       if (pessoal) tags += d.dono === 'todos' ? '<span class="tag para">Para todos</span>' : (MESA ? '<span class="tag para">' + esc(NOME[d.dono] || 'Sem destinatário (oculto)') + '</span>' : '');
       h += '<div class="doc' + (lida ? ' lida' : (novo ? ' novo' : '')) + '"><div class="ico">' + (/^image\//.test(d.tipo || '') ? 'FOTO' : 'PDF') + (lida ? '<span class="selo" title="Lida">' + SVG_OK + '</span>' : '') + '</div><div class="inf"><b>' + esc(d.nome) + '</b><small>' + tags + esc(meta.join(' · ')) + '</small></div>' +
-        '<div class="acs"><button class="btn btn-ouro" type="button" data-ver="' + esc(d.id) + '">Ver</button>' +
+        '<div class="acs">' + (lida && !MESA ? '<div class="estado-lida" role="status">' + SVG_OK + 'Lida</div>' : '') + '<button class="btn btn-ouro" type="button" data-ver="' + esc(d.id) + '">Ver</button>' +
         (CFG.marcarLida && MESA ? '<button class="btn btn-lida' + (lida ? ' on' : '') + '" type="button" data-lida="' + esc(d.id) + '" title="' + (lida ? 'Desmarcar leitura' : 'Marcar como lida') + '">' + (lida ? SVG_OK + 'Lida' : SVG_CIRC + 'Marcar lida') + '</button>' : '') +
         (MESA ? '<button class="btn btn-sec" type="button" data-editar="' + esc(d.id) + '">Editar</button>' : '') +
         (podeApagar(d) ? '<button class="btn btn-del" type="button" data-apagar="' + esc(d.id) + '">Apagar</button>' : '') + '</div>' +
