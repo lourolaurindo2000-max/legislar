@@ -641,7 +641,7 @@
             }
             async function senhaCorreta(t) {
                 if (window.crypto && crypto.subtle) return (await hashTexto(t)) === HASH_SENHA;
-                return btoa(t) === 'YWxtYWRpbmEyMDI2'; // navegadores antigos sem crypto.subtle
+                return false;   // navegador sem crypto.subtle: o modo administrador só abre no notebook/tablet (sem senha reversível no código)
             }
 
             function abrirAdmin() {
