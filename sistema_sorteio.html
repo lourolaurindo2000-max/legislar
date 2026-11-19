@@ -24,7 +24,6 @@
     <title>Sorteio Plenário</title>
     <!-- Tailwind CSS -->
     <script>__twcss('js/tw-sorteio.css')</script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- Google Fonts Inter -->
@@ -199,6 +198,8 @@
         @-webkit-keyframes tracoBrilho{0%{background-position:130% 0}100%{background-position:-30% 0}}
         @keyframes tracoBrilho{0%{background-position:130% 0}100%{background-position:-30% 0}}
 </style>
+    <!-- Tailwind pronto (navegador novo) — no fim do <head>, como o cdn.tailwindcss.com fazia -->
+    <script>__twmoderno('js/tw-sorteio-moderno.css')</script>
 </head>
 <body class="smart-tv-mode py-4 px-4 selection:bg-amber-500 selection:text-black">
 

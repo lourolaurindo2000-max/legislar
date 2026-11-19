@@ -43,6 +43,20 @@
             W.addEventListener('load', function () { navigator.serviceWorker.register(raiz + 'sw.js', { scope: raiz })['catch'](function () {}); });
         }
     } catch (e) {}
+
+    // ---------- abre mais rápido: já começa a conectar no banco e no login enquanto a página carrega ----------
+    try {
+        var cab = D.head || D.getElementsByTagName('head')[0];
+        if (cab) {
+            var hosts = [['https://projeto-teste-f08c4-default-rtdb.firebaseio.com', 0], ['https://securetoken.googleapis.com', 1], ['https://identitytoolkit.googleapis.com', 1]];
+            for (var hi = 0; hi < hosts.length; hi++) {
+                var lk = D.createElement('link');
+                lk.rel = 'preconnect'; lk.href = hosts[hi][0];
+                if (hosts[hi][1]) lk.crossOrigin = 'anonymous';
+                cab.appendChild(lk);
+            }
+        }
+    } catch (e) {}
     if (!apisOk || !sintaxeOk) D.write('<script src="' + base + 'core-js.min.js"><\/script>');
     if (!sintaxeOk) D.write('<script src="' + base + 'babel.min.js"><\/script>');
 
@@ -79,6 +93,12 @@
     // ---------- Tailwind: o cdn.tailwindcss.com só roda em navegador novo; nas TVs antigas usa o CSS pronto ----------
     W.__twcss = function (href) {
         if (!forcar && sintaxe('var a={};a?.b??1')) return;
+        D.write('<link rel="stylesheet" href="' + href + '">');
+    };
+    // Navegador novo: Tailwind já pronto (arquivo .css) em vez do cdn.tailwindcss.com, que montava o estilo
+    // na hora em todo carregamento e atrasava a abertura. Fica no fim do <head>, onde o cdn colocava o estilo.
+    W.__twmoderno = function (href) {
+        if (forcar || !sintaxe('var a={};a?.b??1')) return;   // TV antiga: continua com o __twcss
         D.write('<link rel="stylesheet" href="' + href + '">');
     };
 

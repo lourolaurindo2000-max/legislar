@@ -95,7 +95,6 @@
     </style>
     <!-- Tailwind CSS para estilização moderna e responsiva -->
     <script>__twcss('js/tw-controle.css')</script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- FontAwesome para Ícones -->
@@ -354,6 +353,8 @@
         @keyframes tracoBrilho{0%{background-position:130% 0}100%{background-position:-30% 0}}
 </style>
     <script src="js/sair-aba.js"></script>
+    <!-- Tailwind pronto (navegador novo) — no fim do <head>, como o cdn.tailwindcss.com fazia -->
+    <script>__twmoderno('js/tw-controle-moderno.css')</script>
 </head>
 <body class="min-h-screen flex flex-col justify-between font-sans antialiased bg-governo-dark">
     <!-- ACESSO DA PRESIDÊNCIA (não aparece na Smart TV) -->

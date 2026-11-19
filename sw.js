@@ -8,10 +8,10 @@
  * - Bibliotecas externas (Firebase, Font Awesome, fontes, fotos): usa a cópia guardada e atualiza por trás.
  * - O banco de dados (Firebase Realtime Database) NUNCA passa por aqui.
  */
-var VERSAO = 'pld-offline-v117';
+var VERSAO = 'pld-offline-v118';
 var PAGINAS = [
   './', 'index.html', 'dashboard.html', 'votacao.html', 'controle_de_fala.html', 'presenca_plenaria.html',
-  'sistema_sorteio.html', 'visualizar.js', 'js/tv-compat.js', 'js/tw-controle.css', 'js/tw-sorteio.css',
+  'sistema_sorteio.html', 'visualizar.js', 'js/tv-compat.js', 'js/tw-controle.css', 'js/tw-sorteio.css', 'js/tw-controle-moderno.css', 'js/tw-sorteio-moderno.css',
   'img/brasao.png', 'img/logoCamara.PNG', 'img/plenario.png', 'js/capa-tablet.js', 'js/fala-tablet.js', 'js/presenca-tablet.js', 'js/bip-tv.js', 'js/sons.js', 'js/login-guard.js', 'js/sair-aba.js', 'manifest.json', 'anotacoes.html', 'js/anotacoes-aviso.js', 'ordem_do_dia.html', 'atas.html', 'arquivos_diversos.html', 'js/docs.js', 'js/docs-aviso.js', 'js/natal.js', 'js/fb-auth.js',
   'img/icone-192.png', 'img/icone-512.png'
 ];
@@ -22,8 +22,7 @@ var EXTERNOS = [
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
-  'https://code.jquery.com/jquery-3.7.1.min.js',
-  'https://cdn.tailwindcss.com'
+  'https://code.jquery.com/jquery-3.7.1.min.js'
 ];
 var LIBS = /^https:\/\/(www\.gstatic\.com\/firebasejs|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net|unpkg\.com|code\.jquery\.com|cdn\.tailwindcss\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|[0-9]\.gravatar\.com|gravatar\.com)/;
 
