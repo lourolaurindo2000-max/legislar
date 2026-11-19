@@ -245,7 +245,7 @@
     var n = 0, h = '', ultimo = '', abriu = false;
     l.forEach(function (d) {
       var novo = EH_TABLET && vistoNaAbertura && d.criadoEm > vistoNaAbertura; if (novo) n++;
-      if (anoData) { var g = grupo(d); if (g !== ultimo) { if (abriu) h += '</div>'; h += '<div class="grupo">' + esc(g) + '</div><div class="lista">'; abriu = true; ultimo = g; } }
+      if (anoData && !CFG.novoPrimeiro) { var g = grupo(d); if (g !== ultimo) { if (abriu) h += '</div>'; h += '<div class="grupo">' + esc(g) + '</div><div class="lista">'; abriu = true; ultimo = g; } }
       else if (!abriu) { h += '<div class="lista">'; abriu = true; }
       var meta = [];
       if (anoData && d.data) meta.push('📅 Sessão de ' + dataBr(d.data));
