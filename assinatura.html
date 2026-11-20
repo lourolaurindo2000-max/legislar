@@ -654,14 +654,14 @@ function renderAta(){
   if (!pdfCache[ataAtual + "_corrompido"])
     $("#ataAlerta").innerHTML = fin ? `<div class="alerta ok">Ata finalizada em ${horaBR(ata.finalizadaEm)}. Código de verificação: <b>${esc(ata.codigo)}</b></div>`
       : estado === "verificando" ? `<div class="alerta aviso"><span class="carreg"></span> Verificando se a ata está no modelo de assinaturas…</div>`
-      : estado === "fora" ? `<div class="alerta erro">Esta ata <b>não está no modelo</b> com as linhas de assinatura. Os vereadores só assinam atas enviadas no modelo padrão (com as linhas ao final).</div>`
+      : estado === "fora" && admin ? `<div class="alerta aviso">Não foram encontradas linhas para todos os vereadores nesta ata. Tudo bem: <b>os vereadores assinam normalmente</b> e as assinaturas sem linha vão para uma folha de assinaturas no final do PDF. (Se quiser, use <b>✍ Ajustar posições</b> para marcar onde cada um assina.)</div>`
       : "";
 
   if (!fin && ENVIADA && ENVIADA.id === ata.id && !pdfCache[ataAtual + "_corrompido"])
     $("#ataAlerta").insertAdjacentHTML("afterbegin", admin
       ? `<div class="alerta ok">📲 Esta ata está <b>nos tablets</b> para os vereadores assinarem (${assinPresentes(ata)} de ${presentes(ata).length} presentes${presentes(ata).length < total(ata) ? ` · ${total(ata) - presentes(ata).length} ausente(s)` : ""}). Quando todos os presentes assinarem, ela é lacrada sozinha e vai para Atas / Proposições.</div>`
       : `<div class="alerta ok">📲 A Mesa enviou esta ata para assinatura. Leia o documento e toque em <b>Assinar</b> ao lado do seu nome.</div>`);
-  const podeAssinar = !fin && estado === "ok";
+  const podeAssinar = !fin && estado !== "verificando";   // qualquer ata: com ou sem linhas detectadas
   const sigs = ata.assinaturas || {};
   $("#folha").innerHTML = `<div class="cab">${esc(CONFIG.PLENARIO)}, ${dataExtenso(ata.data)}.</div>` +
     vagas(ata).map(v => {
@@ -695,7 +695,7 @@ function renderAta(){
   if ($("#aModelo")) $("#aModelo").onclick = iniciarCalibracao;
   if ($("#aFinalizar")) $("#aFinalizar").onclick = finalizar;
   if ($("#aEnviar")) $("#aEnviar").onclick = () => {
-    if (estado !== "ok"){ toast("Esta ata ainda não está pronta para assinatura (modelo com as linhas).", true); return; }
+    if (estado === "verificando"){ toast("Aguarde: a ata ainda está carregando.", true); return; }
     const aus = ata.ausentes || {};
     abrirModal(`<header><h2>Enviar aos tablets</h2><button class="x" onclick="fecharModal()">×</button></header>
     <div class="corpo">
@@ -795,7 +795,7 @@ async function assinaturaCursiva(nome){
 async function modalAssinar(vagaK){
   const ata = ATAS[ataAtual]; const v = vagas(ata).find(x => x.k === vagaK); if (!v) return;
   if (pdfCache[ataAtual + "_corrompido"]){ toast("Documento com integridade comprometida. Assinatura bloqueada.", true); return; }
-  if (!ataAssinavel(ata)){ toast("Esta ata não está no modelo com as linhas de assinatura.", true); return; }
+  if (!ataAssinavel(ata)){ toast("Aguarde: a ata ainda está carregando.", true); return; }
   if (!temAssinaturaReal(v)){ toast(`A assinatura de ${v.nome} ainda não foi cadastrada.`, true); return; }
   if (ausente(ata, v)){ toast(`${v.nome} foi marcado(a) como ausente nesta sessão.`, true); return; }
   abrirModal(`<header><h2>Assinar como ${esc(v.nome)}</h2><button class="x" onclick="fecharModal()">×</button></header>
@@ -943,7 +943,7 @@ function estadoModelo(ata){
   if (l === undefined) return "verificando";
   return l.length >= vagas(ata).length ? "ok" : "fora";
 }
-const ataAssinavel = ata => estadoModelo(ata) === "ok";
+const ataAssinavel = ata => estadoModelo(ata) !== "verificando";   // aceita qualquer ata; sem linha → folha de assinaturas no final
 const temAssinaturaReal = v => typeof ASSINATURAS_REAIS !== "undefined" && !!ASSINATURAS_REAIS[v.vk];
 
 function desenharAssinaturas(){
@@ -1048,10 +1048,11 @@ async function sairCalib(salvar){
 async function finalizar(idAuto){
   const auto = typeof idAuto === "string";
   const ata = ATAS[auto ? idAuto : ataAtual]; if (!ata) return; const n = assinadas(ata), t = total(ata);
-  const semMod = vagas(ata).filter(v => (ata.assinaturas||{})[v.vk] && !MODELO[v.k]);
+  await garantirLinhas(ata.id); const ptsF = obterPontos(ata);
+  const semMod = vagas(ata).filter(v => (ata.assinaturas||{})[v.vk] && !ptsF[v.k]);
   const ok = auto || await confirmar("Finalizar ata",
     (assinPresentes(ata) < presentes(ata).length ? `<div class="alerta aviso">Faltam <b>${presentes(ata).length - assinPresentes(ata)}</b> assinatura(s) de presentes. Quem não assinou simplesmente não terá assinatura na linha.</div>` : "") +
-    (semMod.length ? `<div class="alerta aviso">${semMod.length} assinatura(s) ainda sem posição no modelo irão para uma folha reserva no fim. Defina o modelo para que caiam sobre as linhas da ata.</div>` : "") +
+    (semMod.length ? `<div class="alerta aviso">${semMod.length} assinatura(s) ainda sem posição no modelo sem linha na ata irão para a folha de assinaturas no final do PDF.</div>` : "") +
     "Ao finalizar, a ata é lacrada: ninguém mais poderá assinar. As assinaturas são aplicadas sobre as linhas da própria ata e um manifesto de autenticidade é anexado ao final.",
     "Finalizar e lacrar");
   if (!ok) return;
@@ -1169,7 +1170,7 @@ async function gerarPdfAssinado(ata){
   if (semPos.length){
     const pg = doc.addPage([W, H]);
     pg.drawText("ASSINATURAS", {x: 50, y: H - 60, size: 13, font: fB, color: azul});
-    pg.drawText("(assinaturas ainda sem posição no modelo da ata)", {x: 50, y: H - 76, size: 9, font: fN, color: cinza});
+    pg.drawText("(assinaturas eletrônicas dos vereadores)", {x: 50, y: H - 76, size: 9, font: fN, color: cinza});
     let y = H - 120;
     for (const v of semPos){
       const s = sigs[v.vk];
