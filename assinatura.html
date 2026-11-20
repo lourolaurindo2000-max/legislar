@@ -927,8 +927,13 @@ async function modalAssinar(vagaK){
           <div style="font-size:54px;line-height:1">✅</div>
           <div style="font-size:18px;font-weight:700;color:var(--azul)">${esc(v.nome)}, sua assinatura foi enviada à Mesa.</div>
           <div class="info">${esc(ata.titulo)} · ${horaBR(em)}<br>Ela já aparece na sua linha da ata, para todos. Quando todos os presentes assinarem, a ata é lacrada e vai para Atas / Proposições.</div>
+          <div style="font-weight:600;color:var(--azul)">Voltando ao Legislar em <span id="sVolta">3</span> s…</div>
         </div>
-        <footer><button class="btn verde" onclick="fecharModal()">OK</button></footer>`);
+        <footer><button class="btn verde" id="sVoltarJa">Voltar ao Legislar agora</button></footer>`);
+        // depois de assinar, o tablet volta sozinho para o painel do Legislar
+        const irPainel = () => { clearInterval(tv); location.href = "dashboard.html"; };
+        let n = 3; const tv = setInterval(() => { n--; const e = $("#sVolta"); if (e) e.textContent = n; if (n <= 0) irPainel(); }, 1000);
+        $("#sVoltarJa").onclick = irPainel;
       } else toast(`Ata assinada por ${v.nome}.`);
     } catch(err){
       console.error(err); btn.disabled = false; btn.textContent = ehAssinante() ? "✔ Confirmar e enviar" : "Assinar ata"; erro(esc(err.message));
