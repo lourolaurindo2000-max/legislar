@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Assinatura Digital de Atas — Câmara Municipal de Almadina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Inter:wght@400;500;600;700&family=Great+Vibes&family=Allura&family=Alex+Brush&family=Sacramento&family=Parisienne&family=Dancing+Script:wght@500;700&family=Satisfy&display=swap" rel="stylesheet">
+<!-- Mesmo carregamento do Legislar: __fb() carrega o Firebase + login do aparelho (fb-auth.js) -->
+<script src="js/tv-compat.js"></script>
+<script src="js/login-guard.js"></script>
+<script src="js/sair-aba.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO — edite apenas este bloco
+   ===================================================================== */
+const CONFIG = {
+  CAMARA: "CÂMARA MUNICIPAL DE ALMADINA",
+  PLENARIO: "PLENÁRIO DA CÂMARA MUNICIPAL DE ALMADINA",
+  VEREADORES: [
+    "José Lindomar", "Wilson Freitas", "Marilene Santos",
+    "Sylas Souza", "Jackson Costa", "Rogério Gotado",
+    "Lucas Cavalcante", "Dilson Junior", "Nilza Damasceno"
+  ],
+  // Mesmo Firebase do Legislar (sincroniza entre os 9 tablets, usando o login já existente do aparelho).
+  FIREBASE: {
+    apiKey: "AIzaSyAHawTmb2za8y2Eq70FWejq64-5J6Pbqfo",
+    authDomain: "projeto-teste-f08c4.firebaseapp.com",
+    databaseURL: "https://projeto-teste-f08c4-default-rtdb.firebaseio.com",
+    projectId: "projeto-teste-f08c4",
+    storageBucket: "projeto-teste-f08c4.firebasestorage.app",
+    messagingSenderId: "788863562302",
+    appId: "1:788863562302:web:2ddcfb6c2c892770de976f"
+  }
+};
+</script>
+<style>
+:root{
+  --azul:#0f2a4a; --azul2:#18406e; --ouro:#b8913a; --ouro2:#e7d3a3;
+  --papel:#fbfaf6; --linha:#d9d4c7; --texto:#1d2330; --cinza:#6b7280;
+  --ok:#1f7a4d; --okbg:#e7f5ee; --erro:#b42318; --errobg:#fdecea; --aviso:#9a6700; --avisobg:#fff6dd;
+  --raio:14px; --sombra:0 10px 30px rgba(15,42,74,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#eef1f5;color:var(--texto);font-family:Inter,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;cursor:pointer}
+input,select{font:inherit}
+.topo{background:linear-gradient(135deg,var(--azul),var(--azul2));color:#fff;padding:18px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:20;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.brasao{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--ouro2),var(--ouro));display:grid;place-items:center;color:var(--azul);font-family:Merriweather;font-weight:900;font-size:20px;flex:none}
+.topo h1{font-family:Merriweather;font-size:clamp(15px,2.4vw,20px);margin:0;letter-spacing:.3px}
+.topo small{display:block;opacity:.8;font-size:12px;margin-top:2px}
+.topo .esp{flex:1}
+.selo{font-size:11px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.12);white-space:nowrap}
+.cadeado{background:transparent;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:10px;padding:7px 10px;font-size:15px}
+.abas{display:flex;gap:6px;padding:12px 20px 0;max-width:1200px;margin:0 auto}
+.aba{border:0;background:transparent;padding:10px 16px;border-radius:10px 10px 0 0;color:var(--cinza);font-weight:600}
+.aba.ativa{background:#fff;color:var(--azul);box-shadow:0 -2px 0 var(--ouro) inset}
+main{max-width:1200px;margin:0 auto;padding:0 20px 60px}
+.painel{background:#fff;border-radius:0 var(--raio) var(--raio) var(--raio);box-shadow:var(--sombra);padding:22px}
+.btn{border:0;border-radius:10px;padding:11px 18px;font-weight:600;background:var(--azul);color:#fff;transition:.15s}
+.btn:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ouro{background:var(--ouro);color:#fff}
+.btn.claro{background:#eef1f5;color:var(--azul)}
+.btn.verde{background:var(--ok)}
+.btn.verm{background:var(--erro)}
+.btn.peq{padding:7px 12px;font-size:13px}
+.linha{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.lista{display:grid;gap:12px;margin-top:16px}
+.card{border:1px solid var(--linha);border-radius:12px;padding:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--papel)}
+.card h3{margin:0 0 4px;font-size:16px;color:var(--azul)}
+.card .meta{font-size:13px;color:var(--cinza)}
+.card .esp{flex:1;min-width:200px}
+.tag{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px}
+.tag.aberta{background:var(--avisobg);color:var(--aviso)}
+.tag.final{background:var(--okbg);color:var(--ok)}
+.prog{height:6px;background:#e5e7eb;border-radius:9px;overflow:hidden;margin-top:8px;max-width:260px}
+.prog i{display:block;height:100%;background:var(--ouro)}
+.vazio{text-align:center;color:var(--cinza);padding:40px 10px}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.filtros select,.filtros input{padding:9px 12px;border:1px solid var(--linha);border-radius:10px;background:#fff}
+/* visualização da ata */
+.grade{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.grade{grid-template-columns:1fr}}
+.pdfbox{background:#525659;border-radius:12px;padding:12px;max-height:80vh;overflow:auto}
+.pdfbox canvas{display:block;width:100%;height:auto;margin:0 auto 12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.folha{background:#fff;border:1px solid var(--linha);border-radius:12px;padding:22px 20px}
+.folha .cab{font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:14px;text-align:center;letter-spacing:.3px;margin-bottom:18px}
+.slot{display:grid;grid-template-columns:130px 1fr;gap:8px;align-items:end;padding:8px 0}
+.slot.dem{grid-template-columns:130px 1fr}
+.slot .rot{font-family:Arial,Helvetica,sans-serif;font-size:14px;padding-bottom:6px}
+.slot .lin{border-bottom:1.5px solid #111;min-height:62px;display:flex;align-items:flex-end;justify-content:space-between;gap:6px;position:relative}
+.slot .lin img{height:58px;max-width:70%;object-fit:contain}
+.slot .nome{font-size:11px;color:var(--cinza);margin-top:3px}
+.slot .quando{font-size:10px;color:var(--ok);text-align:right}
+.slot .assinar{margin-bottom:6px}
+.hash{font-family:ui-monospace,Consolas,monospace;font-size:11px;word-break:break-all;color:#374151;background:#f3f4f6;padding:8px;border-radius:8px}
+.info{font-size:13px;color:var(--cinza);line-height:1.5}
+.alerta{border-radius:10px;padding:12px 14px;font-size:14px;margin:12px 0}
+.alerta.ok{background:var(--okbg);color:var(--ok)}
+.alerta.erro{background:var(--errobg);color:var(--erro)}
+.alerta.aviso{background:var(--avisobg);color:var(--aviso)}
+/* modal */
+.fundo{position:fixed;inset:0;background:rgba(10,20,35,.6);display:none;align-items:center;justify-content:center;z-index:100;padding:14px}
+.fundo.on{display:flex}
+.modal{background:#fff;border-radius:16px;width:min(560px,100%);max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.modal header{padding:18px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px}
+.modal header h2{font-size:17px;margin:0;color:var(--azul);flex:1}
+.modal .corpo{padding:18px 20px;display:grid;gap:12px}
+.modal footer{padding:14px 20px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.x{border:0;background:#f3f4f6;width:34px;height:34px;border-radius:50%;font-size:18px}
+label.campo{display:grid;gap:5px;font-size:13px;font-weight:600;color:#374151}
+label.campo input,label.campo select{padding:11px 12px;border:1px solid var(--linha);border-radius:10px;font-weight:400;font-size:15px;background:#fff}
+.pad{border:2px dashed var(--ouro);border-radius:12px;background:#fffdf6;position:relative;touch-action:none}
+.pad canvas{display:block;width:100%;height:190px;touch-action:none}
+.pad .dica{position:absolute;left:0;right:0;bottom:46px;text-align:center;color:#c9b98e;pointer-events:none;font-size:13px}
+.pad .base{position:absolute;left:8%;right:8%;bottom:40px;border-bottom:1px solid #d8c9a0;pointer-events:none}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.check input{width:20px;height:20px;margin-top:2px;flex:none}
+.mesa{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.mesa{grid-template-columns:1fr}.slot{grid-template-columns:1fr}}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--azul);color:#fff;padding:12px 20px;border-radius:12px;box-shadow:var(--sombra);transition:.3s;z-index:200;font-size:14px;max-width:92vw}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.toast.erro{background:var(--erro)}
+.carreg{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:g .7s linear infinite;vertical-align:-3px}
+@keyframes g{to{transform:rotate(360deg)}}
+.oculto{display:none!important}
+.rodape{text-align:center;font-size:12px;color:var(--cinza);margin-top:26px}
+.auditoria{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.auditoria th,.auditoria td{border-bottom:1px solid #eee;padding:6px 4px;text-align:left;vertical-align:top}
+.auditoria td.h{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;word-break:break-all}
+/* assinaturas sobre o PDF */
+.pagWrap{position:relative;margin:0 auto 12px;width:100%;max-width:900px}
+.pdfbox .pagWrap canvas{margin:0;display:block;width:100%;height:auto}
+.marca{position:absolute;transform:translate(-50%,-50%);z-index:6;pointer-events:none}
+.marca.sig{transform:translate(-50%,-100%)}            /* base da assinatura encosta na linha */
+.marca.sig img{display:block;height:34px;width:auto;max-width:230px;margin:0 auto}
+.marca .cap{font-size:8px;color:var(--ok);text-align:center;white-space:nowrap;margin-top:0}
+.marca.assinar{pointer-events:auto;cursor:pointer;border:1.5px dashed var(--ouro);background:rgba(231,211,163,.35);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:600;color:#8a6d1f;white-space:nowrap}
+.marca.ponto{pointer-events:auto;cursor:pointer;border:1.5px dashed var(--azul2);background:rgba(24,64,110,.12);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:600;color:var(--azul);white-space:nowrap}
+.marca.ponto.sel{background:var(--azul);color:#fff;border-style:solid}
+.marca.falta{border:1px dashed #c9b98e;background:rgba(0,0,0,.02);border-radius:8px;padding:4px 8px;font-size:10px;color:#9a6700;white-space:nowrap}
+.barraPos{background:#fff;border:1px solid var(--linha);border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:var(--sombra)}
+.barraPos .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chipV{border:1px solid var(--linha);background:#f7f5ef;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
+.chipV.ok{background:var(--okbg);border-color:#bfe3cf;color:var(--ok)}
+.chipV.sel{background:var(--azul);color:#fff;border-color:var(--azul)}
+</style>
+</head>
+<body>
+<script>__fb()</script>
+
+<div class="topo">
+  <div class="brasao">A</div>
+  <div>
+    <h1>Assinatura Digital de Atas</h1>
+    <small>Câmara Municipal de Almadina — Plenário</small>
+  </div>
+  <div class="esp"></div>
+  <span class="selo" id="seloModo">…</span>
+  <button class="cadeado" id="btnAdmin" title="Administrador">🔒</button>
+</div>
+
+<div class="abas">
+  <button class="aba ativa" data-aba="atas">Atas</button>
+  <button class="aba" data-aba="verificar">Verificar autenticidade</button>
+</div>
+
+<main>
+  <!-- LISTA -->
+  <section class="painel" id="vAtas">
+    <div class="linha">
+      <div style="flex:1;min-width:220px">
+        <h2 style="margin:0;color:var(--azul);font-family:Merriweather;font-size:20px">Atas das sessões</h2>
+        <div class="info">Selecione uma ata para ler o documento e assinar.</div>
+      </div>
+      <button class="btn ouro oculto" id="btnNova">+ Nova ata para assinatura</button>
+    </div>
+    <div class="filtros">
+      <select id="fAno"><option value="">Todos os anos</option></select>
+      <select id="fStatus"><option value="">Todas</option><option value="aberta">Aguardando assinaturas</option><option value="finalizada">Finalizadas</option></select>
+      <input id="fBusca" placeholder="Buscar por título ou número">
+    </div>
+    <div class="lista" id="lista"></div>
+  </section>
+
+  <!-- ATA -->
+  <section class="painel oculto" id="vAta">
+    <div class="linha" style="margin-bottom:14px">
+      <button class="btn claro peq" id="btnVoltar">← Voltar</button>
+      <div style="flex:1;min-width:200px">
+        <h2 id="ataTitulo" style="margin:0;color:var(--azul);font-family:Merriweather;font-size:19px"></h2>
+        <div class="info" id="ataMeta"></div>
+      </div>
+      <span id="ataTag"></span>
+    </div>
+    <div id="ataAlerta"></div>
+    <div class="grade">
+      <div>
+        <div class="pdfbox" id="pdfBox"><div class="vazio" style="color:#ddd"><span class="carreg"></span> Carregando documento…</div></div>
+      </div>
+      <div>
+        <div class="folha" id="folha"></div>
+        <div style="margin-top:14px" class="linha" id="acoesAta"></div>
+        <details style="margin-top:14px">
+          <summary style="cursor:pointer;font-weight:600;color:var(--azul)">Trilha de auditoria e integridade</summary>
+          <div id="auditoria" style="margin-top:10px"></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- VERIFICAR -->
+  <section class="painel oculto" id="vVerificar">
+    <h2 style="margin:0 0 6px;color:var(--azul);font-family:Merriweather;font-size:20px">Verificar autenticidade</h2>
+    <p class="info">Envie o PDF da ata (original ou o assinado) ou digite o código de verificação impresso no rodapé. O sistema confere a impressão digital SHA-256 do arquivo com o registro gravado no momento das assinaturas: qualquer alteração, mesmo de uma vírgula, é detectada.</p>
+    <div class="linha">
+      <input type="file" id="verArquivo" accept="application/pdf">
+      <span class="info">ou</span>
+      <input id="verCodigo" placeholder="XXXX-XXXX-XXXX" style="padding:10px 12px;border:1px solid var(--linha);border-radius:10px;text-transform:uppercase">
+      <button class="btn" id="btnVerificar">Verificar</button>
+    </div>
+    <div id="verResultado"></div>
+  </section>
+
+  <div class="rodape">
+    Sistema Plenário — Câmara Municipal de Almadina · Assinatura eletrônica com registro de integridade SHA-256<br>
+    <small>(PLD) Plenário Legislativo Digital · Todos os direitos reservados a André Almeida — Desenvolvedor do Sistema · versão 1</small>
+  </div>
+</main>
+
+<!-- MODAL GENÉRICO -->
+<div class="fundo" id="fundo"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   UTILITÁRIOS
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const chave = nome => nome.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"");
+const MESES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+const dataExtenso = iso => { const [a,m,d] = iso.split("-"); return `${d} DE ${MESES[+m-1]} DE ${a}`; };
+const dataBR = iso => iso.split("-").reverse().join("/");
+const horaBR = ms => new Date(ms).toLocaleString("pt-BR",{timeZone:"America/Bahia",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+
+async function sha256Hex(data){
+  const buf = typeof data === "string" ? new TextEncoder().encode(data) : data;
+  const h = await crypto.subtle.digest("SHA-256", buf);
+  return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2,"0")).join("");
+}
+function bytesToB64(bytes){
+  let s = ""; const n = 0x8000;
+  for (let i = 0; i < bytes.length; i += n) s += String.fromCharCode.apply(null, bytes.subarray(i, i+n));
+  return btoa(s);
+}
+function b64ToBytes(b64){
+  const s = atob(b64); const u = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+  return u;
+}
+function toast(msg, erro){
+  const t = $("#toast"); t.textContent = msg; t.className = "toast on" + (erro ? " erro" : "");
+  clearTimeout(t._t); t._t = setTimeout(() => t.className = "toast", 3600);
+}
+function baixar(bytes, nome){
+  const url = URL.createObjectURL(new Blob([bytes], {type:"application/pdf"}));
+  const a = document.createElement("a"); a.href = url; a.download = nome; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
+}
+
+/* =====================================================================
+   ARMAZENAMENTO — Firebase Realtime Database ou IndexedDB local
+   Estrutura:
+     atasAssinatura/atas/{id}        -> dados da ata e assinaturas
+     atasAssinatura/pdfs/{id}        -> PDF original (base64)
+     atasAssinatura/finais/{id}      -> PDF assinado final (base64)
+     atasAssinatura/pins/{vereador}  -> {salt, hash} do PIN pessoal
+   ===================================================================== */
+const RAIZ = "legislar/assinaturaAtas";   // dentro do namespace do Legislar (mesmas regras de acesso autenticado)
+const Store = {
+  modo: "local", db: null, idb: null, ouvintes: [],
+  async iniciar(){
+    if (CONFIG.FIREBASE && CONFIG.FIREBASE.databaseURL && window.firebase){
+      firebase.initializeApp(CONFIG.FIREBASE);
+      this.db = firebase.database(); this.modo = "firebase";
+      this.db.ref(`${RAIZ}/atas`).on("value", s => this._emitir(s.val() || {}));
+      this.db.ref(".info/serverTimeOffset").on("value", s => this.offset = s.val() || 0);
+    } else {
+      this.idb = await new Promise((ok, falha) => {
+        const r = indexedDB.open("assinaturaAtasAlmadina", 1);
+        r.onupgradeneeded = () => r.result.createObjectStore("kv");
+        r.onsuccess = () => ok(r.result); r.onerror = () => falha(r.error);
+      });
+      try { this.canal = new BroadcastChannel("assinaturaAtas"); this.canal.onmessage = () => this._recarregarLocal(); } catch(e){}
+      await this._recarregarLocal();
+    }
+  },
+  offset: 0,
+  agora(){ return Date.now() + (this.offset || 0); },
+  _emitir(atas){ this.cache = atas; this.ouvintes.forEach(f => f(atas)); },
+  aoMudar(f){ this.ouvintes.push(f); if (this.cache) f(this.cache); },
+  _kv(op, k, v){
+    return new Promise((ok, falha) => {
+      const tx = this.idb.transaction("kv", op === "get" ? "readonly" : "readwrite");
+      const st = tx.objectStore("kv");
+      const r = op === "get" ? st.get(k) : op === "del" ? st.delete(k) : st.put(v, k);
+      r.onsuccess = () => ok(r.result); r.onerror = () => falha(r.error);
+    });
+  },
+  async _recarregarLocal(){ this._emitir((await this._kv("get","atas")) || {}); },
+  async _salvarLocalAtas(atas){ await this._kv("put","atas",atas); this._emitir(atas); try{ this.canal && this.canal.postMessage(1); }catch(e){} },
+
+  async salvarAta(ata){
+    if (this.modo === "firebase") return this.db.ref(`${RAIZ}/atas/${ata.id}`).set(ata);
+    const atas = (await this._kv("get","atas")) || {}; atas[ata.id] = ata; await this._salvarLocalAtas(atas);
+  },
+  async atualizarAta(id, campos){
+    if (this.modo === "firebase") return this.db.ref(`${RAIZ}/atas/${id}`).update(campos);
+    const atas = (await this._kv("get","atas")) || {}; Object.assign(atas[id], campos); await this._salvarLocalAtas(atas);
+  },
+  async excluirAta(id){
+    if (this.modo === "firebase"){
+      await this.db.ref(`${RAIZ}/pdfs/${id}`).remove();
+      await this.db.ref(`${RAIZ}/finais/${id}`).remove();
+      return this.db.ref(`${RAIZ}/atas/${id}`).remove();
+    }
+    const atas = (await this._kv("get","atas")) || {}; delete atas[id];
+    await this._kv("del","pdf_"+id); await this._kv("del","final_"+id); await this._salvarLocalAtas(atas);
+  },
+  async salvarArquivo(tipo, id, b64){
+    if (this.modo === "firebase") return this.db.ref(`${RAIZ}/${tipo}/${id}`).set(b64);
+    return this._kv("put", (tipo === "pdfs" ? "pdf_" : "final_") + id, b64);
+  },
+  async lerArquivo(tipo, id){
+    if (this.modo === "firebase") return (await this.db.ref(`${RAIZ}/${tipo}/${id}`).get()).val();
+    return this._kv("get", (tipo === "pdfs" ? "pdf_" : "final_") + id);
+  },
+  /* modelo de posições de assinatura — o mesmo para todas as atas */
+  async lerModelo(){
+    if (this.modo === "firebase") return (await this.db.ref(`${RAIZ}/modeloAssin`).get()).val() || {};
+    return (await this._kv("get","modeloAssin")) || {};
+  },
+  async salvarModelo(m){
+    if (this.modo === "firebase") return this.db.ref(`${RAIZ}/modeloAssin`).set(m);
+    return this._kv("put","modeloAssin",m);
+  },
+  ouvirModelo(cb){
+    if (this.modo === "firebase") this.db.ref(`${RAIZ}/modeloAssin`).on("value", s => cb(s.val() || {}));
+  },
+  /* grava a assinatura só se a vaga ainda estiver livre (evita assinatura dupla) */
+  async gravarAssinatura(ataId, k, registro){
+    if (this.modo === "firebase"){
+      const r = await this.db.ref(`${RAIZ}/atas/${ataId}/assinaturas/${k}`).transaction(atual => atual ? undefined : registro);
+      if (!r.committed) throw new Error("Este vereador já assinou esta ata.");
+      const st = (await this.db.ref(`${RAIZ}/atas/${ataId}/status`).get()).val();
+      if (st !== "aberta"){ await this.db.ref(`${RAIZ}/atas/${ataId}/assinaturas/${k}`).remove(); throw new Error("A ata já foi finalizada."); }
+      return;
+    }
+    const atas = (await this._kv("get","atas")) || {}; const ata = atas[ataId];
+    if (!ata || ata.status !== "aberta") throw new Error("A ata não está aberta para assinatura.");
+    ata.assinaturas = ata.assinaturas || {};
+    if (ata.assinaturas[k]) throw new Error("Este vereador já assinou esta ata.");
+    ata.assinaturas[k] = registro; await this._salvarLocalAtas(atas);
+  }
+};
+
+/* =====================================================================
+   ESTADO E REGRAS
+   ===================================================================== */
+let ATAS = {}, ataAtual = null, admin = false, pdfCache = {};
+let MODELO = {};                       // ajuste manual opcional de pontos (sobrepõe a detecção), por cargo/linha
+let calib = {ativo:false, sel:null, trab:{}};  // estado da calibração do modelo
+let linhasAta = {};                    // linhas detectadas automaticamente na última página, por id de ata
+try { admin = sessionStorage.getItem("adminAtas") === "1"; } catch(e){}
+
+function vagas(ata){
+  const m = ata.mesa || {};
+  const lista = [
+    {k:"presidente", rotulo:"Presidente", nome:m.presidente},
+    {k:"vice", rotulo:"Vice-presidente", nome:m.vice},
+    {k:"sec1", rotulo:"1º secretário", nome:m.sec1},
+    {k:"sec2", rotulo:"2º secretário", nome:m.sec2}
+  ];
+  const mesaNomes = [m.presidente,m.vice,m.sec1,m.sec2];
+  const demais = (ata.vereadores || CONFIG.VEREADORES).filter(n => !mesaNomes.includes(n));
+  demais.forEach((n,i) => lista.push({k:"dem"+i, rotulo: i===0 ? "Demais vereadores" : "", nome:n, demais:true}));
+  return lista.map(v => ({...v, cargo: v.demais ? "Vereador(a)" : v.rotulo, vk: chave(v.nome || v.k)}));
+}
+const assinadas = ata => Object.keys(ata.assinaturas || {}).length;
+const total = ata => vagas(ata).length;
+
+async function codigoVerificacao(ata){
+  const regs = vagas(ata).map(v => (ata.assinaturas||{})[v.vk]?.hash || "").join("|");
+  const h = await sha256Hex(ata.pdfHash + "|" + regs);
+  return h.slice(0,12).toUpperCase().match(/.{4}/g).join("-");
+}
+
+/* =====================================================================
+   NAVEGAÇÃO
+   ===================================================================== */
+function mostrar(v){
+  ["vAtas","vAta","vVerificar"].forEach(id => $("#"+id).classList.toggle("oculto", id !== v));
+  document.querySelectorAll(".aba").forEach(b => b.classList.toggle("ativa",
+    (v === "vVerificar" && b.dataset.aba === "verificar") || (v !== "vVerificar" && b.dataset.aba === "atas")));
+  window.scrollTo(0,0);
+}
+document.querySelectorAll(".aba").forEach(b => b.onclick = () => {
+  if (b.dataset.aba === "verificar") mostrar("vVerificar"); else { ataAtual = null; mostrar("vAtas"); renderLista(); }
+});
+$("#btnVoltar").onclick = () => { ataAtual = null; location.hash = ""; mostrar("vAtas"); renderLista(); };
+
+/* =====================================================================
+   LISTA DE ATAS
+   ===================================================================== */
+function renderLista(){
+  $("#btnNova").classList.toggle("oculto", !admin);
+  $("#btnAdmin").textContent = admin ? "🔓" : "🔒";
+  const anos = [...new Set(Object.values(ATAS).map(a => a.data.slice(0,4)))].sort().reverse();
+  const fa = $("#fAno"), sel = fa.value;
+  fa.innerHTML = '<option value="">Todos os anos</option>' + anos.map(a => `<option ${a===sel?"selected":""}>${a}</option>`).join("");
+  const fs = $("#fStatus").value, fb = $("#fBusca").value.trim().toLowerCase();
+  const itens = Object.values(ATAS)
+    .filter(a => (!fa.value || a.data.startsWith(fa.value)) && (!fs || a.status === fs) &&
+      (!fb || (a.titulo + " " + (a.numero||"")).toLowerCase().includes(fb)))
+    .sort((a,b) => b.data.localeCompare(a.data) || b.criadaEm - a.criadaEm);
+  if (!itens.length){
+    $("#lista").innerHTML = `<div class="vazio">${Object.keys(ATAS).length ? "Nenhuma ata com esses filtros." :
+      admin ? "Nenhuma ata ainda. Clique em <b>+ Nova ata para assinatura</b>." : "Nenhuma ata disponível para assinatura."}</div>`;
+    return;
+  }
+  $("#lista").innerHTML = itens.map(a => {
+    const n = assinadas(a), t = total(a);
+    return `<div class="card">
+      <div class="esp">
+        <h3>${esc(a.titulo)}</h3>
+        <div class="meta">${a.numero ? "Nº " + esc(a.numero) + " · " : ""}Sessão de ${dataBR(a.data)} · ${n} de ${t} assinaturas</div>
+        <div class="prog"><i style="width:${Math.round(n/t*100)}%"></i></div>
+      </div>
+      <span class="tag ${a.status === "finalizada" ? "final" : "aberta"}">${a.status === "finalizada" ? "Finalizada" : "Aguardando"}</span>
+      <button class="btn peq" data-abrir="${a.id}">${a.status === "finalizada" ? "Ver ata" : "Abrir e assinar"}</button>
+    </div>`;
+  }).join("");
+  document.querySelectorAll("[data-abrir]").forEach(b => b.onclick = () => abrirAta(b.dataset.abrir));
+}
+["#fAno","#fStatus"].forEach(s => $(s).onchange = renderLista);
+$("#fBusca").oninput = renderLista;
+
+/* =====================================================================
+   MODAIS
+   ===================================================================== */
+function abrirModal(html){ $("#modal").innerHTML = html; $("#fundo").classList.add("on"); }
+function fecharModal(){ $("#fundo").classList.remove("on"); $("#modal").innerHTML = ""; }
+$("#fundo").addEventListener("click", e => { if (e.target.id === "fundo") fecharModal(); });
+function confirmar(titulo, texto, rotuloOk, perigo){
+  return new Promise(res => {
+    abrirModal(`<header><h2>${esc(titulo)}</h2></header><div class="corpo"><div>${texto}</div></div>
+      <footer><button class="btn claro" id="mNao">Cancelar</button><button class="btn ${perigo?"verm":""}" id="mSim">${esc(rotuloOk)}</button></footer>`);
+    $("#mNao").onclick = () => { fecharModal(); res(false); };
+    $("#mSim").onclick = () => { fecharModal(); res(true); };
+  });
+}
+
+/* ---------- ADMIN ---------- */
+$("#btnAdmin").onclick = () => {
+  // Acesso de administrador liberado sem senha
+  admin = !admin;
+  try{ admin ? sessionStorage.setItem("adminAtas","1") : sessionStorage.removeItem("adminAtas"); }catch(e){}
+  toast(admin ? "Modo administrador ativo." : "Modo administrador encerrado.");
+  renderLista(); if (ataAtual) renderAta();
+};
+
+/* ---------- NOVA ATA ---------- */
+$("#btnNova").onclick = () => {
+  const ops = CONFIG.VEREADORES.map(n => `<option>${esc(n)}</option>`).join("");
+  const hoje = new Date().toISOString().slice(0,10);
+  abrirModal(`<header><h2>Nova ata para assinatura</h2><button class="x" onclick="fecharModal()">×</button></header>
+  <form class="corpo" id="fNova">
+    <label class="campo">Título<input id="nTitulo" required placeholder="Ata da 32ª Sessão Ordinária"></label>
+    <div class="mesa">
+      <label class="campo">Número<input id="nNumero" placeholder="032/2026"></label>
+      <label class="campo">Data da sessão<input type="date" id="nData" value="${hoje}" required></label>
+    </div>
+    <label class="campo">Arquivo PDF da ata<input type="file" id="nPdf" accept="application/pdf" required></label>
+    <div style="font-weight:700;color:var(--azul);margin-top:4px">Composição da Mesa nesta sessão</div>
+    <div class="mesa">
+      <label class="campo">Presidente<select id="mPres" required><option value="">—</option>${ops}</select></label>
+      <label class="campo">Vice-presidente<select id="mVice" required><option value="">—</option>${ops}</select></label>
+      <label class="campo">1º secretário<select id="mSec1" required><option value="">—</option>${ops}</select></label>
+      <label class="campo">2º secretário<select id="mSec2" required><option value="">—</option>${ops}</select></label>
+    </div>
+    <div class="info">Os demais vereadores entram automaticamente nas linhas de "Demais vereadores".</div>
+    <div id="nErro"></div>
+  </form>
+  <footer><button class="btn claro" onclick="fecharModal()">Cancelar</button><button class="btn ouro" form="fNova" id="nSalvar">Publicar para assinatura</button></footer>`);
+  $("#fNova").onsubmit = async e => {
+    e.preventDefault();
+    const mesa = {presidente:$("#mPres").value, vice:$("#mVice").value, sec1:$("#mSec1").value, sec2:$("#mSec2").value};
+    if (new Set(Object.values(mesa)).size !== 4){ $("#nErro").innerHTML = '<div class="alerta erro">Cada cargo da Mesa precisa de um vereador diferente.</div>'; return; }
+    const f = $("#nPdf").files[0];
+    if (!f || f.type !== "application/pdf"){ $("#nErro").innerHTML = '<div class="alerta erro">Selecione um arquivo PDF.</div>'; return; }
+    if (f.size > 7*1024*1024){ $("#nErro").innerHTML = '<div class="alerta erro">O PDF passa de 7 MB. Comprima o arquivo antes de enviar.</div>'; return; }
+    $("#nSalvar").disabled = true; $("#nSalvar").innerHTML = '<span class="carreg"></span> Enviando…';
+    try {
+      const bytes = new Uint8Array(await f.arrayBuffer());
+      await pdfjsLib.getDocument({data: bytes.slice()}).promise; // garante que é um PDF válido
+      const id = uid();
+      const ata = {
+        id, titulo: $("#nTitulo").value.trim(), numero: $("#nNumero").value.trim(), data: $("#nData").value,
+        pdfNome: f.name, pdfTamanho: f.size, pdfHash: await sha256Hex(bytes),
+        mesa, vereadores: CONFIG.VEREADORES.slice(), status: "aberta", criadaEm: Store.agora(), assinaturas: {}
+      };
+      await Store.salvarArquivo("pdfs", id, bytesToB64(bytes));
+      await Store.salvarAta(ata);
+      fecharModal(); toast("Ata publicada para assinatura."); abrirAta(id);
+    } catch(err){
+      console.error(err); $("#nSalvar").disabled = false; $("#nSalvar").textContent = "Publicar para assinatura";
+      $("#nErro").innerHTML = `<div class="alerta erro">Não foi possível publicar: ${esc(err.message)}</div>`;
+    }
+  };
+};
+
+/* =====================================================================
+   VISUALIZAÇÃO DA ATA
+   ===================================================================== */
+async function abrirAta(id){
+  ataAtual = id; location.hash = "ata-" + id; mostrar("vAta"); renderAta();
+  $("#pdfBox").innerHTML = '<div class="vazio" style="color:#ddd"><span class="carreg"></span> Carregando documento…</div>';
+  try {
+    const b64 = pdfCache[id] || await Store.lerArquivo("pdfs", id);
+    if (!b64) throw new Error("PDF não encontrado.");
+    pdfCache[id] = b64;
+    const bytes = b64ToBytes(b64);
+    const ata = ATAS[id];
+    const hash = await sha256Hex(bytes);
+    if (ata && hash !== ata.pdfHash){
+      $("#ataAlerta").innerHTML = '<div class="alerta erro"><b>ATENÇÃO:</b> o arquivo armazenado não confere com a impressão digital registrada. O documento pode ter sido adulterado. Não assine.</div>';
+      pdfCache[id + "_corrompido"] = true;
+    }
+    if (ataAtual !== id) return;
+    const pdf = await pdfjsLib.getDocument({data: bytes}).promise;
+    const box = $("#pdfBox"); box.innerHTML = "";
+    const larg = Math.min(box.clientWidth - 24, 900), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let ultimoCanvas = null;
+    for (let p = 1; p <= pdf.numPages; p++){
+      if (ataAtual !== id) return;
+      const pg = await pdf.getPage(p), vp0 = pg.getViewport({scale:1});
+      const vp = pg.getViewport({scale: (larg / vp0.width) * dpr});
+      const wrap = document.createElement("div"); wrap.className = "pagWrap"; wrap.dataset.pagina = p;
+      const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+      wrap.appendChild(c); box.appendChild(wrap);
+      await pg.render({canvasContext: c.getContext("2d"), viewport: vp}).promise;
+      ultimoCanvas = c;
+    }
+    box.dataset.npag = pdf.numPages;
+    if (ultimoCanvas) linhasAta[id] = detectarLinhasCanvas(ultimoCanvas);   // detecta as linhas da última página
+    if (calib.ativo) ligarCliquesCalib(true);
+    if (ataAtual === id) renderAta();                                       // reavalia se a ata está no modelo e redesenha
+  } catch(err){
+    console.error(err);
+    $("#pdfBox").innerHTML = `<div class="vazio" style="color:#fbb">Erro ao abrir o PDF: ${esc(err.message)}</div>`;
+  }
+}
+
+function renderAta(){
+  const ata = ATAS[ataAtual]; if (!ata) return;
+  const fin = ata.status === "finalizada";
+  $("#ataTitulo").textContent = ata.titulo;
+  $("#ataMeta").textContent = `${ata.numero ? "Nº " + ata.numero + " · " : ""}Sessão de ${dataBR(ata.data)} · ${assinadas(ata)} de ${total(ata)} assinaturas`;
+  $("#ataTag").innerHTML = `<span class="tag ${fin ? "final" : "aberta"}">${fin ? "Finalizada" : "Aguardando assinaturas"}</span>`;
+  const estado = estadoModelo(ata);
+  if (!pdfCache[ataAtual + "_corrompido"])
+    $("#ataAlerta").innerHTML = fin ? `<div class="alerta ok">Ata finalizada em ${horaBR(ata.finalizadaEm)}. Código de verificação: <b>${esc(ata.codigo)}</b></div>`
+      : estado === "verificando" ? `<div class="alerta aviso"><span class="carreg"></span> Verificando se a ata está no modelo de assinaturas…</div>`
+      : estado === "fora" ? `<div class="alerta erro">Esta ata <b>não está no modelo</b> com as linhas de assinatura. Os vereadores só assinam atas enviadas no modelo padrão (com as linhas ao final).</div>`
+      : "";
+
+  const podeAssinar = !fin && estado === "ok";
+  const sigs = ata.assinaturas || {};
+  $("#folha").innerHTML = `<div class="cab">${esc(CONFIG.PLENARIO)}, ${dataExtenso(ata.data)}.</div>` +
+    vagas(ata).map(v => {
+      const s = sigs[v.vk];
+      return `<div class="slot"><div class="rot">${v.rotulo ? esc(v.rotulo) + ":" : ""}</div>
+        <div><div class="lin">${s ? `<img src="${s.img}" alt="Assinatura de ${esc(v.nome)}"><span class="quando">✔ ${horaBR(s.em)}</span>`
+          : fin ? `<span class="info" style="padding-bottom:6px">não assinou</span>`
+          : podeAssinar && temAssinaturaReal(v) ? `<span></span><button class="btn peq ouro assinar" data-vaga="${v.k}">Assinar</button>`
+          : podeAssinar ? `<span class="info" style="padding-bottom:6px">aguardando assinatura</span>`
+          : `<span class="info" style="padding-bottom:6px">—</span>`}</div>
+        <div class="nome">${esc(v.nome)}${v.demais ? "" : " — " + esc(v.cargo)}</div></div></div>`;
+    }).join("");
+  if (podeAssinar) document.querySelectorAll("[data-vaga]").forEach(b => b.onclick = () => modalAssinar(b.dataset.vaga));
+
+  const acoes = [];
+  if (fin) acoes.push(`<button class="btn verde" id="aBaixar">⬇ Baixar ata assinada (PDF)</button>`);
+  if (fin) acoes.push(`<button class="btn ouro" id="aImprimir">🖨 Imprimir</button>`);
+  acoes.push(`<button class="btn claro" id="aOriginal">PDF original</button>`);
+  if (admin) acoes.push(`<button class="btn claro" id="aModelo">✍ Ajustar posições (opcional)</button>`);
+  if (admin && !fin) acoes.push(`<button class="btn" id="aFinalizar">Finalizar ata</button>`);
+  if (admin && !fin) acoes.push(`<button class="btn verm" id="aExcluir">Excluir</button>`);
+  $("#acoesAta").innerHTML = acoes.join("");
+  if (fin) $("#aBaixar").onclick = baixarFinal;
+  if (fin) $("#aImprimir").onclick = imprimirFinal;
+  $("#aOriginal").onclick = async () => baixar(b64ToBytes(pdfCache[ataAtual] || await Store.lerArquivo("pdfs", ataAtual)), ata.pdfNome || "ata.pdf");
+  if ($("#aModelo")) $("#aModelo").onclick = iniciarCalibracao;
+  if ($("#aFinalizar")) $("#aFinalizar").onclick = finalizar;
+  if ($("#aExcluir")) $("#aExcluir").onclick = async () => {
+    if (await confirmar("Excluir ata", `Excluir <b>${esc(ata.titulo)}</b> e todas as assinaturas já feitas? Isso não pode ser desfeito.`, "Excluir", true)){
+      await Store.excluirAta(ata.id); delete pdfCache[ata.id]; ataAtual = null; mostrar("vAtas"); renderLista(); toast("Ata excluída.");
+    }
+  };
+
+  $("#auditoria").innerHTML = `
+    <div class="info">Impressão digital SHA-256 do PDF original (${esc(ata.pdfNome)}, ${(ata.pdfTamanho/1024).toFixed(0)} KB), registrada em ${horaBR(ata.criadaEm)}:</div>
+    <div class="hash">${ata.pdfHash}</div>
+    ${ata.finalHash ? `<div class="info" style="margin-top:8px">SHA-256 do PDF assinado final:</div><div class="hash">${ata.finalHash}</div>` : ""}
+    <table class="auditoria"><tr><th>Signatário</th><th>Data/hora</th><th>Hash da assinatura</th></tr>
+    ${vagas(ata).filter(v => sigs[v.vk]).sort((a,b) => sigs[a.vk].em - sigs[b.vk].em).map(v => {
+      const s = sigs[v.vk];
+      return `<tr><td>${esc(s.nome)}<br><span class="info">${esc(s.cargo)}</span></td><td>${horaBR(s.em)}</td><td class="h">${s.hash}</td></tr>`;
+    }).join("") || '<tr><td colspan="3" class="info">Nenhuma assinatura ainda.</td></tr>'}</table>`;
+
+  if (!calib.ativo) desenharAssinaturas();
+}
+
+/* ---------- ASSINATURA CURSIVA (gerada do nome, com estilo próprio por pessoa) ---------- */
+/* ---------- ASSINATURAS REAIS DOS VEREADORES (recortadas, fundo transparente) ---------- */
+/* Lucas Cavalcante fica sem assinatura (campo livre) ate ser criada. */
+const ASSINATURAS_REAIS = {
+  "jose_lindomar": "data:image/png;base64,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",
+  "marilene_santos": "data:image/png;base64,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",
+  "sylas_souza": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAF4AAAAiCAYAAADWMm7UAAAM20lEQVR4AeXBC3SU9ZnA4d/7zUzCRcyBFgq7Wu12ReXm0VVLqxWoRS6ZCZKQzFRmEkKJa9cWVKqiVKvWWmoNKlYtgoRkAnyTkEAyQdd6AVqpLqsUIaBQre6pFRYVtJGETOb7v/vhjJqTBiHouD36PGKMIVNyy+qRQ4nzRTlX4d8EhisMBAYAPmCXQDOwJF4depovEC+fMn9xDEv1CqNMErgY6KukKB/6G9ABnKNwDlAcCNuPITIxHg3yReDlU1C+YCMbdu6djNEfARMMCCktQJPA8wpbxGM10rcX8QfyOCwQiQF6mcJ8VSaA/nlKcexfGqqCfN6JMYbjVTazhv/tMFcY5WpgKCmvC6w2ljxKtu+365bkczS5ZfVIW2IFcJnAS318njNjFYV8nnk5TlPC9lgH7gNGkPI7hPuH+KyaJcuK6Il1S/K5Znbj9N37W/spBFo7nAqglM8xMcbQE1Nn1IxMOuZGVUK4BDZYMLehOrSFTyhYWsvBDucNYDDC6KZoaDOfgaKSGCfl9Gbhojw+K16OUUFpLYkO51GFiaS8LiLXxqNBm09JrKKQQNi+XeF+oBjYTAYVlcRodbQJmLh7f2vCH7Hrsr2eSF1FIZlmcRTB0lr8kdjCRNJJKkzkMGFdts9zcjwatPmUebK8DwAJlEIyrNXRpUAu8ApwECXc3uH8JbekhkzzcgSB/2hEWlqvMnALSo7yvvfEkpJ4VbCeDFm7bBr+sL0NOPfSiM3aaIhMKF+wEVcE2DfQ4vR3ERKqVaIMzbaETPPSjUBx7Fw1ukJhKGkCr4mwSpWcgtJa6ioKyRSBnQrnOsp44HEyYEPzHlxZwMsVVSHSigtKa6mrKCTTvHQxZUYtanQTkEUnCqeqcgMo7R3ObwJhe2Uyy1v66LJpFJTWUldRyNFMKY7hGN2IsK8pGirkSISXUFDhdOBxMqCPz8PBDkeBgXRSV1FIT/nD9s8R2i3Luq2xsohjYdHFRWcMwiWkifAqQjlwOSLfF7gHeE9hhieRfCk3Eru8vcNpy43E5nAUxugG4CKUaYFIjCNS3sElyglkSKyiENfLwL8WlcQ4XkUlMVw3otxqHPNGXnFsHMfASxfrd+w9TyCp4LOEKxqjocV0kV8cuzqhuhqlQFQX4xLVm8oXbLx37rwxdCcQtqcrjCHNI1A4q47apQV0pSLtqOLKJoMENimc1uZoGKjmOKhR0hxgiDH6eCBi3xyPhu7gY3jpJBC2ca1V6A1c3xgNLaYb9VVBXNMCYXu9wlhSvvSHXfuYy9+bNHM1HuEuFAX2AkMc1XXJQx3vANNxTYnYOLAVZaAI+xVQyKKT3LJ6pC1xnQhvx6Ohh/mEjIgtqjNUiADVHIE/EjtP0DBwvipveSwJNFQFOWz08CGsb97jAHsFrldYrMrP/WH7m+L1BOLLC+nMXxz7tkf1917SrpndiMITwD8BDzdVh+7kKFTkOlQ3k9LxrdMH0R1PIrkQGCxQpdAfCKgyGVegpGZ6n14+HGUfMBBhryojcIlg0YnVlviBwi9VIS8S29kYDT5DF5NmrsbXkbxK4cl4NLSdj3F6/96P7d7fugfl4kBJDfHKIjrLK6kZZoy5G+US5SOO0W3AKFxz541hfdh+D+gXrw6tyCuObTVG6wC/Jp0Wf8ReJcpLCIMUJqKc5Qh1Fml/2t96C3AxsG2gxSyOgfTr/d+AQ8of584bQ1d5JTXDgB+K0CIe6wFEBtCZYxa3HmyfDgwEVgzt32eICDs5TCkpnFXHBxRGkqZCf7rhTSRto9ytyg0cxcJFeSAsBzxqzM9Iu2Z2I4GwfYtxzB9RLgH+LHBlts8jCE8DI/PC9gV8pAU4AVdjVXBHts9zBnAH4EUpUyhX5XqUs4Btoqzx4sorjg1XmA+0qMc6q6KyiKMpLbZRlWkCqrzvPH8k9iCqrUCWwAkKJwJjAB+KZRzzLF0JJ6oyGZdYsnLhojwCEdvCpTCkrb3jh8CvcQm0KO8zIvII3VCYzGHCAY6BIjcKeh0wa8rcR2/i7fdwks5vgfHAQYT5Q3zWXUuWFXFYIGLXK1yoMB7YhEsgqWCVL9jI3HljqKsoxDV/yoza+caYyUY5zULfFMva2lhZtBOXF5cxeg/gtYSbGyuLOBJ/xD5flAKF8cBIRb3KhwTVK0hT/s47wC6BgQqn4RL4r3g09D1/2N6CyyfySF7YvkDhDGAnMAxlAvBrXAotpDzVWFlEV5NmrsYDfQD1KA9zDNZFg/jD9n+i5Jp97y4DioC+wHaPMKohGqIzj8j6pCoK44BbcClYgM6dN4bOGpYX4nqEbnj9YTsP+C7CThmUcw+dFERsOpR8RyRbVK8CzldSBAwfeRn4mkACmI2wV0WyRfUhVQYg5DVFQ3FcgYh9D8ocXCokSDkFOFhfWYQ/bF+JSyxZrkbvFOiHq6C0FtflpLTSDU8iWQ94gIMN1aEtHIPyBRuxYI8BVCnlMGFX72zfqNqlBXT17WGDt65v3vMWMLpwVh21Swtw9QI66AELyMOlyI0N5ZPorB3uMlAnqiuB8wUOCLyOS8EizRIpBn6p0FvhF8B8jC5VZQCwtCkaipOm0MoHFA8pfYF3cyOxi4Ag8JYFL3CYsAdXosO5GziZlNF04Y/YPwOmktI3v6SGo5kaibG+ec8mA7NIE+Gpof37nFG7tIDuzJ03BtdjQNah9uT38otjuAYCr9ADlsAIwGQLDXQhykE6UeivcBLwHLCNlCcao8FntHfWfIF7gBNVGQ14gYWer+SU0YkoB/nIabll9bjeQfiyqC4HLIGrjNERpGzPjcQmKMwBDgA7gEGBiD2StLywPQPlJ8C7wO9wJRyTxxGUzawhELbndai2Ad9CaCfNIIsWLsrj41iwApeqzksYnQ0Iwk56wAvkAE6H0VHANjoxlmwSo6Rt8ljyYxF5tsPoHFG9GziQLYzHtW5JPq6rc8vqr+6VdDilXzYLF+XRlRF5U1RJGyiHEtcCm1Dyga8Ba+LVoRX+sP08LlHeELQaEAtmKZylMFxhArA9ELbHKzwEdIgwTZSTDFyEMA1opItAxP6uKncCZ4vQjvKaKqcCfwFOFnQ80MDHaKwOPeoP202AH7gXSIjIL+gBz9CRBbuBEiC0qr55QN2a5ieC+SM4bPrUEa+sWtN8CnA28FVFTjVGbxCIAIcsYeraaOhVOpmedybBS4czYdLpdCe2pvmrCkHSRBgtghcYJIIjIsEVa3acLXAt8J7CGGCQwK/i1aFFq9buaEG5HOErK9c0twHVQLaIlMWjofr6R3ZtTSbND4BvrFzT/D/rm3a+sGLtTqKrt+evqG++D/gpMATYhPAEcDHwnE9kmIFbAO9l+SMe4ijq4i+uMkZbBHarJbc2VQWfpgfEGIM/bP8EuAHoAyiwXeApoE491tNiTIsqJ/AB4ffAj5uioc30UF5xbLgx2oxL4EWFM0lxAA/wFuADckgTYVE8GppDWiBsr1cYS4oj8KN4dehB0nIjsSmiagO9gDbAB3hJeRGRm7M9sro9aRzgXa/HGrC2sgh/2N4H5GjvrOx1S/LJJAtXU3Xodo/X0xfhp8ArwCiFq1SY3FRZhEH6AUtJSYhiN0VDmzkOjVXBHcABXApf4iMeUr4M5OASeE1EpsajoTl0Ih5rHMLtAr8RGBuvDj1IJ+uiwQZL5DtAPfAmsAdYagn5Qwf0GdYUDa5OJM0iwBK4c21lEYcJPA9kedsS55BhXtIalhfiug24LTcSQ2CmV9iCa100iKvMH7a3A79SuD8QtgstuLWhOrSBHri0pAbXy8B5wCBgpVhyN6qXqDIO2GbBEwp/HZxlbVuyrIiuGiuLcN3Ex2iMBp8BCjgCFQpREr2EBaSpsANlooFhwBYyyEs31kWDuJbRRVN1aJE/Yj8rSqXCWAfG+iP204pEe6EP1UVDdCe3rB6rLXEhwpWqTAO8gAKCcG+8Kvgc8BxwB5+BS2euBmUw0FwbDfEhZRcpXyfDvPRQUzS0+ZrZjWf+6UDrZarciHKhoBe2w2J/2N4tsBVoBQ4hWKqcIzBKIQsFhL0C91mwzSDeeDS4mc+Y6XC+ScqLdGLB2wZQyCHDvByHhYvycK0sX7Bx5cYdey42MBHlEmCkwlA+oHzgrwjPiPLYYJ+1dMmyIv4/OeATXMIhOlERgyouHxnm5ROYO28Mc+FJ4Eng2kDYBkvONUofL9rHiFhY1iPx5YX8I/GiSQcQJZvOVL+OS+BVMszLpyheHcL1HP/gkr2y/iBtiYTCBcF/X0Ns8VQOUxiHS4QXyDCLL6B1S/JxNQD/fPBg+2Z/2P5GoKQG13hgvwzKeZIM8/IFle3zFCU6nA0KY4Bn1TFtQJYI5Q3lk8g0iy+ouopCxo4YMhaR7wtsAP4mwoLBPusOPgP/BwMHY7qBrSExAAAAAElFTkSuQmCC",
+  "rogerio_gotado": "data:image/png;base64,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",
+  "dilson_junior": "data:image/png;base64,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",
+  "nilza_damasceno": "data:image/png;base64,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",
+  "jackson_costa": "data:image/png;base64,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",
+  "wilson_freitas": "data:image/png;base64,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",
+};
+
+const FONTES_ASSIN = ['"Great Vibes"','"Allura"','"Alex Brush"','"Sacramento"','"Parisienne"','"Dancing Script"','"Satisfy"'];
+function semente(txt){ let h=0; for(let i=0;i<txt.length;i++){ h=(h*31 + txt.charCodeAt(i))>>>0; } return h; }
+async function assinaturaCursiva(nome){
+  const h = semente(nome);
+  const fonte = FONTES_ASSIN[h % FONTES_ASSIN.length];
+  const fs = 58 + (h % 10);                              // tamanho 58..67 (distinção sem inclinar)
+  const rot = 0;                                         // reta sobre a linha
+  const tintas = ["#0b1f4d","#102a54","#141414","#1b2a4a"];
+  const tinta = tintas[(h >> 6) % tintas.length];
+  try { await document.fonts.load(`${fs}px ${fonte}`, nome); await document.fonts.ready; } catch(e){}
+  const med = document.createElement("canvas").getContext("2d");
+  med.font = `${fs}px ${fonte}, cursive`;
+  const tw = Math.ceil(med.measureText(nome).width);
+  const pad = Math.round(fs*0.5);
+  const w = tw + pad*2, hh = Math.round(fs*1.8);
+  const c = document.createElement("canvas"); c.width = w; c.height = hh;
+  const ctx = c.getContext("2d");
+  ctx.translate(w/2, hh/2); ctx.rotate(rot);
+  ctx.font = `${fs}px ${fonte}, cursive`;
+  ctx.fillStyle = tinta; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(nome, 0, 0);
+  // recorta margens transparentes
+  const d = ctx.getImageData(0,0,w,hh).data;
+  let x0=w,y0=hh,x1=0,y1=0;
+  for (let y=0;y<hh;y++) for (let x=0;x<w;x++) if (d[(y*w+x)*4+3] > 12){ if(x<x0)x0=x; if(y<y0)y0=y; if(x>x1)x1=x; if(y>y1)y1=y; }
+  if (x1<x0){ return c.toDataURL("image/png"); }
+  const m = 6; x0=Math.max(0,x0-m); y0=Math.max(0,y0-m); x1=Math.min(w,x1+m); y1=Math.min(hh,y1+m);
+  const r = document.createElement("canvas"); r.width=x1-x0; r.height=y1-y0;
+  r.getContext("2d").drawImage(c, x0,y0,x1-x0,y1-y0, 0,0,x1-x0,y1-y0);
+  return r.toDataURL("image/png");
+}
+
+/* ---------- ASSINAR ---------- */
+async function modalAssinar(vagaK){
+  const ata = ATAS[ataAtual]; const v = vagas(ata).find(x => x.k === vagaK); if (!v) return;
+  if (pdfCache[ataAtual + "_corrompido"]){ toast("Documento com integridade comprometida. Assinatura bloqueada.", true); return; }
+  if (!ataAssinavel(ata)){ toast("Esta ata não está no modelo com as linhas de assinatura.", true); return; }
+  if (!temAssinaturaReal(v)){ toast(`A assinatura de ${v.nome} ainda não foi cadastrada.`, true); return; }
+  abrirModal(`<header><h2>Assinar como ${esc(v.nome)}</h2><button class="x" onclick="fecharModal()">×</button></header>
+  <div class="corpo">
+    <div class="alerta aviso" style="margin:0">Cargo: <b>${esc(v.cargo)}</b> · ${esc(ata.titulo)} · Sessão de ${dataBR(ata.data)}</div>
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:5px;color:#374151">Sua assinatura</div>
+      <div id="sPrev" style="border:1.5px solid var(--linha);border-radius:12px;background:#fffdf6;min-height:84px;display:grid;place-items:center;padding:8px"><span class="carreg"></span></div>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer;font-size:13px;color:var(--azul)">Desenhar à mão (opcional)</summary>
+        <div class="pad" style="margin-top:8px"><canvas id="sPad"></canvas><div class="base"></div><div class="dica" id="sDica">assine aqui</div></div>
+        <div class="linha" style="justify-content:flex-end;margin-top:6px"><button class="btn claro peq" type="button" id="sLimpar">Limpar</button></div>
+        <div class="info">O desenho é guardado na trilha de auditoria como prova do ato.</div>
+      </details>
+    </div>
+    <label class="check"><input type="checkbox" id="sAceite"><span>Declaro que li a ata e concordo com seu teor. Reconheço esta assinatura eletrônica como minha, com a mesma validade da assinatura manuscrita.</span></label>
+    <div id="sErro"></div>
+  </div>
+  <footer><button class="btn claro" onclick="fecharModal()">Cancelar</button><button class="btn ouro" id="sOk">Assinar ata</button></footer>`);
+
+  const real = ASSINATURAS_REAIS[v.vk];
+  $("#sPrev").innerHTML = `<img src="${real}" style="max-width:100%;max-height:72px" alt="Assinatura de ${esc(v.nome)}">`;
+  const pad = criarPad($("#sPad"), () => $("#sDica").style.display = "none");
+  $("#sLimpar").onclick = () => { pad.limpar(); $("#sDica").style.display = ""; };
+  $("#sOk").onclick = async () => {
+    const erro = m => $("#sErro").innerHTML = `<div class="alerta erro">${m}</div>`;
+    if (!$("#sAceite").checked) return erro("Marque a declaração de leitura e concordância.");
+    const btn = $("#sOk"); btn.disabled = true; btn.innerHTML = '<span class="carreg"></span> Assinando…';
+    try {
+      // confere integridade do documento no instante da assinatura
+      const b64 = pdfCache[ataAtual] || await Store.lerArquivo("pdfs", ataAtual);
+      const docHash = await sha256Hex(b64ToBytes(b64));
+      if (docHash !== ata.pdfHash) throw new Error("O documento não confere com o registro. Assinatura bloqueada.");
+      const img = real;   // assinatura real do vereador
+      const traco = pad.vazio() ? null : pad.png();                 // desenho à mão (opcional) p/ auditoria
+      const em = Store.agora();
+      const base = {ata: ata.id, docHash, nome: v.nome, cargo: v.cargo, em, imgHash: await sha256Hex(img)};
+      const registro = {
+        nome: v.nome, cargo: v.cargo, em, img, imgHash: base.imgHash, docHash,
+        hash: await sha256Hex(JSON.stringify(base)),
+        aparelho: navigator.userAgent.slice(0, 180)
+      };
+      if (traco) registro.traco = traco;
+      if (Store.modo === "firebase") registro.emServidor = firebase.database.ServerValue.TIMESTAMP;
+      await Store.gravarAssinatura(ata.id, v.vk, registro);
+      fecharModal(); toast(`Ata assinada por ${v.nome}.`);
+    } catch(err){
+      console.error(err); btn.disabled = false; btn.textContent = "Assinar ata"; erro(esc(err.message));
+    }
+  };
+}
+
+function criarPad(canvas, aoDesenhar){
+  const ctx = canvas.getContext("2d"); let desenhando = false, tracos = 0, ult = null;
+  function ajustar(){
+    const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    canvas.width = r.width * dpr; canvas.height = r.height * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#0b1f4d";
+  }
+  requestAnimationFrame(ajustar);
+  const pos = e => { const r = canvas.getBoundingClientRect(); return {x: e.clientX - r.left, y: e.clientY - r.top, p: e.pressure || .5}; };
+  canvas.addEventListener("pointerdown", e => { e.preventDefault(); canvas.setPointerCapture(e.pointerId); desenhando = true; ult = pos(e); tracos++; aoDesenhar && aoDesenhar();
+    ctx.beginPath(); ctx.arc(ult.x, ult.y, 1.2, 0, Math.PI*2); ctx.fillStyle = "#0b1f4d"; ctx.fill(); });
+  canvas.addEventListener("pointermove", e => { if (!desenhando) return; e.preventDefault(); const p = pos(e);
+    ctx.lineWidth = 1.6 + p.p * 2.2; ctx.beginPath(); ctx.moveTo(ult.x, ult.y);
+    const mx = (ult.x + p.x)/2, my = (ult.y + p.y)/2; ctx.quadraticCurveTo(ult.x, ult.y, mx, my); ctx.lineTo(p.x, p.y); ctx.stroke(); ult = p; });
+  ["pointerup","pointercancel","pointerleave"].forEach(ev => canvas.addEventListener(ev, () => desenhando = false));
+  return {
+    limpar(){ ctx.clearRect(0,0,canvas.width,canvas.height); tracos = 0; },
+    vazio(){ return tracos === 0; },
+    png(){ // recorta o espaço em branco ao redor da assinatura
+      const w = canvas.width, h = canvas.height, d = ctx.getImageData(0,0,w,h).data;
+      let x0=w,y0=h,x1=0,y1=0;
+      for (let y=0;y<h;y++) for (let x=0;x<w;x++) if (d[(y*w+x)*4+3] > 10){ if(x<x0)x0=x; if(y<y0)y0=y; if(x>x1)x1=x; if(y>y1)y1=y; }
+      const m = 8; x0=Math.max(0,x0-m); y0=Math.max(0,y0-m); x1=Math.min(w,x1+m); y1=Math.min(h,y1+m);
+      const c = document.createElement("canvas"); c.width = x1-x0; c.height = y1-y0;
+      c.getContext("2d").drawImage(canvas, x0,y0,x1-x0,y1-y0, 0,0,x1-x0,y1-y0);
+      return c.toDataURL("image/png");
+    }
+  };
+}
+
+
+/* =====================================================================
+   ASSINATURAS SOBRE O PDF (mesmo modelo p/ todas as atas)
+   ===================================================================== */
+const paginaAlvo = (nPag, ent) => Math.max(1, nPag - (ent.dist || 0));   // linhas ficam ao final → conta a partir da última página
+
+/* detecta as linhas de assinatura (longas corridas horizontais escuras) num canvas renderizado */
+function detectarLinhasCanvas(canvas){
+  const ctx = canvas.getContext("2d"); const w = canvas.width, h = canvas.height;
+  let d; try { d = ctx.getImageData(0,0,w,h).data; } catch(e){ return []; }
+  const minLen = Math.floor(w * 0.20);
+  const linhas = []; let cur = null;
+  for (let y = 0; y < h; y++){
+    let run = 0, best = 0, s = -1, bs = 0;
+    for (let x = 0; x < w; x++){
+      const i = (y*w + x)*4;
+      const dark = d[i] < 120 && d[i+1] < 120 && d[i+2] < 120 && d[i+3] > 40;
+      if (dark){ if (run === 0) s = x; run++; if (run > best){ best = run; bs = s; } } else run = 0;
+    }
+    if (best >= minLen){
+      if (!cur) cur = {y0:y,y1:y,len:best,x0:bs,x1:bs+best};
+      else { cur.y1=y; if (best>cur.len){cur.len=best;cur.x0=bs;cur.x1=bs+best;} }
+    } else if (cur){ linhas.push(cur); cur=null; }
+  }
+  if (cur) linhas.push(cur);
+  return linhas.map(L => ({ fy:(L.y0+L.y1)/2/h, x0f:L.x0/w, x1f:L.x1/w }))
+               .sort((a,b)=>a.fy-b.fy);
+}
+
+/* garante a detecção da última página (renderiza fora da tela se necessário) */
+async function garantirLinhas(id){
+  if (linhasAta[id]) return linhasAta[id];
+  try {
+    const b64 = pdfCache[id] || await Store.lerArquivo("pdfs", id);
+    const pdf = await pdfjsLib.getDocument({data: b64ToBytes(b64)}).promise;
+    const pg = await pdf.getPage(pdf.numPages);
+    const base = pg.getViewport({scale:1});
+    const vp = pg.getViewport({scale: 1100 / base.width});
+    const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+    await pg.render({canvasContext: c.getContext("2d"), viewport: vp}).promise;
+    linhasAta[id] = detectarLinhasCanvas(c);
+  } catch(e){ linhasAta[id] = []; }
+  return linhasAta[id];
+}
+
+/* pontos finais por cargo: ajuste manual (MODELO) tem prioridade; senão, linhas detectadas (topo→baixo) */
+function obterPontos(ata){
+  const vg = vagas(ata);
+  const linhas = linhasAta[ata.id] || [];
+  const auto = {};
+  linhas.slice(0, vg.length).forEach((l, i) => { auto[vg[i].k] = {dist:0, fx:(l.x0f + l.x1f)/2, fy:l.fy}; });
+  const pts = {};
+  vg.forEach(v => { pts[v.k] = MODELO[v.k] || auto[v.k] || null; });
+  return pts;
+}
+
+/* a ata só é assinável se a última página contiver as linhas do modelo (detecção) */
+function estadoModelo(ata){
+  const l = linhasAta[ata.id];
+  if (l === undefined) return "verificando";
+  return l.length >= vagas(ata).length ? "ok" : "fora";
+}
+const ataAssinavel = ata => estadoModelo(ata) === "ok";
+const temAssinaturaReal = v => typeof ASSINATURAS_REAIS !== "undefined" && !!ASSINATURAS_REAIS[v.vk];
+
+function desenharAssinaturas(){
+  const box = $("#pdfBox"); const ata = ATAS[ataAtual]; if (!ata || !box) return;
+  box.querySelectorAll(".marca").forEach(m => m.remove());
+  const wraps = box.querySelectorAll(".pagWrap"); if (!wraps.length) return;
+  const nPag = +box.dataset.npag || wraps.length;
+  const pts = calib.ativo ? calib.trab : obterPontos(ata);
+  const sigs = ata.assinaturas || {}, fin = ata.status === "finalizada";
+  vagas(ata).forEach(v => {
+    const ent = pts[v.k]; if (!ent) return;
+    const wrap = box.querySelector(`.pagWrap[data-pagina="${paginaAlvo(nPag, ent)}"]`); if (!wrap) return;
+    const s = sigs[v.vk];
+    const m = document.createElement("div"); m.className = "marca";
+    m.style.left = (ent.fx * 100) + "%"; m.style.top = (ent.fy * 100) + "%";
+    if (calib.ativo){
+      m.className = "marca ponto" + (calib.sel === v.k ? " sel" : "");
+      m.innerHTML = `${esc(v.nome.split(" ")[0])}${s ? " ✔" : ""} <span style="opacity:.7">✕</span>`;
+      m.onclick = e => { e.stopPropagation(); if (calib.sel === v.k){ delete calib.trab[v.k]; } calib.sel = v.k; montarBarraCalib(); desenharAssinaturas(); };
+    } else if (s){
+      m.className = "marca sig";
+      m.innerHTML = `<div class="cap">✔</div><img src="${s.img}" alt="Assinatura de ${esc(v.nome)}">`;
+    } else if (!fin && ataAssinavel(ata) && temAssinaturaReal(v)){
+      m.className = "marca assinar";
+      m.textContent = `✍ ${v.nome.split(" ")[0]}`;
+      m.onclick = () => modalAssinar(v.k);
+    } else {
+      m.className = "marca falta";
+      m.textContent = `${v.nome} — não assinou`;
+    }
+    wrap.appendChild(m);
+  });
+}
+
+/* ---------- CALIBRAÇÃO DO MODELO (admin, uma vez) ---------- */
+function iniciarCalibracao(){
+  const ata = ATAS[ataAtual]; if (!ata) return;
+  if (!$("#pdfBox").querySelector(".pagWrap")){ toast("Aguarde o PDF carregar para marcar os pontos.", true); return; }
+  calib.ativo = true;
+  calib.trab = JSON.parse(JSON.stringify(MODELO || {}));
+  const falta = vagas(ata).find(v => !calib.trab[v.k]);
+  calib.sel = (falta || vagas(ata)[0]).k;
+  montarBarraCalib(); ligarCliquesCalib(true); desenharAssinaturas();
+  toast("Toque num nome e depois na linha da ata onde ele assina.");
+}
+function montarBarraCalib(){
+  const ata = ATAS[ataAtual];
+  let bar = $("#barraPos");
+  if (!bar){ bar = document.createElement("div"); bar.id = "barraPos"; bar.className = "barraPos"; $("#pdfBox").parentNode.insertBefore(bar, $("#pdfBox")); }
+  const chips = vagas(ata).map(v => {
+    const ok = !!calib.trab[v.k];
+    return `<button class="chipV ${ok ? "ok" : ""} ${calib.sel === v.k ? "sel" : ""}" data-pk="${v.k}">${ok ? "✓ " : ""}${esc(v.nome)}</button>`;
+  }).join("");
+  const n = Object.keys(calib.trab).length, t = vagas(ata).length;
+  bar.innerHTML = `<div style="font-weight:700;color:var(--azul)">Modelo de assinaturas — marque as linhas da ata (${n}/${t})</div>
+    <div class="info">Este modelo vale para <b>todas as atas</b>. Toque no nome e depois no ponto da ata (sobre a linha). Toque numa marca para removê-la. Como as linhas ficam ao final, marque na última página.</div>
+    <div class="chips">${chips}</div>
+    <div class="linha" style="justify-content:flex-end">
+      <button class="btn claro peq" id="pbLimpar">Limpar todas</button>
+      <button class="btn claro peq" id="pbCancelar">Cancelar</button>
+      <button class="btn ouro peq" id="pbSalvar">Salvar modelo</button></div>`;
+  bar.querySelectorAll("[data-pk]").forEach(b => b.onclick = () => { calib.sel = b.dataset.pk; montarBarraCalib(); desenharAssinaturas(); });
+  $("#pbLimpar").onclick = () => { calib.trab = {}; montarBarraCalib(); desenharAssinaturas(); };
+  $("#pbCancelar").onclick = () => sairCalib(false);
+  $("#pbSalvar").onclick = () => sairCalib(true);
+}
+function ligarCliquesCalib(on){
+  $("#pdfBox").querySelectorAll(".pagWrap").forEach(w => {
+    w.style.cursor = on ? "crosshair" : "";
+    w.onclick = on ? (e => cliqueCalib(e, w)) : null;
+  });
+}
+function cliqueCalib(e, wrap){
+  if (!calib.ativo) return;
+  if (!calib.sel){ toast("Escolha um vereador primeiro.", true); return; }
+  const box = $("#pdfBox"), nPag = +box.dataset.npag || box.querySelectorAll(".pagWrap").length;
+  const r = wrap.getBoundingClientRect();
+  const fx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  const fy = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+  calib.trab[calib.sel] = {dist: nPag - (+wrap.dataset.pagina), fx, fy};
+  const ata = ATAS[ataAtual];
+  const prox = vagas(ata).find(v => !calib.trab[v.k]);
+  if (prox) calib.sel = prox.k;
+  montarBarraCalib(); desenharAssinaturas();
+}
+async function sairCalib(salvar){
+  if (salvar){
+    try { await Store.salvarModelo(calib.trab); MODELO = calib.trab; toast("Modelo de assinaturas salvo."); }
+    catch(err){ toast("Erro ao salvar o modelo: " + err.message, true); return; }
+  }
+  calib.ativo = false; calib.sel = null;
+  const bar = $("#barraPos"); if (bar) bar.remove();
+  ligarCliquesCalib(false); desenharAssinaturas();
+}
+
+/* =====================================================================
+   FINALIZAÇÃO E PDF ASSINADO
+   ===================================================================== */
+async function finalizar(){
+  const ata = ATAS[ataAtual]; const n = assinadas(ata), t = total(ata);
+  const semMod = vagas(ata).filter(v => (ata.assinaturas||{})[v.vk] && !MODELO[v.k]);
+  const ok = await confirmar("Finalizar ata",
+    (n < t ? `<div class="alerta aviso">Faltam <b>${t-n}</b> assinatura(s). Quem não assinou simplesmente não terá assinatura na linha.</div>` : "") +
+    (semMod.length ? `<div class="alerta aviso">${semMod.length} assinatura(s) ainda sem posição no modelo irão para uma folha reserva no fim. Defina o modelo para que caiam sobre as linhas da ata.</div>` : "") +
+    "Ao finalizar, a ata é lacrada: ninguém mais poderá assinar. As assinaturas são aplicadas sobre as linhas da própria ata e um manifesto de autenticidade é anexado ao final.",
+    "Finalizar e lacrar");
+  if (!ok) return;
+  toast("Gerando PDF assinado…");
+  try {
+    await garantirLinhas(ata.id);                 // garante a detecção das linhas da última página
+    const finalizadaEm = Store.agora();
+    const codigo = await codigoVerificacao(ata);
+    const bytes = await gerarPdfAssinado({...ata, codigo, finalizadaEm});
+    const finalHash = await sha256Hex(bytes);
+    await Store.salvarArquivo("finais", ata.id, bytesToB64(bytes));
+    await Store.atualizarAta(ata.id, {status: "finalizada", finalizadaEm, codigo, finalHash});
+    toast("Ata finalizada e lacrada.");
+  } catch(err){ console.error(err); toast("Erro ao finalizar: " + err.message, true); }
+}
+
+async function baixarFinal(){
+  const ata = ATAS[ataAtual];
+  const b64 = await Store.lerArquivo("finais", ata.id);
+  if (!b64) return toast("PDF final não encontrado.", true);
+  const bytes = b64ToBytes(b64);
+  if (await sha256Hex(bytes) !== ata.finalHash) return toast("O PDF final armazenado não confere com o registro!", true);
+  baixar(bytes, `${(ata.numero || ata.titulo).replace(/[^\w\-]+/g,"_")}_assinada.pdf`);
+}
+
+async function imprimirFinal(){
+  const ata = ATAS[ataAtual];
+  const b64 = await Store.lerArquivo("finais", ata.id);
+  if (!b64) return toast("PDF final não encontrado.", true);
+  const bytes = b64ToBytes(b64);
+  if (await sha256Hex(bytes) !== ata.finalHash) return toast("O PDF final armazenado não confere com o registro!", true);
+  const url = URL.createObjectURL(new Blob([bytes], {type:"application/pdf"}));
+  // tenta imprimir direto por um iframe oculto; se o navegador bloquear, abre em nova aba p/ imprimir
+  const ifr = document.createElement("iframe");
+  ifr.style.position = "fixed"; ifr.style.right = "0"; ifr.style.bottom = "0";
+  ifr.style.width = "0"; ifr.style.height = "0"; ifr.style.border = "0";
+  ifr.src = url;
+  ifr.onload = () => {
+    try { ifr.contentWindow.focus(); ifr.contentWindow.print(); }
+    catch(e){ window.open(url, "_blank"); }
+    setTimeout(() => { URL.revokeObjectURL(url); ifr.remove(); }, 60000);
+  };
+  document.body.appendChild(ifr);
+  toast("Abrindo impressão…");
+}
+
+async function gerarPdfAssinado(ata){
+  const {PDFDocument, StandardFonts, rgb} = PDFLib;
+  const orig = b64ToBytes(pdfCache[ata.id] || await Store.lerArquivo("pdfs", ata.id));
+  const doc = await PDFDocument.load(orig, {ignoreEncryption: true});
+  const fN = await doc.embedFont(StandardFonts.Helvetica), fB = await doc.embedFont(StandardFonts.HelveticaBold);
+  const fM = await doc.embedFont(StandardFonts.Courier);
+  const preto = rgb(0,0,0), cinza = rgb(.35,.35,.35), azul = rgb(.06,.16,.29);
+  const sigs = ata.assinaturas || {};
+  const nOrig = doc.getPageCount();
+  const pontos = obterPontos(ata);                         // detecção automática + ajuste manual
+
+  // assinaturas feitas que não têm ponto (linha não localizada) caem numa folha de reserva
+  const assinados = vagas(ata).filter(v => sigs[v.vk]);
+  const semPos = assinados.filter(v => !pontos[v.k]);
+  const totalPag = nOrig + (semPos.length ? 1 : 0) + 1;   // + folha reserva (se houver) + manifesto
+
+  const rodape = (pg, i) => {
+    const {width} = pg.getSize();
+    const txt = `Documento assinado eletronicamente · Código de verificação ${ata.codigo} · Página ${i} de ${totalPag}`;
+    pg.drawText(txt, {x: (width - fN.widthOfTextAtSize(txt, 7)) / 2, y: 14, size: 7, font: fN, color: cinza});
+  };
+  const paginas = doc.getPages();
+  paginas.forEach((pg, i) => rodape(pg, i + 1));
+
+  // ---- ASSINATURAS SOBRE AS LINHAS DA PRÓPRIA ATA (modelo fixo) ----
+  // Cada assinatura é padronizada: altura uniforme, base assentada na linha e centralizada no ponto.
+  const ALT = 26;                       // altura uniforme da assinatura (pt) — reta sobre a linha
+  for (const v of assinados){
+    const ent = pontos[v.k]; if (!ent) continue;
+    const idx = Math.min(nOrig - 1, Math.max(0, nOrig - 1 - (ent.dist || 0)));
+    const page = paginas[idx]; const {width: PW, height: PH} = page.getSize();
+    const cx = ent.fx * PW, lineY = PH - ent.fy * PH;     // ponto detectado = a linha
+    const s = sigs[v.vk];
+    const png = await doc.embedPng(s.img);
+    const larg = Math.min(png.width * ALT / png.height, PW * 0.42);
+    const altR = png.height * larg / png.width;
+    page.drawImage(png, {x: cx - larg / 2, y: lineY + 2, width: larg, height: altR});  // base assentada logo acima da linha
+  }
+
+  const W = 595.28, H = 841.89;
+
+  // ---- FOLHA RESERVA (só p/ assinaturas sem ponto no modelo) ----
+  if (semPos.length){
+    const pg = doc.addPage([W, H]);
+    pg.drawText("ASSINATURAS", {x: 50, y: H - 60, size: 13, font: fB, color: azul});
+    pg.drawText("(assinaturas ainda sem posição no modelo da ata)", {x: 50, y: H - 76, size: 9, font: fN, color: cinza});
+    let y = H - 120;
+    for (const v of semPos){
+      const s = sigs[v.vk];
+      pg.drawLine({start: {x: 150, y: y - 2}, end: {x: 520, y: y - 2}, thickness: .9, color: preto});
+      const png = await doc.embedPng(s.img);
+      const larg = Math.min(png.width * 38 / png.height, 360), altR = png.height * larg / png.width;
+      pg.drawImage(png, {x: 150 + (370 - larg) / 2, y: y - 1, width: larg, height: altR});
+      pg.drawText(`${v.nome} — ${v.cargo} · ${horaBR(s.em)}`, {x: 150, y: y - 12, size: 7, font: fN, color: cinza});
+      y -= 62; if (y < 90) y = 90;
+    }
+    rodape(pg, nOrig + 1);
+  }
+
+  // ---- MANIFESTO DE ASSINATURAS ----
+  const mf = doc.addPage([W, H]); let my = H - 60;
+  const t = (txt, o = {}) => { mf.drawText(txt, {x: o.x ?? 50, y: my, size: o.size ?? 9, font: o.font ?? fN, color: o.color ?? preto}); my -= o.gap ?? 14; };
+  t("MANIFESTO DE ASSINATURAS ELETRÔNICAS", {font: fB, size: 14, color: azul, gap: 22});
+  t(CONFIG.CAMARA, {font: fB, size: 10});
+  t(`${ata.titulo}${ata.numero ? " — Nº " + ata.numero : ""} · Sessão de ${dataBR(ata.data)}`, {size: 10, gap: 20});
+  t(`Código de verificação: ${ata.codigo}`, {font: fB, size: 12, color: azul, gap: 18});
+  t(`Arquivo original: ${ata.pdfNome}`);
+  t("SHA-256 do documento original:");
+  t(ata.pdfHash, {font: fM, size: 8.2, gap: 16});
+  t(`Publicada para assinatura em ${horaBR(ata.criadaEm)} · Lacrada em ${horaBR(ata.finalizadaEm)}`, {gap: 24});
+  mf.drawLine({start: {x: 50, y: my + 10}, end: {x: W - 50, y: my + 10}, thickness: .5, color: cinza});
+  const ordem = vagas(ata).filter(v => sigs[v.vk]).sort((a, b) => sigs[a.vk].em - sigs[b.vk].em);
+  for (const v of ordem){
+    const s = sigs[v.vk];
+    t(`${s.nome} — ${s.cargo}`, {font: fB, size: 10, gap: 13});
+    t(`Assinado em ${horaBR(s.em)} (horário de Brasília) · Declaração de leitura aceita`, {size: 8, color: cinza, gap: 11});
+    t(`Hash da assinatura: ${s.hash}`, {font: fM, size: 7.2, color: cinza, gap: 18});
+  }
+  const faltam = vagas(ata).filter(v => !sigs[v.vk]);
+  if (faltam.length) t(`Não assinaram: ${faltam.map(v => v.nome).join(", ")}`, {size: 9, color: rgb(.6,.1,.1), gap: 20});
+  my -= 6;
+  [
+    "Este documento foi assinado eletronicamente no Sistema Plenário da Câmara Municipal de Almadina.",
+    "Cada assinatura vincula o signatário, o cargo, a data/hora e a impressão digital SHA-256 do documento original.",
+    "Qualquer alteração no conteúdo da ata invalida as impressões digitais acima. Para conferir a autenticidade,",
+    "use a opção \"Verificar autenticidade\" do sistema com o código de verificação ou com este arquivo PDF."
+  ].forEach(l => t(l, {size: 8.5, color: cinza, gap: 12}));
+  rodape(mf, totalPag);
+
+  doc.setTitle(`${ata.titulo} — assinada`); doc.setSubject(`Código de verificação ${ata.codigo}`);
+  doc.setProducer("Sistema Plenário — Câmara Municipal de Almadina"); doc.setCreator("Sistema Plenário");
+  doc.setCreationDate(new Date(ata.finalizadaEm)); doc.setModificationDate(new Date(ata.finalizadaEm));
+  return doc.save();
+}
+
+/* =====================================================================
+   VERIFICAÇÃO
+   ===================================================================== */
+$("#btnVerificar").onclick = async () => {
+  const out = $("#verResultado"); const f = $("#verArquivo").files[0]; const cod = $("#verCodigo").value.trim().toUpperCase();
+  if (!f && !cod){ out.innerHTML = '<div class="alerta aviso">Envie um PDF ou digite o código de verificação.</div>'; return; }
+  out.innerHTML = '<div class="alerta aviso"><span class="carreg"></span> Verificando…</div>';
+  let ata = null, como = "";
+  if (f){
+    const h = await sha256Hex(new Uint8Array(await f.arrayBuffer()));
+    ata = Object.values(ATAS).find(a => a.finalHash === h); como = "PDF assinado final";
+    if (!ata){ ata = Object.values(ATAS).find(a => a.pdfHash === h); como = "PDF original da ata"; }
+    if (!ata){ out.innerHTML = `<div class="alerta erro"><b>Documento NÃO reconhecido.</b> Este arquivo não corresponde a nenhuma ata registrada — ou foi alterado depois de assinado.<br><span class="hash" style="display:block;margin-top:8px">SHA-256: ${h}</span></div>`; return; }
+  } else {
+    ata = Object.values(ATAS).find(a => a.codigo === cod); como = "código de verificação";
+    if (!ata){ out.innerHTML = '<div class="alerta erro"><b>Código não encontrado.</b> Confira se foi digitado corretamente.</div>'; return; }
+  }
+  // confere se o registro interno continua íntegro
+  let integro = true;
+  for (const v of vagas(ata)){
+    const s = (ata.assinaturas || {})[v.vk]; if (!s) continue;
+    const base = {ata: ata.id, docHash: s.docHash, nome: s.nome, cargo: s.cargo, em: s.em, imgHash: await sha256Hex(s.img)};
+    if (await sha256Hex(JSON.stringify(base)) !== s.hash || s.docHash !== ata.pdfHash) integro = false;
+  }
+  if (ata.codigo && await codigoVerificacao(ata) !== ata.codigo) integro = false;
+  const sigs = ata.assinaturas || {};
+  out.innerHTML = `<div class="alerta ${integro ? "ok" : "erro"}">
+    <b>${integro ? "✔ Documento AUTÊNTICO" : "✖ Registro com divergência"}</b> — identificado pelo ${como}.<br>
+    ${esc(ata.titulo)}${ata.numero ? " · Nº " + esc(ata.numero) : ""} · Sessão de ${dataBR(ata.data)} · ${ata.status === "finalizada" ? "Finalizada em " + horaBR(ata.finalizadaEm) : "Ainda em assinatura"}
+    ${ata.codigo ? `<br>Código: <b>${esc(ata.codigo)}</b>` : ""}</div>
+    <table class="auditoria"><tr><th>Signatário</th><th>Cargo</th><th>Data/hora</th></tr>
+    ${vagas(ata).map(v => `<tr><td>${esc(v.nome)}</td><td>${esc(v.cargo)}</td><td>${sigs[v.vk] ? "✔ " + horaBR(sigs[v.vk].em) : '<span style="color:var(--erro)">não assinou</span>'}</td></tr>`).join("")}</table>
+    <div style="margin-top:12px"><button class="btn peq" onclick="abrirAta('${ata.id}')">Abrir a ata</button></div>`;
+};
+
+/* =====================================================================
+   INÍCIO
+   ===================================================================== */
+(async () => {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  try { await Store.iniciar(); }
+  catch(err){ console.error(err); toast("Erro ao conectar ao armazenamento: " + err.message, true); return; }
+  $("#seloModo").textContent = Store.modo === "firebase" ? "● Sincronizado" : "● Somente este aparelho";
+  $("#seloModo").title = Store.modo === "firebase" ? "Dados no Firebase, compartilhados entre os aparelhos" : "Configure o Firebase para sincronizar entre os tablets";
+  // Nos tablets (vereadores) só aparece a função de assinar; o modo administrador fica no notebook da Mesa.
+  try {
+    var ehTablet = navigator.maxTouchPoints > 0 && (matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ''));
+    if (ehTablet && $("#btnAdmin")) $("#btnAdmin").style.display = "none";
+  } catch(e){}
+  try { MODELO = await Store.lerModelo(); } catch(e){ MODELO = {}; }
+  Store.ouvirModelo(m => { MODELO = m || {}; if (ataAtual && !calib.ativo) desenharAssinaturas(); });
+  Store.aoMudar(atas => {
+    ATAS = atas;
+    if (ataAtual && ATAS[ataAtual]) renderAta();
+    else if (ataAtual && !ATAS[ataAtual]){ ataAtual = null; mostrar("vAtas"); }
+    if (!ataAtual) renderLista();
+  });
+  const m = location.hash.match(/^#ata-(.+)$/);
+  if (m && ATAS[m[1]]) abrirAta(m[1]); else renderLista();
+})();
+</script>
+</body>
+</html>
