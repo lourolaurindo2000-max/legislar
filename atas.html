@@ -41,6 +41,8 @@
     var a = document.createElement('a');
     a.id = 'btnAssinaturaAtas';
     a.href = 'assinatura.html';
+    // sempre a versão mais nova (evita cópia antiga guardada no tablet)
+    a.addEventListener('click', function () { a.href = 'assinatura.html?v=' + Date.now(); });
     a.setAttribute('aria-label', 'Abrir Assinatura Digital de Atas');
     a.innerHTML =
       '<span style="width:44px;height:44px;flex:none;border-radius:12px;display:grid;place-items:center;background:radial-gradient(circle at 30% 30%,#e7d3a3,#b8913a);color:#0f2a4a;font-size:22px">✍️</span>' +
