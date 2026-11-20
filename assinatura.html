@@ -145,7 +145,7 @@ label.campo input,label.campo select{padding:11px 12px;border:1px solid var(--li
 .lixeira{border:1px solid #f1c4c4;background:#fff5f5;color:var(--erro);border-radius:10px;width:38px;height:38px;font-size:17px;display:grid;place-items:center;flex:none;transition:.15s}
 .lixeira:hover{background:var(--erro);color:#fff;border-color:var(--erro)}
 .marca{position:absolute;transform:translate(-50%,-50%);z-index:6;pointer-events:none}
-.marca.sig{transform:translate(-50%,-100%)}            /* base da assinatura encosta na linha */
+.marca.sig{transform:translate(-50%,-82%)}             /* assinatura assentada sobre a linha (desce um pouco, como à mão) */
 .marca.sig img{display:block;height:34px;width:auto;max-width:230px;margin:0 auto}
 .marca .cap{font-size:8px;color:var(--ok);text-align:center;white-space:nowrap;margin-top:0}
 .marca.assinar{pointer-events:auto;cursor:pointer;border:1.5px dashed var(--ouro);background:rgba(231,211,163,.35);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:600;color:#8a6d1f;white-space:nowrap}
@@ -1256,7 +1256,7 @@ async function gerarPdfAssinado(ata){
     const png = await doc.embedPng(s.img);
     const larg = Math.min(png.width * ALT / png.height, PW * 0.42);
     const altR = png.height * larg / png.width;
-    page.drawImage(png, {x: cx - larg / 2, y: lineY + 2, width: larg, height: altR});  // base assentada logo acima da linha
+    page.drawImage(png, {x: cx - larg / 2, y: lineY - altR * 0.22, width: larg, height: altR});  // assentada sobre a linha (igual à tela)
   }
 
   const W = 595.28, H = 841.89;
