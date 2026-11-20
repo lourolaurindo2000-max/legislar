@@ -198,7 +198,7 @@ body.assinante .marca.assinar{font-size:15px;padding:10px 16px;border-width:2px;
       <button class="btn ouro oculto" id="btnNova">+ Nova ata para assinatura</button>
     </div>
     <div class="filtros">
-      <select id="fAno"><option value="">Todos os anos</option></select>
+      <select id="fAno"></select>
       <select id="fStatus"><option value="">Todas</option><option value="aberta">Aguardando assinaturas</option><option value="finalizada">Finalizadas</option></select>
       <input id="fBusca" placeholder="Buscar por título ou número">
     </div>
@@ -550,9 +550,11 @@ function renderLista(){
   }
   $("#btnNova").classList.toggle("oculto", !admin);
   $("#btnAdmin").textContent = admin ? "🔓" : "🔒";
-  const anos = [...new Set(Object.values(ATAS).map(a => a.data.slice(0,4)))].sort().reverse();
-  const fa = $("#fAno"), sel = fa.value;
-  fa.innerHTML = '<option value="">Todos os anos</option>' + anos.map(a => `<option ${a===sel?"selected":""}>${a}</option>`).join("");
+  // anos fixos 2026, 2027, 2028 (+ outros que tiverem atas); começa no ano atual
+  const anos = [...new Set(["2026","2027","2028", ...Object.values(ATAS).map(a => a.data.slice(0,4))])].sort();
+  const fa = $("#fAno"), atual = String(new Date().getFullYear());
+  const sel = fa.value || (anos.includes(atual) ? atual : anos[0]);
+  fa.innerHTML = anos.map(a => `<option ${a===sel?"selected":""}>${a}</option>`).join("");
   const fs = $("#fStatus").value, fb = $("#fBusca").value.trim().toLowerCase();
   const itens = Object.values(ATAS)
     .filter(a => (!fa.value || a.data.startsWith(fa.value)) && (!fs || a.status === fs) &&
