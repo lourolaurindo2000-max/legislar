@@ -147,6 +147,7 @@ label.campo input,label.campo select{padding:11px 12px;border:1px solid var(--li
 .marca.sig img{display:block;height:34px;width:auto;max-width:230px;margin:0 auto}
 .marca .cap{font-size:8px;color:var(--ok);text-align:center;white-space:nowrap;margin-top:0}
 .marca.assinar{pointer-events:auto;cursor:pointer;border:1.5px dashed var(--ouro);background:rgba(231,211,163,.35);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:600;color:#8a6d1f;white-space:nowrap}
+body.assinante .marca.assinar{font-size:15px;padding:10px 16px;border-width:2px;background:rgba(231,211,163,.75);box-shadow:0 2px 8px rgba(0,0,0,.2)}   /* tablet: fácil de tocar */
 .marca.ponto{pointer-events:auto;cursor:pointer;border:1.5px dashed var(--azul2);background:rgba(24,64,110,.12);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:600;color:var(--azul);white-space:nowrap}
 .marca.ponto.sel{background:var(--azul);color:#fff;border-style:solid}
 .marca.falta{border:1px dashed #c9b98e;background:rgba(0,0,0,.02);border-radius:8px;padding:4px 8px;font-size:10px;color:#9a6700;white-space:nowrap}
@@ -592,7 +593,14 @@ $("#btnNova").onclick = () => {
       };
       await Store.salvarArquivo("pdfs", id, bytesToB64(bytes));
       await Store.salvarAta(ata);
-      fecharModal(); toast("Ata publicada para assinatura."); abrirAta(id);
+      // já vai para os tablets: grava as linhas de assinatura (iguais em todo aparelho) e envia
+      pdfCache[id] = bytesToB64(bytes);
+      try {
+        const linhas = await garantirLinhas(id);
+        if (linhas && linhas.length) await Store.atualizarAta(id, {linhas: linhas.map(l => ({fy: +l.fy.toFixed(5), x0f: +l.x0f.toFixed(5), x1f: +l.x1f.toFixed(5)}))});
+        await Store.definirEnviada(id);
+        fecharModal(); toast("Ata publicada e enviada aos tablets. Se faltou alguém, toque em 👥 Marcar ausentes."); abrirAta(id);
+      } catch(e2){ console.error(e2); fecharModal(); toast("Ata publicada, mas não foi enviada aos tablets: toque em 📲 Enviar aos tablets.", true); abrirAta(id); }
     } catch(err){
       console.error(err); $("#nSalvar").disabled = false; $("#nSalvar").textContent = "Publicar para assinatura";
       $("#nErro").innerHTML = `<div class="alerta erro">Não foi possível publicar: ${esc(err.message)}</div>`;
@@ -684,7 +692,7 @@ function renderAta(){
   if (admin) acoes.push(`<button class="btn claro" id="aModelo">✍ Ajustar posições (opcional)</button>`);
   const ehEnviada = ENVIADA && ENVIADA.id === ata.id;
   if (admin && !fin && Store.modo === "firebase")
-    acoes.push(ehEnviada ? `<button class="btn claro" id="aRecolher">⏹ Recolher dos tablets</button>`
+    acoes.push(ehEnviada ? `<button class="btn verde" id="aEnviar">👥 Marcar ausentes</button><button class="btn claro" id="aRecolher">⏹ Recolher dos tablets</button>`
                          : `<button class="btn verde" id="aEnviar">📲 Enviar aos tablets</button>`);
   if (admin && !fin) acoes.push(`<button class="btn" id="aFinalizar">Finalizar ata</button>`);
   if (admin && !fin) acoes.push(`<button class="btn verm" id="aExcluir">Excluir</button>`);
@@ -697,14 +705,14 @@ function renderAta(){
   if ($("#aEnviar")) $("#aEnviar").onclick = () => {
     if (estado === "verificando"){ toast("Aguarde: a ata ainda está carregando.", true); return; }
     const aus = ata.ausentes || {};
-    abrirModal(`<header><h2>Enviar aos tablets</h2><button class="x" onclick="fecharModal()">×</button></header>
+    abrirModal(`<header><h2>${ehEnviada ? "Presença na sessão" : "Enviar aos tablets"}</h2><button class="x" onclick="fecharModal()">×</button></header>
     <div class="corpo">
       <div class="info">Desmarque quem <b>faltou</b> à sessão. Quando todos os <b>presentes</b> assinarem, a ata é lacrada sozinha e vai para Atas / Proposições.</div>
       ${vagas(ata).map(v => `<label class="check" style="padding:8px 4px;border-bottom:1px solid var(--linha)"><input type="checkbox" data-pres="${esc(v.vk)}" ${aus[v.vk] ? "" : "checked"} ${(ata.assinaturas||{})[v.vk] ? "disabled" : ""}>
         <span><b>${esc(v.nome)}</b> <small class="info">— ${esc(v.cargo)}${(ata.assinaturas||{})[v.vk] ? " · já assinou" : ""}</small></span></label>`).join("")}
       <div id="eErro"></div>
     </div>
-    <footer><button class="btn claro" onclick="fecharModal()">Cancelar</button><button class="btn verde" id="eOk">📲 Enviar aos tablets</button></footer>`);
+    <footer><button class="btn claro" onclick="fecharModal()">Cancelar</button><button class="btn verde" id="eOk">${ehEnviada ? "Salvar presença" : "📲 Enviar aos tablets"}</button></footer>`);
     $("#eOk").onclick = async () => {
       const ausentes = {};
       document.querySelectorAll("[data-pres]").forEach(c => { if (!c.checked) ausentes[c.dataset.pres] = true; });
@@ -714,10 +722,10 @@ function renderAta(){
         const linhas = await garantirLinhas(ata.id);
         await Store.atualizarAta(ata.id, {ausentes: Object.keys(ausentes).length ? ausentes : null,
           linhas: linhas && linhas.length ? linhas.map(l => ({fy: +l.fy.toFixed(5), x0f: +l.x0f.toFixed(5), x1f: +l.x1f.toFixed(5)})) : null});
-        await Store.definirEnviada(ata.id);
+        if (!ehEnviada) await Store.definirEnviada(ata.id);   // já enviada: só atualiza a presença (os tablets não recarregam)
         fecharModal();
         const np = vagas(ata).length - Object.keys(ausentes).length;
-        toast(`Ata enviada aos tablets: ${np} presente(s)` + (np < vagas(ata).length ? `, ${vagas(ata).length - np} ausente(s).` : "."));
+        toast((ehEnviada ? "Presença salva" : "Ata enviada aos tablets") + `: ${np} presente(s)` + (np < vagas(ata).length ? `, ${vagas(ata).length - np} ausente(s).` : "."));
       } catch(err){ console.error(err); $("#eOk").disabled = false; $("#eErro").innerHTML = `<div class="alerta erro">Não foi possível enviar: ${esc(err.message)}</div>`; }
     };
   };
