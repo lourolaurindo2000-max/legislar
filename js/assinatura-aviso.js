@@ -10,8 +10,10 @@
   try { if (W.self !== W.top) return; } catch (e) { return; }
   var UA = navigator.userAgent || '';
   if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(UA)) return;
-  var ehTablet = false;
-  try { ehTablet = navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPad|iPhone|Mobile/i.test(UA)); } catch (e) {}
+  // notebook = mouse/touchpad e não é Android/iPad/celular (mesma regra de js/fb-auth.js); notebook com tela de toque continua notebook
+  var ehNotebook = false, ehTablet = false;
+  try { ehNotebook = !/Android|iPhone|iPad|iPod|Mobile/i.test(UA) && matchMedia('(any-pointer: fine)').matches; } catch (e) {}
+  try { ehTablet = !ehNotebook && navigator.maxTouchPoints > 0; } catch (e) {}
 
   var RAIZ = (W.__DOC_RAIZ || 'legislar') + '/assinaturaAtas';
   // ids iguais aos da Votação/Anotações
@@ -63,8 +65,8 @@
   function esconder() { if (caixa) caixa.style.display = 'none'; }
 
   function ehMesa() {
-    try { if (W.PldAuth && PldAuth.conta()) return PldAuth.conta() === 'mesa'; } catch (e) {}
-    return !ehTablet;   // login ainda não carregou: decide pelo tipo de aparelho
+    var c = null; try { c = W.PldAuth && PldAuth.conta(); } catch (e) {}
+    return c === 'mesa' || (ehNotebook && c !== 'tv');
   }
 
   var tentativas = 0;
@@ -82,7 +84,6 @@
       var sigs = ata.assinaturas || {}, n = contar(sigs), t = totalVagas(ata);
       var tit = esc(ata.titulo || 'Ata') + (ata.numero ? ' (Nº ' + esc(ata.numero) + ')' : '');
       if (ehMesa()) {
-        if (ehTablet && !(W.PldAuth && PldAuth.conta() === 'mesa')) return esconder();
         if (n >= t) mostrar('✅ Ata assinada por todos os vereadores', tit + ' — pronta para lacrar e imprimir.',
           'Abrir para imprimir', 'assinatura.html?v=' + Date.now() + '#ata-' + env.id, 'as_mesa_' + env.id);
         else esconder();

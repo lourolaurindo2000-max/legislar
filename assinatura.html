@@ -401,12 +401,16 @@ let calib = {ativo:false, sel:null, trab:{}};  // estado da calibração do mode
 let linhasAta = {};                    // linhas detectadas automaticamente na última página, por id de ata
 try { admin = sessionStorage.getItem("adminAtas") === "1"; } catch(e){}
 // Tablets (vereadores) não têm acesso à configuração: só leem e assinam o que a Mesa enviar.
-let EH_TABLET = false;
-try { EH_TABLET = navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '')); } catch(e){}
+// Notebook = tem mouse/touchpad e não é Android/iPad/celular (mesma regra do login do sistema, js/fb-auth.js).
+// Notebook com tela de toque continua sendo notebook.
+let EH_NOTEBOOK = false, EH_TABLET = false;
+try { EH_NOTEBOOK = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') && matchMedia('(any-pointer: fine)').matches; } catch(e){}
+try { EH_TABLET = !EH_NOTEBOOK && navigator.maxTouchPoints > 0; } catch(e){}
 if (EH_TABLET) admin = false;
 // Só o notebook da Mesa (login "mesa") configura. Tablets/celulares (login "vereadores") e TV: só assinam.
 let CONTA = null;                      // conta do login do aparelho ("mesa", "vereadores", "tv")
-const ehAssinante = () => CONTA ? CONTA !== "mesa" : EH_TABLET;   // tablets/celulares dos vereadores
+const ehMesaAparelho = () => CONTA === "mesa" || (EH_NOTEBOOK && CONTA !== "tv");   // notebook do operador
+const ehAssinante = () => !ehMesaAparelho() && (EH_TABLET || (CONTA && CONTA !== "mesa"));   // tablets/celulares dos vereadores
 const autoAberta = {};                 // cada ata enviada abre sozinha uma vez (depois o vereador navega livre)
 // Vereador: ao entrar na página, já cai na ata que a Mesa enviou para assinar.
 function abrirPendente(){
@@ -533,7 +537,7 @@ function confirmar(titulo, texto, rotuloOk, perigo){
 
 /* ---------- ADMIN ---------- */
 $("#btnAdmin").onclick = () => {
-  if (EH_TABLET && !(window.PldAuth && PldAuth.conta() === "mesa")) return;   // segurança extra: tablet nunca vira administrador
+  if (!EH_NOTEBOOK && !(window.PldAuth && PldAuth.conta() === "mesa")) return;   // segurança extra: tablet nunca vira administrador
   // Acesso de administrador liberado sem senha
   admin = !admin;
   try{ admin ? sessionStorage.setItem("adminAtas","1") : sessionStorage.removeItem("adminAtas"); }catch(e){}
@@ -1224,12 +1228,12 @@ $("#btnVerificar").onclick = async () => {
   $("#seloModo").title = Store.modo === "firebase" ? "Dados no Firebase, compartilhados entre os aparelhos" : "Configure o Firebase para sincronizar entre os tablets";
   // Nos tablets (vereadores) só aparece a função de assinar; o modo administrador fica no notebook da Mesa.
   try {
-    if (EH_TABLET) aplicarPermissao(false);
+    if (EH_TABLET) aplicarPermissao(false); else if (EH_NOTEBOOK) aplicarPermissao(true);
     // decisão final pelo login do aparelho (mais seguro que o tipo de tela)
     if (Store.modo === "firebase" && firebase.auth) firebase.auth().onAuthStateChanged(u => {
       if (!u || !u.email) return;
       CONTA = u.email.split("@")[0];
-      aplicarPermissao(CONTA === "mesa");
+      aplicarPermissao(ehMesaAparelho());
       abrirPendente();
     });
   } catch(e){}
