@@ -437,6 +437,58 @@ function aplicarPermissao(ehMesa){
   if (ataAtual && ATAS[ataAtual]) renderAta(); else renderLista();
   verificarAutoFinal();
 }
+/* ---------- DONO DO TABLET (mesmo vínculo da Votação, Presença e Anotações: legislar/votacao/aparelhos) ---------- */
+const VID_NOME = {v1:"Jackson Costa", v2:"Dilson Junior", v3:"Lucas Cavalcante", v4:"Marilene Santos", v5:"Nilza Damasceno",
+  v6:"Rogério Gotado", v7:"Sylas Souza", v8:"José Lindomar", v9:"Wilson Freitas"};
+let APARELHOS = {}, AP_OK = false, ENSAIO = false, MEU_VID = null;
+function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+function lsSet(k, v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e){} }
+function devId(){ let d = lsGet("vp_dev"); if (!d){ d = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); lsSet("vp_dev", d); } return d; }
+function calcMeuVid(){
+  if (ENSAIO){ const m = lsGet("an_meu"); return m && VID_NOME[m] ? m : null; }
+  const dev = devId();
+  for (const vid in APARELHOS) if (APARELHOS[vid] && APARELHOS[vid].dev === dev && VID_NOME[vid]) return vid;
+  return null;
+}
+const meuVk = () => MEU_VID ? chave(VID_NOME[MEU_VID]) : null;
+// no tablet, cada vereador só assina na própria linha; o notebook da Mesa pode colher qualquer assinatura
+const podeAssinarVaga = v => !ehAssinante() || (!!MEU_VID && v.vk === meuVk());
+function escolherDono(){
+  if (!ehAssinante() || MEU_VID || !AP_OK || $("#fundo").classList.contains("on")) return;
+  const dev = devId();
+  abrirModal(`<header><h2>De quem é este tablet?</h2></header>
+  <div class="corpo">
+    <div class="info">Toque no seu nome. O tablet fica reservado para você (o mesmo vínculo da Votação, da Presença e de Anotações). Assim, aqui aparece só o <b>seu</b> campo de assinatura.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px">
+      ${Object.keys(VID_NOME).map(vid => { const outro = !ENSAIO && APARELHOS[vid] && APARELHOS[vid].dev && APARELHOS[vid].dev !== dev;
+        return `<button class="btn ${outro ? "claro" : ""}" data-dono="${vid}" ${outro ? "disabled" : ""} style="padding:14px">${esc(VID_NOME[vid])}${outro ? "<br><small>🔒 outro tablet</small>" : ""}</button>`; }).join("")}
+    </div>
+    <div id="dErro"></div>
+  </div>`);
+  document.querySelectorAll("[data-dono]").forEach(b => b.onclick = async () => {
+    const vid = b.dataset.dono;
+    if (!await confirmar(VID_NOME[vid], `Este tablet ficará reservado para <b>${esc(VID_NOME[vid])}</b> (Documentos, Anotações, Votação, Presença e Assinatura). Confira se é o seu nome.`, "Sim, sou eu")) { escolherDono(); return; }
+    if (ENSAIO){ lsSet("an_meu", vid); MEU_VID = vid; if (ataAtual) renderAta(); return; }
+    Store.db.ref(`legislar/votacao/aparelhos/${vid}`).transaction(cur => {
+      if (cur && cur.dev && cur.dev !== dev) return;
+      return {dev, em: Date.now()};
+    }, (err, ok, snap) => {
+      const v = snap && snap.val();
+      if (err || !ok || !v || v.dev !== dev){ toast(err ? "Sem internet. Tente de novo." : VID_NOME[vid] + " já está vinculado a outro tablet.", true); escolherDono(); return; }
+      APARELHOS[vid] = v; MEU_VID = vid; if (ataAtual) renderAta();
+    }, false);
+  });
+}
+function ouvirDono(){
+  if (Store.modo !== "firebase") return;
+  const reav = () => {
+    const antes = MEU_VID; MEU_VID = calcMeuVid();
+    if (antes !== MEU_VID && ataAtual && ATAS[ataAtual]) renderAta();
+    if (ataAtual && !MEU_VID) escolherDono();
+  };
+  Store.db.ref("legislar/votacao/aparelhos").on("value", s => { APARELHOS = s.val() || {}; AP_OK = true; reav(); });
+  Store.db.ref("legislar/votacao/config/ensaio").on("value", s => { const v = s.val(); ENSAIO = !!(v && v.ligado); reav(); });
+}
 let ENVIADA = null;
 let EH_MESA = false;                   // login "mesa" confirmado (notebook do operador)
 const finalizando = {};
@@ -671,6 +723,7 @@ async function abrirAta(id){
 
 function renderAta(){
   const ata = ATAS[ataAtual]; if (!ata) return;
+  if (ehAssinante() && AP_OK && !MEU_VID) setTimeout(escolherDono, 0);   // tablet sem dono: pergunta de quem é
   const fin = ata.status === "finalizada";
   $("#ataTitulo").textContent = ata.titulo;
   $("#ataMeta").textContent = `${ata.numero ? "Nº " + ata.numero + " · " : ""}Sessão de ${dataBR(ata.data)} · ${assinadas(ata)} de ${total(ata)} assinaturas`;
@@ -695,7 +748,7 @@ function renderAta(){
         <div><div class="lin">${s ? `<img src="${s.img}" alt="Assinatura de ${esc(v.nome)}"><span class="quando">✔ ${horaBR(s.em)}</span>`
           : ausente(ata, v) ? `<span class="info" style="padding-bottom:6px">ausente</span>`
           : fin ? `<span class="info" style="padding-bottom:6px">não assinou</span>`
-          : podeAssinar && temAssinaturaReal(v) ? `<span></span><button class="btn peq ouro assinar" data-vaga="${v.k}">Assinar</button>`
+          : podeAssinar && temAssinaturaReal(v) && podeAssinarVaga(v) ? `<span></span><button class="btn peq ouro assinar" data-vaga="${v.k}">Assinar</button>`
           : podeAssinar ? `<span class="info" style="padding-bottom:6px">aguardando assinatura</span>`
           : `<span class="info" style="padding-bottom:6px">—</span>`}</div>
         <div class="nome">${esc(v.nome)}${v.demais ? "" : " — " + esc(v.cargo)}</div></div></div>`;
@@ -823,6 +876,7 @@ async function modalAssinar(vagaK){
   if (!ataAssinavel(ata)){ toast("Aguarde: a ata ainda está carregando.", true); return; }
   if (!temAssinaturaReal(v)){ toast(`A assinatura de ${v.nome} ainda não foi cadastrada.`, true); return; }
   if (ausente(ata, v)){ toast(`${v.nome} foi marcado(a) como ausente nesta sessão.`, true); return; }
+  if (!podeAssinarVaga(v)){ toast(MEU_VID ? `Este tablet é de ${VID_NOME[MEU_VID]}: só ${VID_NOME[MEU_VID]} assina aqui.` : "Escolha de quem é este tablet para assinar.", true); if (!MEU_VID) escolherDono(); return; }
   abrirModal(`<header><h2>Assinar como ${esc(v.nome)}</h2><button class="x" onclick="fecharModal()">×</button></header>
   <div class="corpo">
     <div class="alerta aviso" style="margin:0">Cargo: <b>${esc(v.cargo)}</b> · ${esc(ata.titulo)} · Sessão de ${dataBR(ata.data)}</div>
@@ -839,7 +893,7 @@ async function modalAssinar(vagaK){
     <label class="check"><input type="checkbox" id="sAceite"><span>Declaro que li a ata e concordo com seu teor. Reconheço esta assinatura eletrônica como minha, com a mesma validade da assinatura manuscrita.</span></label>
     <div id="sErro"></div>
   </div>
-  <footer><button class="btn claro" onclick="fecharModal()">Cancelar</button><button class="btn ouro" id="sOk">Assinar ata</button></footer>`);
+  <footer><button class="btn claro" onclick="fecharModal()">Cancelar</button><button class="btn ${ehAssinante() ? "verde" : "ouro"}" id="sOk">${ehAssinante() ? "✔ Confirmar e enviar" : "Assinar ata"}</button></footer>`);
 
   const real = ASSINATURAS_REAIS[v.vk];
   $("#sPrev").innerHTML = `<img src="${real}" style="max-width:100%;max-height:72px" alt="Assinatura de ${esc(v.nome)}">`;
@@ -848,7 +902,7 @@ async function modalAssinar(vagaK){
   $("#sOk").onclick = async () => {
     const erro = m => $("#sErro").innerHTML = `<div class="alerta erro">${m}</div>`;
     if (!$("#sAceite").checked) return erro("Marque a declaração de leitura e concordância.");
-    const btn = $("#sOk"); btn.disabled = true; btn.innerHTML = '<span class="carreg"></span> Assinando…';
+    const btn = $("#sOk"); btn.disabled = true; btn.innerHTML = '<span class="carreg"></span> ' + (ehAssinante() ? "Enviando…" : "Assinando…");
     try {
       // confere integridade do documento no instante da assinatura
       const b64 = pdfCache[ataAtual] || await Store.lerArquivo("pdfs", ataAtual);
@@ -866,9 +920,18 @@ async function modalAssinar(vagaK){
       if (traco) registro.traco = traco;
       if (Store.modo === "firebase") registro.emServidor = firebase.database.ServerValue.TIMESTAMP;
       await Store.gravarAssinatura(ata.id, v.vk, registro);
-      fecharModal(); toast(`Ata assinada por ${v.nome}.`);
+      fecharModal();
+      if (ehAssinante()){
+        abrirModal(`<header><h2>✅ Assinatura enviada</h2></header>
+        <div class="corpo" style="text-align:center">
+          <div style="font-size:54px;line-height:1">✅</div>
+          <div style="font-size:18px;font-weight:700;color:var(--azul)">${esc(v.nome)}, sua assinatura foi enviada à Mesa.</div>
+          <div class="info">${esc(ata.titulo)} · ${horaBR(em)}<br>Ela já aparece na sua linha da ata, para todos. Quando todos os presentes assinarem, a ata é lacrada e vai para Atas / Proposições.</div>
+        </div>
+        <footer><button class="btn verde" onclick="fecharModal()">OK</button></footer>`);
+      } else toast(`Ata assinada por ${v.nome}.`);
     } catch(err){
-      console.error(err); btn.disabled = false; btn.textContent = "Assinar ata"; erro(esc(err.message));
+      console.error(err); btn.disabled = false; btn.textContent = ehAssinante() ? "✔ Confirmar e enviar" : "Assinar ata"; erro(esc(err.message));
     }
   };
 }
@@ -994,6 +1057,8 @@ function desenharAssinaturas(){
     } else if (ausente(ata, v)){
       m.className = "marca falta";
       m.textContent = `${v.nome} — ausente`;
+    } else if (!fin && !podeAssinarVaga(v)){
+      return;                                                         // tablet: linha de outro vereador fica livre até ele assinar
     } else if (!fin && ataAssinavel(ata) && temAssinaturaReal(v)){
       m.className = "marca assinar";
       m.textContent = `✍ ${v.nome.split(" ")[0]}`;
@@ -1294,6 +1359,7 @@ $("#btnVerificar").onclick = async () => {
   // Nos tablets (vereadores) só aparece a função de assinar; o modo administrador fica no notebook da Mesa.
   try {
     if (EH_TABLET) aplicarPermissao(false); else if (EH_NOTEBOOK) aplicarPermissao(true);
+    ouvirDono();
     // decisão final pelo login do aparelho (mais seguro que o tipo de tela)
     if (Store.modo === "firebase" && firebase.auth) firebase.auth().onAuthStateChanged(u => {
       if (!u || !u.email) return;
