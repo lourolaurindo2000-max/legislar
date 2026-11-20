@@ -445,7 +445,8 @@ function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null
 function lsSet(k, v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e){} }
 function devId(){ let d = lsGet("vp_dev"); if (!d){ d = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); lsSet("vp_dev", d); } return d; }
 function calcMeuVid(){
-  if (ENSAIO){ const m = lsGet("an_meu"); return m && VID_NOME[m] ? m : null; }
+  // Sempre o vínculo real (votacao/aparelhos), mesmo com o Modo de ensaio ligado: nunca o "an_meu" de Anotações,
+  // que guarda o último nome escolhido em testes e fazia aparecer o vereador errado no tablet.
   const dev = devId();
   for (const vid in APARELHOS) if (APARELHOS[vid] && APARELHOS[vid].dev === dev && VID_NOME[vid]) return vid;
   return null;
@@ -460,7 +461,7 @@ function escolherDono(){
   <div class="corpo">
     <div class="info">Toque no seu nome. O tablet fica reservado para você (o mesmo vínculo da Votação, da Presença e de Anotações). Assim, aqui aparece só o <b>seu</b> campo de assinatura.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px">
-      ${Object.keys(VID_NOME).map(vid => { const outro = !ENSAIO && APARELHOS[vid] && APARELHOS[vid].dev && APARELHOS[vid].dev !== dev;
+      ${Object.keys(VID_NOME).map(vid => { const outro = APARELHOS[vid] && APARELHOS[vid].dev && APARELHOS[vid].dev !== dev;
         return `<button class="btn ${outro ? "claro" : ""}" data-dono="${vid}" ${outro ? "disabled" : ""} style="padding:14px">${esc(VID_NOME[vid])}${outro ? "<br><small>🔒 outro tablet</small>" : ""}</button>`; }).join("")}
     </div>
     <div id="dErro"></div>
@@ -468,7 +469,6 @@ function escolherDono(){
   document.querySelectorAll("[data-dono]").forEach(b => b.onclick = async () => {
     const vid = b.dataset.dono;
     if (!await confirmar(VID_NOME[vid], `Este tablet ficará reservado para <b>${esc(VID_NOME[vid])}</b> (Documentos, Anotações, Votação, Presença e Assinatura). Confira se é o seu nome.`, "Sim, sou eu")) { escolherDono(); return; }
-    if (ENSAIO){ lsSet("an_meu", vid); MEU_VID = vid; if (ataAtual) renderAta(); return; }
     Store.db.ref(`legislar/votacao/aparelhos/${vid}`).transaction(cur => {
       if (cur && cur.dev && cur.dev !== dev) return;
       return {dev, em: Date.now()};
@@ -741,6 +741,8 @@ function renderAta(){
     $("#ataAlerta").insertAdjacentHTML("afterbegin", admin
       ? `<div class="alerta ok">📲 Esta ata está <b>nos tablets</b> para os vereadores assinarem (${assinPresentes(ata)} de ${presentes(ata).length} presentes${presentes(ata).length < total(ata) ? ` · ${total(ata) - presentes(ata).length} ausente(s)` : ""}). Quando todos os presentes assinarem, ela é lacrada sozinha e vai para Atas / Proposições.</div>`
       : `<div class="alerta ok">📲 A Mesa enviou esta ata para assinatura. Leia o documento e toque em <b>Assinar</b> ao lado do seu nome.</div>`);
+  if (ehAssinante() && MEU_VID && !fin)
+    $("#ataAlerta").insertAdjacentHTML("afterbegin", `<div class="alerta aviso" style="font-size:15px">🔒 Este tablet é de <b>${esc(VID_NOME[MEU_VID])}</b>. Só ${esc(VID_NOME[MEU_VID])} assina aqui. Se não for o seu nome, avise o operador.</div>`);
   const podeAssinar = !fin && estado !== "verificando";   // qualquer ata: com ou sem linhas detectadas
   const sigs = ata.assinaturas || {};
   $("#folha").innerHTML = `<div class="cab">${esc(CONFIG.PLENARIO)}, ${dataExtenso(ata.data)}.</div>` +
