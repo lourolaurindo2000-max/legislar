@@ -633,7 +633,9 @@ async function abrirAta(id){
       ultimoCanvas = c;
     }
     box.dataset.npag = pdf.numPages;
-    if (ultimoCanvas) linhasAta[id] = detectarLinhasCanvas(ultimoCanvas);   // detecta as linhas da última página
+    // linhas da última página: usa as gravadas pela Mesa ao enviar; senão detecta num tamanho fixo (igual em todo aparelho)
+    if (ata && Array.isArray(ata.linhas) && ata.linhas.length) linhasAta[id] = ata.linhas;
+    else { delete linhasAta[id]; await garantirLinhas(id); }
     if (calib.ativo) ligarCliquesCalib(true);
     if (ataAtual === id) renderAta();                                       // reavalia se a ata está no modelo e redesenha
   } catch(err){
@@ -709,7 +711,9 @@ function renderAta(){
       if (Object.keys(ausentes).length >= vagas(ata).length){ $("#eErro").innerHTML = '<div class="alerta erro">Marque pelo menos um vereador presente.</div>'; return; }
       $("#eOk").disabled = true;
       try {
-        await Store.atualizarAta(ata.id, {ausentes: Object.keys(ausentes).length ? ausentes : null});
+        const linhas = await garantirLinhas(ata.id);
+        await Store.atualizarAta(ata.id, {ausentes: Object.keys(ausentes).length ? ausentes : null,
+          linhas: linhas && linhas.length ? linhas.map(l => ({fy: +l.fy.toFixed(5), x0f: +l.x0f.toFixed(5), x1f: +l.x1f.toFixed(5)})) : null});
         await Store.definirEnviada(ata.id);
         fecharModal();
         const np = vagas(ata).length - Object.keys(ausentes).length;
@@ -890,7 +894,7 @@ function detectarLinhasCanvas(canvas){
     let run = 0, best = 0, s = -1, bs = 0;
     for (let x = 0; x < w; x++){
       const i = (y*w + x)*4;
-      const dark = d[i] < 120 && d[i+1] < 120 && d[i+2] < 120 && d[i+3] > 40;
+      const dark = d[i] < 160 && d[i+1] < 160 && d[i+2] < 160 && d[i+3] > 40;
       if (dark){ if (run === 0) s = x; run++; if (run > best){ best = run; bs = s; } } else run = 0;
     }
     if (best >= minLen){
@@ -911,7 +915,7 @@ async function garantirLinhas(id){
     const pdf = await pdfjsLib.getDocument({data: b64ToBytes(b64)}).promise;
     const pg = await pdf.getPage(pdf.numPages);
     const base = pg.getViewport({scale:1});
-    const vp = pg.getViewport({scale: 1100 / base.width});
+    const vp = pg.getViewport({scale: 1400 / base.width});
     const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
     await pg.render({canvasContext: c.getContext("2d"), viewport: vp}).promise;
     linhasAta[id] = detectarLinhasCanvas(c);
@@ -922,7 +926,7 @@ async function garantirLinhas(id){
 /* pontos finais por cargo: ajuste manual (MODELO) tem prioridade; senão, linhas detectadas (topo→baixo) */
 function obterPontos(ata){
   const vg = vagas(ata);
-  const linhas = linhasAta[ata.id] || [];
+  const linhas = (Array.isArray(ata.linhas) && ata.linhas.length ? ata.linhas : linhasAta[ata.id]) || [];
   const auto = {};
   linhas.slice(0, vg.length).forEach((l, i) => { auto[vg[i].k] = {dist:0, fx:(l.x0f + l.x1f)/2, fy:l.fy}; });
   const pts = {};
@@ -932,6 +936,9 @@ function obterPontos(ata){
 
 /* a ata só é assinável se a última página contiver as linhas do modelo (detecção) */
 function estadoModelo(ata){
+  const vg = vagas(ata);
+  if (Array.isArray(ata.linhas) && ata.linhas.length >= vg.length) return "ok";
+  if (vg.every(v => MODELO[v.k])) return "ok";                       // posições ajustadas à mão pela Mesa
   const l = linhasAta[ata.id];
   if (l === undefined) return "verificando";
   return l.length >= vagas(ata).length ? "ok" : "fora";
