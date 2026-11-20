@@ -158,37 +158,21 @@
       '#tl-mapa{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 18px;padding:16px 26px 10px;overflow:auto}' +
       /* miniatura do tablet: moldura escura, câmera, tela colorida */
       '.tl-tb{display:flex;flex-direction:column;align-items:center;user-select:none;-webkit-user-select:none}' +
-      '.tl-mold{position:relative;width:100%;max-width:178px;aspect-ratio:16/11;background:linear-gradient(150deg,#f8fafc,#cbd5e1);border-radius:20px;padding:10px 12px;box-sizing:border-box;' +
-      'box-shadow:0 8px 18px rgba(0,0,0,.4),inset 0 -3px 0 rgba(0,0,0,.12),inset 0 2px 0 rgba(255,255,255,.9);transition:transform .2s cubic-bezier(.3,1.6,.5,1),box-shadow .2s}' +
-      '.tl-mold:before{content:"";position:absolute;top:50%;left:4px;width:4px;height:4px;margin-top:-2px;border-radius:50%;background:#94a3b8}' +
-      '.tl-mold:after{content:"";position:absolute;top:-3px;right:22px;width:16px;height:3px;border-radius:3px 3px 0 0;background:#94a3b8}' +
-      '.tl-tela{position:relative;width:100%;height:100%;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding:4px;overflow:hidden}' +
-      '.tl-tela:before{content:"";position:absolute;left:-30%;top:-60%;width:80%;height:120%;background:linear-gradient(120deg,rgba(255,255,255,.35),rgba(255,255,255,0));transform:rotate(18deg);pointer-events:none}' +
-      /* rostinho */
-      '.tl-cara{position:relative;width:46px;height:30px;flex:0 0 auto}' +
-      '.tl-cara i{position:absolute;top:4px;width:8px;height:10px;border-radius:50%;background:#14532d}' +
-      '.tl-cara i.e{left:9px}.tl-cara i.d{right:9px}' +
-      '.tl-cara u{position:absolute;left:50%;bottom:2px;width:16px;height:8px;margin-left:-8px;border:3px solid #14532d;border-top:0;border-radius:0 0 12px 12px;box-sizing:border-box}' +
-      '.tl-cara em{position:absolute;bottom:5px;width:8px;height:5px;border-radius:50%;background:rgba(255,120,150,.6)}' +
-      '.tl-cara em.e{left:0}.tl-cara em.d{right:0}' +
-      '.tl-cara b{position:absolute;right:-14px;top:-8px;font:800 12px/1 Arial,sans-serif;color:#fecaca;letter-spacing:1px}' +
-      '.tl-tela small{position:relative;display:block;font-size:10.5px;margin-top:5px;line-height:1.25;font-weight:600}' +
-      '.tl-tb.verde .tl-tela{background:linear-gradient(160deg,#bbf7d0,#4ade80 55%,#22c55e);color:#14532d}' +
-      '.tl-tb.verde .tl-cara i{animation:tl-pisca-olho 4s infinite}' +
-      '@keyframes tl-pisca-olho{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}' +
-      '.tl-tb.verde .tl-mold{cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.4),0 0 18px rgba(74,222,128,.5),inset 0 -3px 0 rgba(0,0,0,.12),inset 0 2px 0 rgba(255,255,255,.9)}' +
-      '.tl-tb.verde .tl-mold:hover{transform:translateY(-4px) rotate(-2deg) scale(1.05);box-shadow:0 12px 22px rgba(0,0,0,.45),0 0 26px rgba(74,222,128,.8),inset 0 -3px 0 rgba(0,0,0,.12),inset 0 2px 0 rgba(255,255,255,.9)}' +
-      '.tl-tb.verde .tl-mold:active{transform:scale(.95)}' +
-      '.tl-tb.vermelho .tl-mold{background:linear-gradient(150deg,#e2e8f0,#94a3b8)}' +
-      '.tl-tb.vermelho .tl-tela{background:linear-gradient(160deg,#fca5a5,#ef4444 55%,#b91c1c);color:#fff}' +
-      '.tl-tb.vermelho .tl-cara i{top:9px;height:3px;border-radius:3px;background:#7f1d1d}' +
-      '.tl-tb.vermelho .tl-cara u{width:10px;height:4px;margin-left:-5px;border:0;border-radius:3px;background:#7f1d1d;bottom:5px}' +
-      '.tl-tb.vermelho .tl-cara b{animation:tl-zz 2.4s ease-in-out infinite}' +
-      '@keyframes tl-zz{0%{opacity:0;transform:translate(0,4px)}40%{opacity:1}100%{opacity:0;transform:translate(6px,-6px)}}' +
-      '.tl-tb.espera .tl-tela{background:linear-gradient(160deg,#fde68a,#fbbf24 55%,#f59e0b);color:#78350f;animation:tl-pisca 1s ease-in-out infinite}' +
-      '.tl-tb.espera .tl-cara i{top:7px;height:5px;background:#78350f}' +
-      '.tl-tb.espera .tl-cara u{width:10px;height:10px;margin-left:-5px;border:3px solid #78350f;border-radius:50%}' +
-      '@keyframes tl-pisca{50%{opacity:.65}}' +
+      '.tl-mold{position:relative;width:100%;max-width:178px;aspect-ratio:16/11;background:linear-gradient(150deg,#3a4250,#1b2029);border-radius:14px;padding:8px 10px;box-sizing:border-box;' +
+      'box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.10);transition:transform .15s ease,box-shadow .15s ease}' +
+      '.tl-mold:before{content:"";position:absolute;top:50%;left:3.5px;width:3px;height:3px;margin-top:-1.5px;border-radius:50%;background:#5b6475}' +
+      '.tl-tela{position:relative;width:100%;height:100%;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding:4px;overflow:hidden}' +
+      '.tl-tela:before{content:"";position:absolute;left:0;top:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0));pointer-events:none}' +
+      '.tl-tela svg{position:relative;width:26px;height:26px;flex:0 0 auto}' +
+      '.tl-tela strong{position:relative;display:block;font-size:11px;letter-spacing:.14em;margin-top:5px;font-weight:700}' +
+      '.tl-tela small{position:relative;display:block;font-size:10px;margin-top:2px;line-height:1.25;opacity:.85}' +
+      '.tl-tb.verde .tl-tela{background:linear-gradient(160deg,#16a34a,#15803d 60%,#166534);color:#fff}' +
+      '.tl-tb.verde .tl-mold{cursor:pointer}' +
+      '.tl-tb.verde .tl-mold:hover{transform:translateY(-3px);box-shadow:0 10px 20px rgba(0,0,0,.5),0 0 0 2px #22c55e,inset 0 0 0 1px rgba(255,255,255,.12)}' +
+      '.tl-tb.verde .tl-mold:active{transform:translateY(0) scale(.98)}' +
+      '.tl-tb.vermelho .tl-tela{background:linear-gradient(160deg,#b91c1c,#991b1b 60%,#7f1d1d);color:#fee2e2}' +
+      '.tl-tb.espera .tl-tela{background:linear-gradient(160deg,#d97706,#b45309);color:#fff;animation:tl-pisca 1.2s ease-in-out infinite}' +
+      '@keyframes tl-pisca{50%{opacity:.7}}' +
       '.tl-nm{margin-top:7px;font-size:13.5px;font-weight:700;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '.tl-nm span{color:#e6b955;font-weight:600;margin-right:4px}' +
       '#tl-outros{padding:0 22px 6px;font-size:12.5px;color:#9fb0d0;text-align:center}' +
@@ -211,7 +195,7 @@
     btn.innerHTML = '&#x23FB;<b></b>';
     var ov = D.createElement('div'); ov.id = 'tl-ov';
     ov.innerHTML = '<div id="tl-cx"><h3><span id="tl-tit">Tablets</span><button type="button" id="tl-x" title="Fechar">&times;</button></h3>' +
-      '<div id="tl-leg"><i style="background:#22c55e;margin-left:0"></i>ligado — clique para desligar<i style="background:#ef4444"></i>desligado<i style="background:#f59e0b"></i>desligando</div>' +
+      '<div id="tl-leg"><i style="background:#16a34a;margin-left:0"></i>ligado — clique para desligar<i style="background:#b91c1c"></i>desligado<i style="background:#d97706"></i>desligando</div>' +
       '<div id="tl-mapa"></div><div id="tl-outros"></div>' +
       '<div class="tl-pe"><button type="button" class="tl-fechar" id="tl-fechar">Fechar</button><button type="button" class="tl-todos" id="tl-todos">&#x23FB; Desligar todos os ligados</button></div>' +
       '<div id="tl-conf"><div><p id="tl-conf-t"></p><button type="button" id="tl-nao" style="background:rgba(255,255,255,.12);color:#fff">Cancelar</button><button type="button" id="tl-sim" style="background:#dc2626;color:#fff">Desligar</button></div></div></div>';
@@ -229,6 +213,7 @@
       return t;
     }
 
+    var ICONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v9"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>';
     function render() {
       if (!$('tl-mapa')) return;
       var lig = ligados();
@@ -240,14 +225,14 @@
       $('tl-todos').disabled = !lig.length;
       var h = '', usados = {};
       for (var i = 0; i < VERS.length; i++) {
-        var v = VERS[i], dev = devDe(v.id), d = dev ? online[dev] : null, cls, sub;
+        var v = VERS[i], dev = devDe(v.id), d = dev ? online[dev] : null, cls, sub, rotulo;
         if (dev) usados[dev] = 1;
-        if (d && pedidos[dev]) { cls = 'espera'; sub = (Date.now() - pedidos[dev] > 20000) ? 'Sem resposta' : 'Desligando…'; }
-        else if (d) { cls = 'verde'; sub = 'Ligado<br>' + esc(info(d)); }
-        else { cls = 'vermelho'; sub = dev ? 'Desligado' : 'Desligado<br>(sem vínculo)'; }
+        if (d && pedidos[dev]) { cls = 'espera'; rotulo = 'DESLIGANDO'; sub = (Date.now() - pedidos[dev] > 20000) ? 'Sem resposta' : 'aguarde…'; }
+        else if (d) { cls = 'verde'; rotulo = 'LIGADO'; sub = esc(info(d)); }
+        else { cls = 'vermelho'; rotulo = 'DESLIGADO'; sub = dev ? '' : 'sem vínculo'; }
         h += '<div class="tl-tb ' + cls + '"><div class="tl-mold"' +
           (cls === 'verde' ? ' data-dev="' + esc(dev) + '" data-nome="' + esc(v.nome) + '" title="Clique para desligar o tablet de ' + esc(v.nome) + '"' : '') +
-          '><div class="tl-tela"><span class="tl-cara"><i class="e"></i><i class="d"></i><u></u>' + (cls === 'verde' ? '<em class="e"></em><em class="d"></em>' : '') + (cls === 'vermelho' ? '<b>zZ</b>' : '') + '</span><small>' + sub + '</small></div></div>' +
+          '><div class="tl-tela">' + ICONE + '<strong>' + rotulo + '</strong><small>' + sub + '</small></div></div>' +
           '<div class="tl-nm"><span>' + v.ap + '</span>' + esc(v.nome) + '</div></div>';
       }
       $('tl-mapa').innerHTML = h;
