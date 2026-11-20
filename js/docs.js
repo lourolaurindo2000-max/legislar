@@ -10,6 +10,9 @@
   var CFG = window.DOCCFG || {};
   var RAIZ = window.__DOC_RAIZ || 'legislar';
   var BASE = RAIZ + '/docs/' + CFG.secao;
+  var SVG_ASSIN = '<svg viewBox="0 0 24 24" width="22" height="22" aria-label="Assinada digitalmente" role="img" style="vertical-align:-5px;margin-right:7px;flex:none"><title>Assinada digitalmente</title>' +
+    '<path fill="#16a34a" d="M12 1.5l2.5 1.9 3.1-.2 1 3 2.6 1.7-.9 3 .9 3-2.6 1.7-1 3-3.1-.2L12 22.5l-2.5-1.9-3.1.2-1-3-2.6-1.7.9-3-.9-3 2.6-1.7 1-3 3.1.2z"/>' +
+    '<path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.6 12.3l3 3 5.8-6.2"/></svg>';
   var PARTE = 1000000, LIMITE = 20 * 1024 * 1024, VISTO = 'doc_visto_' + CFG.secao;
   var ITEM = CFG.item || 'documento';
   var VERS = [
@@ -253,9 +256,9 @@
       if (pessoal && d.por && NOME[d.por]) meta.push('por ' + NOME[d.por]);
       var lida = CFG.marcarLida && !!d.lida;
       if (lida) meta.push('lida em ' + quando(d.lida));
-      var tags = (lida ? '<span class="tag lida">LIDA</span>' : (novo ? '<span class="tag">NOVO</span>' : '')) + (anoData && d.ano ? '<span class="tag ano">' + esc(d.ano) + '</span>' : '');
+      var tags = (d.assinada ? '<span class="tag" style="background:#16a34a;color:#fff;border-color:#16a34a">ASSINADA</span>' : '') + (lida ? '<span class="tag lida">LIDA</span>' : (novo ? '<span class="tag">NOVO</span>' : '')) + (anoData && d.ano ? '<span class="tag ano">' + esc(d.ano) + '</span>' : '');
       if (pessoal) tags += d.dono === 'todos' ? '<span class="tag para">Para todos</span>' : (MESA ? '<span class="tag para">' + esc(NOME[d.dono] || 'Sem destinatário (oculto)') + '</span>' : '');
-      h += '<div class="doc' + (lida ? ' lida' : (novo ? ' novo' : '')) + '"><div class="ico">' + (/^image\//.test(d.tipo || '') ? 'FOTO' : 'PDF') + (lida ? '<span class="selo" title="Lida">' + SVG_OK + '</span>' : '') + '</div><div class="inf"><b>' + esc(d.nome) + '</b><small>' + tags + esc(meta.join(' · ')) + '</small></div>' +
+      h += '<div class="doc' + (lida ? ' lida' : (novo ? ' novo' : '')) + '"><div class="ico">' + (/^image\//.test(d.tipo || '') ? 'FOTO' : 'PDF') + (lida ? '<span class="selo" title="Lida">' + SVG_OK + '</span>' : '') + '</div><div class="inf"><b>' + (d.assinada ? SVG_ASSIN : '') + esc(d.nome) + '</b><small>' + tags + esc(meta.join(' · ')) + '</small></div>' +
         '<div class="acs">' + (lida && !MESA ? '<div class="estado-lida" role="status">' + SVG_OK + 'Lida</div>' : '') + '<button class="btn btn-ouro" type="button" data-ver="' + esc(d.id) + '">Ver</button>' +
         (CFG.marcarLida && MESA ? '<button class="btn btn-lida' + (lida ? ' on' : '') + '" type="button" data-lida="' + esc(d.id) + '" title="' + (lida ? 'Desmarcar leitura' : 'Marcar como lida') + '">' + (lida ? SVG_OK + 'Lida' : SVG_CIRC + 'Marcar lida') + '</button>' : '') +
         (MESA ? '<button class="btn btn-sec" type="button" data-editar="' + esc(d.id) + '">Editar</button>' : '') +

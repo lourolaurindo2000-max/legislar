@@ -1024,11 +1024,33 @@ async function finalizar(idAuto){
     const finalHash = await sha256Hex(bytes);
     await Store.salvarArquivo("finais", ata.id, bytesToB64(bytes));
     await Store.atualizarAta(ata.id, {status: "finalizada", finalizadaEm, codigo, finalHash});
+    // a ata assinada vai para a página Atas / Proposições (mesmo formato dos PDFs enviados lá)
+    try {
+      const docId = await publicarEmAtas({...ata, codigo}, bytes);
+      if (docId) await Store.atualizarAta(ata.id, {docAtasId: docId});
+    } catch(e){ console.error(e); toast("Ata lacrada, mas não foi possível colocá-la em Atas / Proposições: " + e.message, true); }
     if (ENVIADA && ENVIADA.id === ata.id) await Store.definirEnviada(null).catch(() => {});
-    toast(auto ? "✅ Ata assinada por todos e pronta para imprimir." : "Ata finalizada e lacrada.");
+    toast(auto ? "✅ Ata assinada por todos: pronta para imprimir e já está em Atas / Proposições." : "Ata finalizada e lacrada. Ela também foi colocada em Atas / Proposições.");
     if (auto && ataAtual !== ata.id) abrirAta(ata.id);
   } catch(err){ console.error(err); toast("Erro ao finalizar: " + err.message, true); }
   finally { delete finalizando[ata.id]; }
+}
+
+/* Coloca o PDF assinado na lista de Atas / Proposições: legislar/docs/atas/itens + arquivos (partes de 1 MB, dataURL) */
+async function publicarEmAtas(ata, bytes){
+  if (Store.modo !== "firebase" || ata.docAtasId) return null;
+  const base = Store.db.ref("legislar/docs/atas");
+  const id = base.child("itens").push().key;
+  const d = "data:application/pdf;base64," + bytesToB64(bytes), PARTE = 1000000, partes = Math.ceil(d.length / PARTE);
+  const envios = [];
+  for (let k = 0; k < partes; k++) envios.push(base.child("arquivos/" + id + "/" + k).set(d.slice(k * PARTE, (k + 1) * PARTE)));
+  await Promise.all(envios);
+  await base.child("itens/" + id).set({
+    nome: `${ata.titulo}${ata.numero ? " Nº " + ata.numero : ""} — assinada (código ${ata.codigo})`,
+    tamanho: bytes.length, partes, tipo: "application/pdf", criadoEm: firebase.database.ServerValue.TIMESTAMP,
+    data: ata.data, ano: +ata.data.slice(0, 4), por: "mesa", assinada: true, codigo: ata.codigo
+  });
+  return id;
 }
 
 async function baixarFinal(){
@@ -1222,7 +1244,7 @@ $("#btnVerificar").onclick = async () => {
       const novos = Object.keys(a1).filter(k => !a0[k]).map(k => a1[k].nome);
       if (novos.length) toast("✔ " + novos.join(", ") + (novos.length > 1 ? " assinaram" : " assinou") + ` a ata (${Object.keys(a1).length} de ${total(nov)}).`);
       if (ant.status !== "finalizada" && nov.status === "finalizada" && !EH_MESA)
-        toast("✅ Ata lacrada com todas as assinaturas e enviada à Mesa para impressão.");
+        toast("✅ Ata lacrada com todas as assinaturas e enviada à Mesa (Atas / Proposições).");
     }
     ATAS = atas;
     if (hashPend && ATAS[hashPend] && !ataAtual){ const id = hashPend; hashPend = null; abrirAta(id); }
