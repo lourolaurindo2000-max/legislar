@@ -100,9 +100,9 @@ main{max-width:1200px;margin:0 auto;padding:0 20px 60px}
 .slot.dem{grid-template-columns:130px 1fr}
 .slot .rot{font-family:Arial,Helvetica,sans-serif;font-size:14px;padding-bottom:6px}
 .slot .lin{border-bottom:1.5px solid #111;min-height:62px;display:flex;align-items:flex-end;justify-content:space-between;gap:6px;position:relative}
-.slot .lin img{height:58px;max-width:70%;object-fit:contain}
-.slot .nome{font-size:11px;color:var(--cinza);margin-top:3px}
-.slot .quando{font-size:10px;color:var(--ok);text-align:right}
+.slot .lin img{height:58px;max-width:70%;object-fit:contain;position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);pointer-events:none}   /* centralizada e assentada na linha, igual à ata */
+.slot .nome{font-size:11px;color:var(--cinza);margin-top:15px;text-align:center}
+.slot .quando{font-size:10px;color:var(--ok);text-align:right;margin-left:auto;align-self:flex-start}
 .slot .assinar{margin-bottom:6px}
 .hash{font-family:ui-monospace,Consolas,monospace;font-size:11px;word-break:break-all;color:#374151;background:#f3f4f6;padding:8px;border-radius:8px}
 .info{font-size:13px;color:var(--cinza);line-height:1.5}
