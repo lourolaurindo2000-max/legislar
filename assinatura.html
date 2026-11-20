@@ -399,9 +399,30 @@ let linhasAta = {};                    // linhas detectadas automaticamente na �
 try { admin = sessionStorage.getItem("adminAtas") === "1"; } catch(e){}
 // Tablets (vereadores) não têm acesso à configuração: só leem e assinam o que a Mesa enviar.
 let EH_TABLET = false;
-try { EH_TABLET = navigator.maxTouchPoints > 0 && (matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '')); } catch(e){}
+try { EH_TABLET = navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '')); } catch(e){}
 if (EH_TABLET) admin = false;
-let ENVIADA = null;                    // {id, em} — ata enviada pela Mesa aos tablets
+// Só o notebook da Mesa (login "mesa") configura. Tablets/celulares (login "vereadores") e TV: só assinam.
+function aplicarPermissao(ehMesa){
+  EH_MESA = !!ehMesa;
+  if (!ehMesa){
+    admin = false; try { sessionStorage.removeItem("adminAtas"); } catch(e){}
+    $("#btnAdmin").style.display = "none"; $("#btnNova").classList.add("oculto");
+  } else {
+    $("#btnAdmin").style.display = "";
+  }
+  if (ataAtual && ATAS[ataAtual]) renderAta(); else renderLista();
+  verificarAutoFinal();
+}
+let ENVIADA = null;
+let EH_MESA = false;                   // login "mesa" confirmado (notebook do operador)
+const finalizando = {};
+// Notebook da Mesa: quando todos os vereadores assinarem a ata enviada, lacra sozinho e deixa pronta p/ imprimir.
+function verificarAutoFinal(){
+  if (!EH_MESA || !ENVIADA) return;
+  const ata = ATAS[ENVIADA.id];
+  if (!ata || ata.status !== "aberta" || finalizando[ata.id]) return;
+  if (assinadas(ata) >= total(ata)) finalizar(ata.id);
+}                    // {id, em} — ata enviada pela Mesa aos tablets
 
 function vagas(ata){
   const m = ata.mesa || {};
@@ -492,6 +513,7 @@ function confirmar(titulo, texto, rotuloOk, perigo){
 
 /* ---------- ADMIN ---------- */
 $("#btnAdmin").onclick = () => {
+  if (EH_TABLET && !(window.PldAuth && PldAuth.conta() === "mesa")) return;   // segurança extra: tablet nunca vira administrador
   // Acesso de administrador liberado sem senha
   admin = !admin;
   try{ admin ? sessionStorage.setItem("adminAtas","1") : sessionStorage.removeItem("adminAtas"); }catch(e){}
@@ -606,7 +628,7 @@ function renderAta(){
 
   if (!fin && ENVIADA && ENVIADA.id === ata.id && !pdfCache[ataAtual + "_corrompido"])
     $("#ataAlerta").insertAdjacentHTML("afterbegin", admin
-      ? `<div class="alerta ok">📲 Esta ata está <b>nos tablets</b> para os vereadores assinarem.</div>`
+      ? `<div class="alerta ok">📲 Esta ata está <b>nos tablets</b> para os vereadores assinarem (${assinadas(ata)} de ${total(ata)}). Quando todos assinarem, ela é lacrada sozinha e fica pronta para imprimir.</div>`
       : `<div class="alerta ok">📲 A Mesa enviou esta ata para assinatura. Leia o documento e toque em <b>Assinar</b> ao lado do seu nome.</div>`);
   const podeAssinar = !fin && estado === "ok";
   const sigs = ata.assinaturas || {};
@@ -962,16 +984,18 @@ async function sairCalib(salvar){
 /* =====================================================================
    FINALIZAÇÃO E PDF ASSINADO
    ===================================================================== */
-async function finalizar(){
-  const ata = ATAS[ataAtual]; const n = assinadas(ata), t = total(ata);
+async function finalizar(idAuto){
+  const auto = typeof idAuto === "string";
+  const ata = ATAS[auto ? idAuto : ataAtual]; if (!ata) return; const n = assinadas(ata), t = total(ata);
   const semMod = vagas(ata).filter(v => (ata.assinaturas||{})[v.vk] && !MODELO[v.k]);
-  const ok = await confirmar("Finalizar ata",
+  const ok = auto || await confirmar("Finalizar ata",
     (n < t ? `<div class="alerta aviso">Faltam <b>${t-n}</b> assinatura(s). Quem não assinou simplesmente não terá assinatura na linha.</div>` : "") +
     (semMod.length ? `<div class="alerta aviso">${semMod.length} assinatura(s) ainda sem posição no modelo irão para uma folha reserva no fim. Defina o modelo para que caiam sobre as linhas da ata.</div>` : "") +
     "Ao finalizar, a ata é lacrada: ninguém mais poderá assinar. As assinaturas são aplicadas sobre as linhas da própria ata e um manifesto de autenticidade é anexado ao final.",
     "Finalizar e lacrar");
   if (!ok) return;
-  toast("Gerando PDF assinado…");
+  if (finalizando[ata.id]) return; finalizando[ata.id] = true;
+  toast(auto ? "Todos assinaram: gerando a ata assinada para impressão…" : "Gerando PDF assinado…");
   try {
     await garantirLinhas(ata.id);                 // garante a detecção das linhas da última página
     const finalizadaEm = Store.agora();
@@ -981,8 +1005,10 @@ async function finalizar(){
     await Store.salvarArquivo("finais", ata.id, bytesToB64(bytes));
     await Store.atualizarAta(ata.id, {status: "finalizada", finalizadaEm, codigo, finalHash});
     if (ENVIADA && ENVIADA.id === ata.id) await Store.definirEnviada(null).catch(() => {});
-    toast("Ata finalizada e lacrada.");
+    toast(auto ? "✅ Ata assinada por todos e pronta para imprimir." : "Ata finalizada e lacrada.");
+    if (auto && ataAtual !== ata.id) abrirAta(ata.id);
   } catch(err){ console.error(err); toast("Erro ao finalizar: " + err.message, true); }
+  finally { delete finalizando[ata.id]; }
 }
 
 async function baixarFinal(){
@@ -1156,16 +1182,23 @@ $("#btnVerificar").onclick = async () => {
   $("#seloModo").title = Store.modo === "firebase" ? "Dados no Firebase, compartilhados entre os aparelhos" : "Configure o Firebase para sincronizar entre os tablets";
   // Nos tablets (vereadores) só aparece a função de assinar; o modo administrador fica no notebook da Mesa.
   try {
-    if (EH_TABLET && $("#btnAdmin")) $("#btnAdmin").style.display = "none";
-    if (EH_TABLET) try { sessionStorage.removeItem("adminAtas"); } catch(e){}
+    if (EH_TABLET) aplicarPermissao(false);
+    // decisão final pelo login do aparelho (mais seguro que o tipo de tela)
+    if (Store.modo === "firebase" && firebase.auth) firebase.auth().onAuthStateChanged(u => {
+      if (!u || !u.email) return;
+      aplicarPermissao(u.email.split("@")[0] === "mesa");
+    });
   } catch(e){}
   try { MODELO = await Store.lerModelo(); } catch(e){ MODELO = {}; }
   Store.ouvirModelo(m => { MODELO = m || {}; if (ataAtual && !calib.ativo) desenharAssinaturas(); });
+  let hashPend = (location.hash.match(/^#ata-(.+)$/) || [])[1] || null;   // link direto p/ uma ata (ex.: aviso "pronta para imprimir")
   Store.aoMudar(atas => {
     ATAS = atas;
+    if (hashPend && ATAS[hashPend] && !ataAtual){ const id = hashPend; hashPend = null; abrirAta(id); }
     if (ataAtual && ATAS[ataAtual]) renderAta();
     else if (ataAtual && !ATAS[ataAtual]){ ataAtual = null; mostrar("vAtas"); }
     if (!ataAtual) renderLista();
+    verificarAutoFinal();
   });
   const m = location.hash.match(/^#ata-(.+)$/);
   // Tablets: abrem sozinhos a ata que a Mesa enviar (e voltam à lista quando ela for recolhida).
@@ -1187,6 +1220,7 @@ $("#btnVerificar").onclick = async () => {
       }
     }
     if (ataAtual && ATAS[ataAtual]) renderAta();
+    verificarAutoFinal();
   });
   if (m && ATAS[m[1]]) abrirAta(m[1]); else renderLista();
 })();
