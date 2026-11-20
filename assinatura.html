@@ -1193,6 +1193,15 @@ $("#btnVerificar").onclick = async () => {
   Store.ouvirModelo(m => { MODELO = m || {}; if (ataAtual && !calib.ativo) desenharAssinaturas(); });
   let hashPend = (location.hash.match(/^#ata-(.+)$/) || [])[1] || null;   // link direto p/ uma ata (ex.: aviso "pronta para imprimir")
   Store.aoMudar(atas => {
+    // tempo real: avisa todos que estão com a ata aberta quando alguém assina ou quando ela é lacrada
+    const ant = ataAtual && ATAS[ataAtual], nov = ataAtual && atas[ataAtual];
+    if (ant && nov){
+      const a0 = ant.assinaturas || {}, a1 = nov.assinaturas || {};
+      const novos = Object.keys(a1).filter(k => !a0[k]).map(k => a1[k].nome);
+      if (novos.length) toast("✔ " + novos.join(", ") + (novos.length > 1 ? " assinaram" : " assinou") + ` a ata (${Object.keys(a1).length} de ${total(nov)}).`);
+      if (ant.status !== "finalizada" && nov.status === "finalizada" && !EH_MESA)
+        toast("✅ Ata lacrada com todas as assinaturas e enviada à Mesa para impressão.");
+    }
     ATAS = atas;
     if (hashPend && ATAS[hashPend] && !ataAtual){ const id = hashPend; hashPend = null; abrirAta(id); }
     if (ataAtual && ATAS[ataAtual]) renderAta();
