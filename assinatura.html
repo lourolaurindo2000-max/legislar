@@ -54,6 +54,9 @@ input,select{font:inherit}
 .topo .esp{flex:1}
 .voltarAtas{display:inline-flex;align-items:center;gap:6px;flex:none;text-decoration:none;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-radius:12px;padding:12px 16px;font-weight:700;font-size:16px;min-height:48px;-webkit-tap-highlight-color:transparent}
 .voltarAtas:active{background:rgba(255,255,255,.28)}
+body.assinante .abas,body.assinante #vAtas>.linha,body.assinante #vAtas>.filtros,body.assinante #btnVoltar{display:none!important}
+body.assinante #vAtas{border-radius:var(--raio)}
+body.assinante main{padding-top:16px}
 .iconeAss{width:52px;height:52px;flex:none;border-radius:14px;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#f3e3b8,#b8913a 75%);box-shadow:0 2px 8px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.35)}
 @media (max-width:560px){.iconeAss{width:44px;height:44px}.voltarAtas{padding:10px 12px}}
 .selo{font-size:11px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.12);white-space:nowrap}
@@ -402,8 +405,21 @@ let EH_TABLET = false;
 try { EH_TABLET = navigator.maxTouchPoints > 0 && (!matchMedia('(any-pointer: fine)').matches || matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '')); } catch(e){}
 if (EH_TABLET) admin = false;
 // Só o notebook da Mesa (login "mesa") configura. Tablets/celulares (login "vereadores") e TV: só assinam.
+let CONTA = null;                      // conta do login do aparelho ("mesa", "vereadores", "tv")
+const ehAssinante = () => CONTA ? CONTA !== "mesa" : EH_TABLET;   // tablets/celulares dos vereadores
+const autoAberta = {};                 // cada ata enviada abre sozinha uma vez (depois o vereador navega livre)
+// Vereador: ao entrar na página, já cai na ata que a Mesa enviou para assinar.
+function abrirPendente(){
+  if (!ehAssinante() || ataAtual || $("#fundo").classList.contains("on")) return;
+  const alvo = ENVIADA && ATAS[ENVIADA.id] && ATAS[ENVIADA.id].status === "aberta" ? ENVIADA.id : null;   // só a ata enviada pela Mesa
+  const marca = alvo && alvo + "|" + ENVIADA.em;
+  if (!alvo || autoAberta[marca]) return;
+  autoAberta[marca] = true;
+  abrirAta(alvo);
+}
 function aplicarPermissao(ehMesa){
   EH_MESA = !!ehMesa;
+  document.body.classList.toggle("assinante", !ehMesa);
   if (!ehMesa){
     admin = false; try { sessionStorage.removeItem("adminAtas"); } catch(e){}
     $("#btnAdmin").style.display = "none"; $("#btnNova").classList.add("oculto");
@@ -464,6 +480,10 @@ $("#btnVoltar").onclick = () => { ataAtual = null; location.hash = ""; mostrar("
    LISTA DE ATAS
    ===================================================================== */
 function renderLista(){
+  if (document.body.classList.contains("assinante")){
+    $("#lista").innerHTML = `<div class="vazio" style="padding:40px 16px;font-size:17px">✍ Nenhuma ata para assinar no momento.<br><small>Quando a Mesa enviar a ata, ela abre aqui automaticamente.</small></div>`;
+    return;
+  }
   $("#btnNova").classList.toggle("oculto", !admin);
   $("#btnAdmin").textContent = admin ? "🔓" : "🔒";
   const anos = [...new Set(Object.values(ATAS).map(a => a.data.slice(0,4)))].sort().reverse();
@@ -1186,7 +1206,9 @@ $("#btnVerificar").onclick = async () => {
     // decisão final pelo login do aparelho (mais seguro que o tipo de tela)
     if (Store.modo === "firebase" && firebase.auth) firebase.auth().onAuthStateChanged(u => {
       if (!u || !u.email) return;
-      aplicarPermissao(u.email.split("@")[0] === "mesa");
+      CONTA = u.email.split("@")[0];
+      aplicarPermissao(CONTA === "mesa");
+      abrirPendente();
     });
   } catch(e){}
   try { MODELO = await Store.lerModelo(); } catch(e){ MODELO = {}; }
@@ -1208,22 +1230,19 @@ $("#btnVerificar").onclick = async () => {
     else if (ataAtual && !ATAS[ataAtual]){ ataAtual = null; mostrar("vAtas"); }
     if (!ataAtual) renderLista();
     verificarAutoFinal();
+    abrirPendente();
   });
   const m = location.hash.match(/^#ata-(.+)$/);
   // Tablets: abrem sozinhos a ata que a Mesa enviar (e voltam à lista quando ela for recolhida).
   Store.ouvirEnviada(env => {
     const antes = ENVIADA; ENVIADA = env && env.id ? env : null;
-    if (EH_TABLET){
-      const novo = ENVIADA && (!antes || antes.id !== ENVIADA.id || antes.em !== ENVIADA.em);
-      const tentarAbrir = (n = 0) => {
-        if (!ENVIADA) return;
-        const a = ATAS[ENVIADA.id];
-        if (!a){ if (n < 20) setTimeout(() => tentarAbrir(n + 1), 300); return; }
-        if (a.status === "finalizada") return;
-        if ($("#fundo").classList.contains("on")) return;              // não interrompe quem está assinando
-        if (ataAtual !== ENVIADA.id){ abrirAta(ENVIADA.id); toast("A Mesa enviou a ata para assinatura."); }
-      };
-      if (novo) tentarAbrir();
+    if (ehAssinante()){
+      const novo = ENVIADA && antes && (antes.id !== ENVIADA.id || antes.em !== ENVIADA.em);
+      if (novo && ataAtual !== ENVIADA.id && !$("#fundo").classList.contains("on")){
+        // a Mesa enviou outra ata enquanto o vereador olhava uma diferente: troca para a nova
+        ataAtual = null;
+      }
+      if (ENVIADA) abrirPendente();
       else if (!ENVIADA && antes && ataAtual === antes.id && !$("#fundo").classList.contains("on")){
         ataAtual = null; location.hash = ""; mostrar("vAtas"); renderLista();
       }
