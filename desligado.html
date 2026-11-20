@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+<title>Tablet desligado</title>
+<!-- Tela do tablet depois que o operador manda "Desligar".
+     Página preta, sem banco de dados e sem manter a tela acesa: o tablet apaga a tela
+     sozinho pelo tempo de descanso dele. Tocar na tela volta ao painel do Legislativo. -->
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #fff; overflow: hidden; cursor: pointer;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; -webkit-user-select: none; user-select: none; }
+  #c { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    padding: 0 6vw; box-sizing: border-box; transition: opacity 4s; }
+  #c.apagado { opacity: 0; }
+  img { width: 18vmin; height: 18vmin; object-fit: contain; opacity: .55; margin-bottom: 3vmin; }
+  b { font-size: 4.6vmin; letter-spacing: .06em; color: #e6b955; text-transform: uppercase; }
+  p { font-size: 2.8vmin; color: #9aa3b5; margin: 2vmin 0 0; line-height: 1.5; }
+  small { font-size: 2.2vmin; color: #5d6577; margin-top: 4vmin; }
+</style>
+</head>
+<body>
+<div id="c">
+  <img src="img/brasao.png" alt="">
+  <b>Sessão encerrada</b>
+  <p>Tablet desligado pelo operador.<br>A tela vai apagar sozinha.</p>
+  <small>Toque na tela para abrir o sistema novamente.</small>
+</div>
+<script>
+  // depois de 15 s o texto some (tela totalmente preta) até o tablet apagar
+  setTimeout(function () { document.getElementById('c').className = 'apagado'; }, 15000);
+  document.body.onclick = function () { location.replace('dashboard.html'); };
+</script>
+</body>
+</html>
