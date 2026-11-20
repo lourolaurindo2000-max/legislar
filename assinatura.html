@@ -142,6 +142,8 @@ label.campo input,label.campo select{padding:11px 12px;border:1px solid var(--li
 /* assinaturas sobre o PDF */
 .pagWrap{position:relative;margin:0 auto 12px;width:100%;max-width:900px}
 .pdfbox .pagWrap canvas{margin:0;display:block;width:100%;height:auto}
+.lixeira{border:1px solid #f1c4c4;background:#fff5f5;color:var(--erro);border-radius:10px;width:38px;height:38px;font-size:17px;display:grid;place-items:center;flex:none;transition:.15s}
+.lixeira:hover{background:var(--erro);color:#fff;border-color:var(--erro)}
 .marca{position:absolute;transform:translate(-50%,-50%);z-index:6;pointer-events:none}
 .marca.sig{transform:translate(-50%,-100%)}            /* base da assinatura encosta na linha */
 .marca.sig img{display:block;height:34px;width:auto;max-width:230px;margin:0 auto}
@@ -518,10 +520,25 @@ function renderLista(){
         <div class="prog"><i style="width:${Math.round(n/t*100)}%"></i></div>
       </div>
       <span class="tag ${a.status === "finalizada" ? "final" : "aberta"}">${a.status === "finalizada" ? "Finalizada" : "Aguardando"}</span>
+      ${EH_MESA ? `<button class="lixeira" data-apagar="${a.id}" title="Apagar esta ata" aria-label="Apagar ${esc(a.titulo)}">🗑</button>` : ""}
       <button class="btn peq" data-abrir="${a.id}">${a.status === "finalizada" ? "Ver ata" : "Abrir e assinar"}</button>
     </div>`;
   }).join("");
   document.querySelectorAll("[data-abrir]").forEach(b => b.onclick = () => abrirAta(b.dataset.abrir));
+  document.querySelectorAll("[data-apagar]").forEach(b => b.onclick = () => apagarAta(b.dataset.apagar));
+}
+/* Lixeira (notebook): apaga a ata da Assinatura Digital, com confirmação. A cópia já colocada em Atas / Proposições continua lá. */
+async function apagarAta(id){
+  const a = ATAS[id]; if (!a || !EH_MESA) return;
+  const fin = a.status === "finalizada";
+  if (!await confirmar("Apagar ata", `Apagar <b>${esc(a.titulo)}</b>${fin ? " (finalizada)" : ""} e todas as assinaturas dela? Isso não pode ser desfeito.` +
+      (a.docAtasId ? `<div class="info" style="margin-top:8px">A cópia assinada que está em Atas / Proposições <b>continua lá</b> (apague por lá, se quiser).</div>` : ""), "Apagar", true)) return;
+  try {
+    if (ENVIADA && ENVIADA.id === id) await Store.definirEnviada(null).catch(() => {});
+    await Store.excluirAta(id); delete pdfCache[id];
+    if (ataAtual === id){ ataAtual = null; location.hash = ""; mostrar("vAtas"); }
+    renderLista(); toast("Ata apagada.");
+  } catch(err){ console.error(err); toast("Não foi possível apagar: " + err.message, true); }
 }
 ["#fAno","#fStatus"].forEach(s => $(s).onchange = renderLista);
 $("#fBusca").oninput = renderLista;
