@@ -441,7 +441,8 @@ function verificarAutoFinal(){
   if (!EH_MESA || !ENVIADA) return;
   const ata = ATAS[ENVIADA.id];
   if (!ata || ata.status !== "aberta" || finalizando[ata.id]) return;
-  if (assinadas(ata) >= total(ata)) finalizar(ata.id);
+  const pres = presentes(ata);
+  if (pres.length && assinPresentes(ata) >= pres.length) finalizar(ata.id);
 }                    // {id, em} — ata enviada pela Mesa aos tablets
 
 function vagas(ata){
@@ -458,6 +459,9 @@ function vagas(ata){
   return lista.map(v => ({...v, cargo: v.demais ? "Vereador(a)" : v.rotulo, vk: chave(v.nome || v.k)}));
 }
 const assinadas = ata => Object.keys(ata.assinaturas || {}).length;
+const ausente = (ata, v) => !!(ata.ausentes && ata.ausentes[v.vk]);            // marcado pelo operador ao enviar
+const presentes = ata => vagas(ata).filter(v => !ausente(ata, v));
+const assinPresentes = ata => presentes(ata).filter(v => (ata.assinaturas || {})[v.vk]).length;
 const total = ata => vagas(ata).length;
 
 async function codigoVerificacao(ata){
@@ -652,7 +656,7 @@ function renderAta(){
 
   if (!fin && ENVIADA && ENVIADA.id === ata.id && !pdfCache[ataAtual + "_corrompido"])
     $("#ataAlerta").insertAdjacentHTML("afterbegin", admin
-      ? `<div class="alerta ok">📲 Esta ata está <b>nos tablets</b> para os vereadores assinarem (${assinadas(ata)} de ${total(ata)}). Quando todos assinarem, ela é lacrada sozinha e fica pronta para imprimir.</div>`
+      ? `<div class="alerta ok">📲 Esta ata está <b>nos tablets</b> para os vereadores assinarem (${assinPresentes(ata)} de ${presentes(ata).length} presentes${presentes(ata).length < total(ata) ? ` · ${total(ata) - presentes(ata).length} ausente(s)` : ""}). Quando todos os presentes assinarem, ela é lacrada sozinha e vai para Atas / Proposições.</div>`
       : `<div class="alerta ok">📲 A Mesa enviou esta ata para assinatura. Leia o documento e toque em <b>Assinar</b> ao lado do seu nome.</div>`);
   const podeAssinar = !fin && estado === "ok";
   const sigs = ata.assinaturas || {};
@@ -661,6 +665,7 @@ function renderAta(){
       const s = sigs[v.vk];
       return `<div class="slot"><div class="rot">${v.rotulo ? esc(v.rotulo) + ":" : ""}</div>
         <div><div class="lin">${s ? `<img src="${s.img}" alt="Assinatura de ${esc(v.nome)}"><span class="quando">✔ ${horaBR(s.em)}</span>`
+          : ausente(ata, v) ? `<span class="info" style="padding-bottom:6px">ausente</span>`
           : fin ? `<span class="info" style="padding-bottom:6px">não assinou</span>`
           : podeAssinar && temAssinaturaReal(v) ? `<span></span><button class="btn peq ouro assinar" data-vaga="${v.k}">Assinar</button>`
           : podeAssinar ? `<span class="info" style="padding-bottom:6px">aguardando assinatura</span>`
@@ -686,10 +691,30 @@ function renderAta(){
   $("#aOriginal").onclick = async () => baixar(b64ToBytes(pdfCache[ataAtual] || await Store.lerArquivo("pdfs", ataAtual)), ata.pdfNome || "ata.pdf");
   if ($("#aModelo")) $("#aModelo").onclick = iniciarCalibracao;
   if ($("#aFinalizar")) $("#aFinalizar").onclick = finalizar;
-  if ($("#aEnviar")) $("#aEnviar").onclick = async () => {
+  if ($("#aEnviar")) $("#aEnviar").onclick = () => {
     if (estado !== "ok"){ toast("Esta ata ainda não está pronta para assinatura (modelo com as linhas).", true); return; }
-    try { await Store.definirEnviada(ata.id); toast("Ata enviada: os tablets abrem esta ata para assinatura."); }
-    catch(err){ console.error(err); toast("Não foi possível enviar: " + err.message, true); }
+    const aus = ata.ausentes || {};
+    abrirModal(`<header><h2>Enviar aos tablets</h2><button class="x" onclick="fecharModal()">×</button></header>
+    <div class="corpo">
+      <div class="info">Desmarque quem <b>faltou</b> à sessão. Quando todos os <b>presentes</b> assinarem, a ata é lacrada sozinha e vai para Atas / Proposições.</div>
+      ${vagas(ata).map(v => `<label class="check" style="padding:8px 4px;border-bottom:1px solid var(--linha)"><input type="checkbox" data-pres="${esc(v.vk)}" ${aus[v.vk] ? "" : "checked"} ${(ata.assinaturas||{})[v.vk] ? "disabled" : ""}>
+        <span><b>${esc(v.nome)}</b> <small class="info">— ${esc(v.cargo)}${(ata.assinaturas||{})[v.vk] ? " · já assinou" : ""}</small></span></label>`).join("")}
+      <div id="eErro"></div>
+    </div>
+    <footer><button class="btn claro" onclick="fecharModal()">Cancelar</button><button class="btn verde" id="eOk">📲 Enviar aos tablets</button></footer>`);
+    $("#eOk").onclick = async () => {
+      const ausentes = {};
+      document.querySelectorAll("[data-pres]").forEach(c => { if (!c.checked) ausentes[c.dataset.pres] = true; });
+      if (Object.keys(ausentes).length >= vagas(ata).length){ $("#eErro").innerHTML = '<div class="alerta erro">Marque pelo menos um vereador presente.</div>'; return; }
+      $("#eOk").disabled = true;
+      try {
+        await Store.atualizarAta(ata.id, {ausentes: Object.keys(ausentes).length ? ausentes : null});
+        await Store.definirEnviada(ata.id);
+        fecharModal();
+        const np = vagas(ata).length - Object.keys(ausentes).length;
+        toast(`Ata enviada aos tablets: ${np} presente(s)` + (np < vagas(ata).length ? `, ${vagas(ata).length - np} ausente(s).` : "."));
+      } catch(err){ console.error(err); $("#eOk").disabled = false; $("#eErro").innerHTML = `<div class="alerta erro">Não foi possível enviar: ${esc(err.message)}</div>`; }
+    };
   };
   if ($("#aRecolher")) $("#aRecolher").onclick = async () => {
     try { await Store.definirEnviada(null); toast("Ata recolhida dos tablets."); }
@@ -767,6 +792,7 @@ async function modalAssinar(vagaK){
   if (pdfCache[ataAtual + "_corrompido"]){ toast("Documento com integridade comprometida. Assinatura bloqueada.", true); return; }
   if (!ataAssinavel(ata)){ toast("Esta ata não está no modelo com as linhas de assinatura.", true); return; }
   if (!temAssinaturaReal(v)){ toast(`A assinatura de ${v.nome} ainda não foi cadastrada.`, true); return; }
+  if (ausente(ata, v)){ toast(`${v.nome} foi marcado(a) como ausente nesta sessão.`, true); return; }
   abrirModal(`<header><h2>Assinar como ${esc(v.nome)}</h2><button class="x" onclick="fecharModal()">×</button></header>
   <div class="corpo">
     <div class="alerta aviso" style="margin:0">Cargo: <b>${esc(v.cargo)}</b> · ${esc(ata.titulo)} · Sessão de ${dataBR(ata.data)}</div>
@@ -932,6 +958,9 @@ function desenharAssinaturas(){
     } else if (s){
       m.className = "marca sig";
       m.innerHTML = `<div class="cap">✔</div><img src="${s.img}" alt="Assinatura de ${esc(v.nome)}">`;
+    } else if (ausente(ata, v)){
+      m.className = "marca falta";
+      m.textContent = `${v.nome} — ausente`;
     } else if (!fin && ataAssinavel(ata) && temAssinaturaReal(v)){
       m.className = "marca assinar";
       m.textContent = `✍ ${v.nome.split(" ")[0]}`;
@@ -1013,7 +1042,7 @@ async function finalizar(idAuto){
   const ata = ATAS[auto ? idAuto : ataAtual]; if (!ata) return; const n = assinadas(ata), t = total(ata);
   const semMod = vagas(ata).filter(v => (ata.assinaturas||{})[v.vk] && !MODELO[v.k]);
   const ok = auto || await confirmar("Finalizar ata",
-    (n < t ? `<div class="alerta aviso">Faltam <b>${t-n}</b> assinatura(s). Quem não assinou simplesmente não terá assinatura na linha.</div>` : "") +
+    (assinPresentes(ata) < presentes(ata).length ? `<div class="alerta aviso">Faltam <b>${presentes(ata).length - assinPresentes(ata)}</b> assinatura(s) de presentes. Quem não assinou simplesmente não terá assinatura na linha.</div>` : "") +
     (semMod.length ? `<div class="alerta aviso">${semMod.length} assinatura(s) ainda sem posição no modelo irão para uma folha reserva no fim. Defina o modelo para que caiam sobre as linhas da ata.</div>` : "") +
     "Ao finalizar, a ata é lacrada: ninguém mais poderá assinar. As assinaturas são aplicadas sobre as linhas da própria ata e um manifesto de autenticidade é anexado ao final.",
     "Finalizar e lacrar");
@@ -1165,7 +1194,9 @@ async function gerarPdfAssinado(ata){
     t(`Assinado em ${horaBR(s.em)} (horário de Brasília) · Declaração de leitura aceita`, {size: 8, color: cinza, gap: 11});
     t(`Hash da assinatura: ${s.hash}`, {font: fM, size: 7.2, color: cinza, gap: 18});
   }
-  const faltam = vagas(ata).filter(v => !sigs[v.vk]);
+  const ausentesLista = vagas(ata).filter(v => !sigs[v.vk] && ausente(ata, v));
+  const faltam = vagas(ata).filter(v => !sigs[v.vk] && !ausente(ata, v));
+  if (ausentesLista.length) t(`Ausentes na sessão: ${ausentesLista.map(v => v.nome).join(", ")}`, {size: 9, color: cinza, gap: 16});
   if (faltam.length) t(`Não assinaram: ${faltam.map(v => v.nome).join(", ")}`, {size: 9, color: rgb(.6,.1,.1), gap: 20});
   my -= 6;
   [
@@ -1213,7 +1244,7 @@ $("#btnVerificar").onclick = async () => {
     ${esc(ata.titulo)}${ata.numero ? " · Nº " + esc(ata.numero) : ""} · Sessão de ${dataBR(ata.data)} · ${ata.status === "finalizada" ? "Finalizada em " + horaBR(ata.finalizadaEm) : "Ainda em assinatura"}
     ${ata.codigo ? `<br>Código: <b>${esc(ata.codigo)}</b>` : ""}</div>
     <table class="auditoria"><tr><th>Signatário</th><th>Cargo</th><th>Data/hora</th></tr>
-    ${vagas(ata).map(v => `<tr><td>${esc(v.nome)}</td><td>${esc(v.cargo)}</td><td>${sigs[v.vk] ? "✔ " + horaBR(sigs[v.vk].em) : '<span style="color:var(--erro)">não assinou</span>'}</td></tr>`).join("")}</table>
+    ${vagas(ata).map(v => `<tr><td>${esc(v.nome)}</td><td>${esc(v.cargo)}</td><td>${sigs[v.vk] ? "✔ " + horaBR(sigs[v.vk].em) : ausente(ata, v) ? '<span class="info">ausente</span>' : '<span style="color:var(--erro)">não assinou</span>'}</td></tr>`).join("")}</table>
     <div style="margin-top:12px"><button class="btn peq" onclick="abrirAta('${ata.id}')">Abrir a ata</button></div>`;
 };
 

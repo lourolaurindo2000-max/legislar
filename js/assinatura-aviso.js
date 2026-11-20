@@ -81,17 +81,21 @@
 
     function avaliar() {
       if (!env || !ata || ata.status !== 'aberta') return esconder();
-      var sigs = ata.assinaturas || {}, n = contar(sigs), t = totalVagas(ata);
+      var sigs = ata.assinaturas || {}, aus = ata.ausentes || {}, n = 0, t = 0;
+      // presentes = vagas não marcadas como ausentes pelo operador
+      var m = ata.mesa || {}, nomes = [m.presidente, m.vice, m.sec1, m.sec2], vs = ata.vereadores || [];
+      for (var i = 0; i < vs.length; i++) if (nomes.indexOf(vs[i]) < 0) nomes.push(vs[i]);
+      for (var j = 0; j < nomes.length; j++) { var k = chave(nomes[j]); if (aus[k]) continue; t++; if (sigs[k]) n++; }
       var tit = esc(ata.titulo || 'Ata') + (ata.numero ? ' (Nº ' + esc(ata.numero) + ')' : '');
       if (ehMesa()) {
-        if (n >= t) mostrar('✅ Ata assinada por todos os vereadores', tit + ' — pronta para lacrar e imprimir.',
+        if (t && n >= t) mostrar('✅ Ata assinada por todos os vereadores presentes', tit + ' — pronta para lacrar e imprimir.',
           'Abrir para imprimir', 'assinatura.html?v=' + Date.now() + '#ata-' + env.id, 'as_mesa_' + env.id);
         else esconder();
         return;
       }
       if (!ehTablet) return esconder();
       var meuNome = meuVid && NOME[meuVid];
-      if (meuNome && sigs[chave(meuNome)]) return esconder();          // este vereador já assinou
+      if (meuNome && (sigs[chave(meuNome)] || aus[chave(meuNome)])) return esconder();   // já assinou ou está ausente
       mostrar('✍ Ata para você assinar', tit + '<br><small>A Mesa enviou a ata para assinatura' +
         (meuNome ? ', ' + esc(meuNome) : '') + '. Leia o documento e assine pelo tablet.</small>',
         'Assinar agora', 'assinatura.html?v=' + Date.now(), 'as_tab_' + env.id + '_' + (env.em || ''));
