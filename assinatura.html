@@ -58,6 +58,7 @@ body.assinante .abas,body.assinante #vAtas>.linha,body.assinante #vAtas>.filtros
 body.assinante #vAtas{border-radius:var(--raio)}
 body.assinante main{padding-top:16px}
 .iconeAss{width:52px;height:52px;flex:none;border-radius:14px;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#f3e3b8,#b8913a 75%);box-shadow:0 2px 8px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.35)}
+@media (max-width:760px){.lblLonga{display:none}}
 @media (max-width:560px){.iconeAss{width:44px;height:44px}.voltarAtas{padding:10px 12px}}
 .selo{font-size:11px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.12);white-space:nowrap}
 .cadeado{background:transparent;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:10px;padding:7px 10px;font-size:15px}
@@ -172,7 +173,7 @@ label.campo input,label.campo select{padding:11px 12px;border:1px solid var(--li
     <h1>Assinatura Digital de Atas</h1>
     <small>Câmara Municipal de Almadina — Plenário</small>
   </div>
-  <a class="voltarAtas" href="atas.html" title="Voltar para Atas / Proposições">← Atas</a>
+  <a class="voltarAtas" href="atas.html" title="Voltar para Atas / Proposições">← Atas<span class="lblLonga"> / Proposições</span></a>
   <div class="esp"></div>
   <span class="selo" id="seloModo">…</span>
   <button class="cadeado" id="btnAdmin" title="Administrador">🔒</button>
@@ -191,6 +192,7 @@ label.campo input,label.campo select{padding:11px 12px;border:1px solid var(--li
         <h2 style="margin:0;color:var(--azul);font-family:Merriweather;font-size:20px">Atas das sessões</h2>
         <div class="info">Selecione uma ata para ler o documento e assinar.</div>
       </div>
+      <a class="btn claro" href="atas.html" style="text-decoration:none">← Atas / Proposições</a>
       <button class="btn ouro oculto" id="btnNova">+ Nova ata para assinatura</button>
     </div>
     <div class="filtros">
@@ -205,6 +207,7 @@ label.campo input,label.campo select{padding:11px 12px;border:1px solid var(--li
   <section class="painel oculto" id="vAta">
     <div class="linha" style="margin-bottom:14px">
       <button class="btn claro peq" id="btnVoltar">← Voltar</button>
+      <a class="btn claro peq" href="atas.html" style="text-decoration:none">← Atas / Proposições</a>
       <div style="flex:1;min-width:200px">
         <h2 id="ataTitulo" style="margin:0;color:var(--azul);font-family:Merriweather;font-size:19px"></h2>
         <div class="info" id="ataMeta"></div>
