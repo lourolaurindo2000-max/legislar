@@ -361,6 +361,14 @@ const Store = {
     if (this.modo === "firebase") return this.db.ref(`${RAIZ}/modeloAssin`).set(m);
     return this._kv("put","modeloAssin",m);
   },
+  /* ata que a Mesa (notebook) enviou para os tablets assinarem */
+  async definirEnviada(id){
+    if (this.modo !== "firebase") return;
+    return this.db.ref(`${RAIZ}/enviada`).set(id ? {id, em: firebase.database.ServerValue.TIMESTAMP} : null);
+  },
+  ouvirEnviada(cb){
+    if (this.modo === "firebase") this.db.ref(`${RAIZ}/enviada`).on("value", s => cb(s.val()));
+  },
   ouvirModelo(cb){
     if (this.modo === "firebase") this.db.ref(`${RAIZ}/modeloAssin`).on("value", s => cb(s.val() || {}));
   },
@@ -389,6 +397,11 @@ let MODELO = {};                       // ajuste manual opcional de pontos (sobr
 let calib = {ativo:false, sel:null, trab:{}};  // estado da calibração do modelo
 let linhasAta = {};                    // linhas detectadas automaticamente na última página, por id de ata
 try { admin = sessionStorage.getItem("adminAtas") === "1"; } catch(e){}
+// Tablets (vereadores) não têm acesso à configuração: só leem e assinam o que a Mesa enviar.
+let EH_TABLET = false;
+try { EH_TABLET = navigator.maxTouchPoints > 0 && (matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '')); } catch(e){}
+if (EH_TABLET) admin = false;
+let ENVIADA = null;                    // {id, em} — ata enviada pela Mesa aos tablets
 
 function vagas(ata){
   const m = ata.mesa || {};
@@ -591,6 +604,10 @@ function renderAta(){
       : estado === "fora" ? `<div class="alerta erro">Esta ata <b>não está no modelo</b> com as linhas de assinatura. Os vereadores só assinam atas enviadas no modelo padrão (com as linhas ao final).</div>`
       : "";
 
+  if (!fin && ENVIADA && ENVIADA.id === ata.id && !pdfCache[ataAtual + "_corrompido"])
+    $("#ataAlerta").insertAdjacentHTML("afterbegin", admin
+      ? `<div class="alerta ok">📲 Esta ata está <b>nos tablets</b> para os vereadores assinarem.</div>`
+      : `<div class="alerta ok">📲 A Mesa enviou esta ata para assinatura. Leia o documento e toque em <b>Assinar</b> ao lado do seu nome.</div>`);
   const podeAssinar = !fin && estado === "ok";
   const sigs = ata.assinaturas || {};
   $("#folha").innerHTML = `<div class="cab">${esc(CONFIG.PLENARIO)}, ${dataExtenso(ata.data)}.</div>` +
@@ -611,6 +628,10 @@ function renderAta(){
   if (fin) acoes.push(`<button class="btn ouro" id="aImprimir">🖨 Imprimir</button>`);
   acoes.push(`<button class="btn claro" id="aOriginal">PDF original</button>`);
   if (admin) acoes.push(`<button class="btn claro" id="aModelo">✍ Ajustar posições (opcional)</button>`);
+  const ehEnviada = ENVIADA && ENVIADA.id === ata.id;
+  if (admin && !fin && Store.modo === "firebase")
+    acoes.push(ehEnviada ? `<button class="btn claro" id="aRecolher">⏹ Recolher dos tablets</button>`
+                         : `<button class="btn verde" id="aEnviar">📲 Enviar aos tablets</button>`);
   if (admin && !fin) acoes.push(`<button class="btn" id="aFinalizar">Finalizar ata</button>`);
   if (admin && !fin) acoes.push(`<button class="btn verm" id="aExcluir">Excluir</button>`);
   $("#acoesAta").innerHTML = acoes.join("");
@@ -619,8 +640,18 @@ function renderAta(){
   $("#aOriginal").onclick = async () => baixar(b64ToBytes(pdfCache[ataAtual] || await Store.lerArquivo("pdfs", ataAtual)), ata.pdfNome || "ata.pdf");
   if ($("#aModelo")) $("#aModelo").onclick = iniciarCalibracao;
   if ($("#aFinalizar")) $("#aFinalizar").onclick = finalizar;
+  if ($("#aEnviar")) $("#aEnviar").onclick = async () => {
+    if (estado !== "ok"){ toast("Esta ata ainda não está pronta para assinatura (modelo com as linhas).", true); return; }
+    try { await Store.definirEnviada(ata.id); toast("Ata enviada: os tablets abrem esta ata para assinatura."); }
+    catch(err){ console.error(err); toast("Não foi possível enviar: " + err.message, true); }
+  };
+  if ($("#aRecolher")) $("#aRecolher").onclick = async () => {
+    try { await Store.definirEnviada(null); toast("Ata recolhida dos tablets."); }
+    catch(err){ console.error(err); toast("Erro: " + err.message, true); }
+  };
   if ($("#aExcluir")) $("#aExcluir").onclick = async () => {
     if (await confirmar("Excluir ata", `Excluir <b>${esc(ata.titulo)}</b> e todas as assinaturas já feitas? Isso não pode ser desfeito.`, "Excluir", true)){
+      if (ENVIADA && ENVIADA.id === ata.id) await Store.definirEnviada(null).catch(() => {});
       await Store.excluirAta(ata.id); delete pdfCache[ata.id]; ataAtual = null; mostrar("vAtas"); renderLista(); toast("Ata excluída.");
     }
   };
@@ -949,6 +980,7 @@ async function finalizar(){
     const finalHash = await sha256Hex(bytes);
     await Store.salvarArquivo("finais", ata.id, bytesToB64(bytes));
     await Store.atualizarAta(ata.id, {status: "finalizada", finalizadaEm, codigo, finalHash});
+    if (ENVIADA && ENVIADA.id === ata.id) await Store.definirEnviada(null).catch(() => {});
     toast("Ata finalizada e lacrada.");
   } catch(err){ console.error(err); toast("Erro ao finalizar: " + err.message, true); }
 }
@@ -1124,8 +1156,8 @@ $("#btnVerificar").onclick = async () => {
   $("#seloModo").title = Store.modo === "firebase" ? "Dados no Firebase, compartilhados entre os aparelhos" : "Configure o Firebase para sincronizar entre os tablets";
   // Nos tablets (vereadores) só aparece a função de assinar; o modo administrador fica no notebook da Mesa.
   try {
-    var ehTablet = navigator.maxTouchPoints > 0 && (matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ''));
-    if (ehTablet && $("#btnAdmin")) $("#btnAdmin").style.display = "none";
+    if (EH_TABLET && $("#btnAdmin")) $("#btnAdmin").style.display = "none";
+    if (EH_TABLET) try { sessionStorage.removeItem("adminAtas"); } catch(e){}
   } catch(e){}
   try { MODELO = await Store.lerModelo(); } catch(e){ MODELO = {}; }
   Store.ouvirModelo(m => { MODELO = m || {}; if (ataAtual && !calib.ativo) desenharAssinaturas(); });
@@ -1136,6 +1168,26 @@ $("#btnVerificar").onclick = async () => {
     if (!ataAtual) renderLista();
   });
   const m = location.hash.match(/^#ata-(.+)$/);
+  // Tablets: abrem sozinhos a ata que a Mesa enviar (e voltam à lista quando ela for recolhida).
+  Store.ouvirEnviada(env => {
+    const antes = ENVIADA; ENVIADA = env && env.id ? env : null;
+    if (EH_TABLET){
+      const novo = ENVIADA && (!antes || antes.id !== ENVIADA.id || antes.em !== ENVIADA.em);
+      const tentarAbrir = (n = 0) => {
+        if (!ENVIADA) return;
+        const a = ATAS[ENVIADA.id];
+        if (!a){ if (n < 20) setTimeout(() => tentarAbrir(n + 1), 300); return; }
+        if (a.status === "finalizada") return;
+        if ($("#fundo").classList.contains("on")) return;              // não interrompe quem está assinando
+        if (ataAtual !== ENVIADA.id){ abrirAta(ENVIADA.id); toast("A Mesa enviou a ata para assinatura."); }
+      };
+      if (novo) tentarAbrir();
+      else if (!ENVIADA && antes && ataAtual === antes.id && !$("#fundo").classList.contains("on")){
+        ataAtual = null; location.hash = ""; mostrar("vAtas"); renderLista();
+      }
+    }
+    if (ataAtual && ATAS[ataAtual]) renderAta();
+  });
   if (m && ATAS[m[1]]) abrirAta(m[1]); else renderLista();
 })();
 </script>
