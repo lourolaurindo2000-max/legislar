@@ -588,6 +588,7 @@
                 if (document.fullscreenElement && document.exitFullscreen) {
                     document.exitFullscreen().catch(() => {});
                 }
+                if (!window.opener) { window.location.replace("dashboard.html"); return; }
                 try { window.close(); } catch(err) {}
                 setTimeout(function() {
                     if (!window.closed) {

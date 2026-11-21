@@ -11,7 +11,7 @@
     return fino;
   }
   window.pldSairAba = function () {
-    if (!ehNotebook()) { location.href = 'dashboard.html'; return; }
+    if (!ehNotebook() || !window.opener) { location.href = 'dashboard.html'; return; }   // aberto na mesma janela: só volta ao painel
     try {
       if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
