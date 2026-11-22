@@ -722,6 +722,25 @@ function criarPad(canvas, aoDesenhar){
 /* =====================================================================
    INÍCIO
    ===================================================================== */
+/* Bip curto em cada botão — só no tablet do vereador (notebook e TV ficam mudos). Mesmo som da Presença: 1046 Hz, 0,12 s. */
+let AUDIO_CTX = null;
+function bip(){
+  try {
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+    if (!AUDIO_CTX) AUDIO_CTX = new C();
+    if (AUDIO_CTX.state === "suspended") AUDIO_CTX.resume();
+    const o = AUDIO_CTX.createOscillator(), g = AUDIO_CTX.createGain(), t = AUDIO_CTX.currentTime;
+    o.type = "sine"; o.frequency.value = 1046;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    o.connect(g); g.connect(AUDIO_CTX.destination); o.start(t); o.stop(t + 0.13);
+  } catch(e){}
+}
+document.addEventListener("pointerdown", e => {
+  if (EH_MESA) return;
+  const b = e.target.closest && e.target.closest("button, a.btn, label.check");
+  if (b && !b.disabled) bip();
+}, true);
+
 function aplicarPermissao(ehMesa){
   EH_MESA = !!ehMesa;
   $("#lnkVoltar").href = EH_MESA ? "atas.html" : "dashboard.html";
