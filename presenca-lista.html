@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Lista de Presença do Vereador — Câmara Municipal de Almadina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Mesmo carregamento do Legislar: __fb() carrega o Firebase + login do aparelho (fb-auth.js) -->
+<script src="js/tv-compat.js"></script>
+<script src="js/login-guard.js"></script>
+<script src="js/sair-aba.js"></script>
+<!-- as mesmas assinaturas reais usadas na Assinatura Digital de Atas -->
+<script src="js/assinaturas-reais.js?v=1"></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO
+   ===================================================================== */
+const CONFIG = {
+  VEREADORES: [
+    "José Lindomar", "Wilson Freitas", "Marilene Santos",
+    "Sylas Souza", "Jackson Costa", "Rogério Gotado",
+    "Lucas Cavalcante", "Dilson Junior", "Nilza Damasceno"
+  ],
+  // Mesmo Firebase do Legislar (sincroniza entre os 9 tablets, usando o login já existente do aparelho).
+  FIREBASE: {
+    apiKey: "AIzaSyAHawTmb2za8y2Eq70FWejq64-5J6Pbqfo",
+    authDomain: "projeto-teste-f08c4.firebaseapp.com",
+    databaseURL: "https://projeto-teste-f08c4-default-rtdb.firebaseio.com",
+    projectId: "projeto-teste-f08c4",
+    storageBucket: "projeto-teste-f08c4.firebasestorage.app",
+    messagingSenderId: "788863562302",
+    appId: "1:788863562302:web:2ddcfb6c2c892770de976f"
+  }
+};
+</script>
+<style>
+:root{
+  --azul:#0f2a4a; --azul2:#18406e; --ouro:#b8913a; --ouro2:#e7d3a3;
+  --papel:#fbfaf6; --linha:#d9d4c7; --texto:#1d2330; --cinza:#6b7280;
+  --ok:#1f7a4d; --okbg:#e7f5ee; --erro:#b42318; --errobg:#fdecea; --aviso:#9a6700; --avisobg:#fff6dd;
+  --raio:14px; --sombra:0 10px 30px rgba(15,42,74,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#eef1f5;color:var(--texto);font-family:Inter,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;cursor:pointer}
+input,select{font:inherit}
+.topo{background:linear-gradient(135deg,var(--azul),var(--azul2));color:#fff;padding:18px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:20;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.topo h1{font-family:Merriweather;font-size:clamp(15px,2.4vw,20px);margin:0;letter-spacing:.3px}
+.topo small{display:block;opacity:.8;font-size:12px;margin-top:2px}
+.topo .esp{flex:1}
+.iconeLp{width:52px;height:52px;flex:none;border-radius:14px;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#f3e3b8,#b8913a 75%);box-shadow:0 2px 8px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.35)}
+.voltarAtas{display:inline-flex;align-items:center;gap:6px;flex:none;text-decoration:none;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-radius:12px;padding:12px 16px;font-weight:700;font-size:16px;min-height:48px;-webkit-tap-highlight-color:transparent}
+.voltarAtas:active{background:rgba(255,255,255,.28)}
+.selo{font-size:11px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.12);white-space:nowrap}
+@media (max-width:760px){.lblLonga{display:none}}
+@media (max-width:560px){.iconeLp{width:44px;height:44px}.voltarAtas{padding:10px 12px}.selo{display:none}}
+main{max-width:1200px;margin:0 auto;padding:18px 20px 60px}
+.painel{background:#fff;border-radius:var(--raio);box-shadow:var(--sombra);padding:22px}
+.btn{border:0;border-radius:10px;padding:11px 18px;font-weight:600;background:var(--azul);color:#fff;transition:.15s}
+.btn:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ouro{background:var(--ouro);color:#fff}
+.btn.claro{background:#eef1f5;color:var(--azul)}
+.btn.verde{background:var(--ok)}
+.btn.verm{background:var(--erro)}
+.btn.peq{padding:7px 12px;font-size:13px}
+.btn.grande{font-size:20px;padding:18px 26px;border-radius:14px;min-height:64px}
+.linha{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.lista{display:grid;gap:12px;margin-top:16px}
+.card{border:1px solid var(--linha);border-radius:12px;padding:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--papel)}
+.card h3{margin:0 0 4px;font-size:16px;color:var(--azul)}
+.card .meta{font-size:13px;color:var(--cinza)}
+.card .esp{flex:1;min-width:200px}
+.tag{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.tag.aberta{background:var(--avisobg);color:var(--aviso)}
+.tag.final{background:var(--okbg);color:var(--ok)}
+.tag.cinza{background:#eef1f5;color:var(--cinza)}
+.vazio{text-align:center;color:var(--cinza);padding:40px 10px}
+.info{font-size:13px;color:var(--cinza);line-height:1.5}
+.alerta{border-radius:10px;padding:12px 14px;font-size:14px;margin:12px 0}
+.alerta.ok{background:var(--okbg);color:var(--ok)}
+.alerta.erro{background:var(--errobg);color:var(--erro)}
+.alerta.aviso{background:var(--avisobg);color:var(--aviso)}
+.lixeira{border:1px solid #f1c4c4;background:#fff5f5;color:var(--erro);border-radius:10px;width:38px;height:38px;font-size:17px;display:grid;place-items:center;flex:none;transition:.15s}
+.lixeira:hover{background:var(--erro);color:#fff;border-color:var(--erro)}
+.grade{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.grade{grid-template-columns:1fr}}
+.oculto{display:none!important}
+.rodape{text-align:center;font-size:12px;color:var(--cinza);margin-top:26px}
+/* tabela de presença (operador) */
+.tabPres{width:100%;border-collapse:collapse;font-size:14px}
+.tabPres th,.tabPres td{border-bottom:1px solid #eee;padding:9px 6px;text-align:left}
+.tabPres th{font-size:12px;color:var(--cinza);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.tabPres td.c{text-align:center;white-space:nowrap}
+.ok{color:var(--ok);font-weight:700}
+.desf{border:0;background:transparent;color:var(--cinza);font-size:12px;text-decoration:underline;padding:0 0 0 4px}
+.faseBox{border:1px solid var(--linha);border-radius:12px;padding:14px;background:var(--papel)}
+.faseBox h3{margin:0 0 8px;font-size:15px;color:var(--azul)}
+/* folha A4 — réplica do modelo "Nova lista de presença 2026" */
+.a4box{position:relative;overflow:hidden;border-radius:6px;background:#525659;padding:10px}
+.a4box .a4{transform-origin:top left;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+.a4{width:210mm;height:297mm;background:#fff;color:#000;padding:3mm 12.7mm 12.7mm;font-family:Arial,Helvetica,sans-serif;position:relative;overflow:hidden}
+.a4 .cab{display:block;width:175.8mm;height:35mm;margin:0 auto;object-fit:contain}
+.a4 .tit{text-align:center;font-weight:700;font-size:16pt;margin:9mm 0 0}
+.a4 .dt{text-align:center;font-weight:700;font-size:14pt;margin:8mm 0 0}
+.a4 .exp{text-align:center;font-weight:700;font-size:14pt;margin:9mm 0 3mm}
+.a4 .exp.g{margin-top:9mm}
+.a4 .ln{display:flex;align-items:flex-end;height:8mm;padding-left:12mm;font-weight:700;font-size:14pt}
+.a4 .ln .n{width:8mm;flex:none}
+.a4 .ln .t{flex:1;border-bottom:1px solid #000;height:100%;position:relative;margin-right:4mm}
+.a4 .ln .t img{position:absolute;left:18mm;height:10.5mm;width:auto;max-width:95mm;pointer-events:none}
+.a4 .ln .t .nm{position:absolute;right:1mm;bottom:.6mm;font-size:6.5pt;font-weight:400;color:#555;white-space:nowrap}
+.a4 .dt.f{margin-top:10mm}
+/* modal */
+.fundo{position:fixed;inset:0;background:rgba(10,20,35,.6);display:none;align-items:center;justify-content:center;z-index:100;padding:14px}
+.fundo.on{display:flex}
+.modal{background:#fff;border-radius:16px;width:min(560px,100%);max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.modal header{padding:18px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px}
+.modal header h2{font-size:17px;margin:0;color:var(--azul);flex:1}
+.modal .corpo{padding:18px 20px;display:grid;gap:12px}
+.modal footer{padding:14px 20px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.x{border:0;background:#f3f4f6;width:34px;height:34px;border-radius:50%;font-size:18px}
+label.campo{display:grid;gap:5px;font-size:13px;font-weight:600;color:#374151}
+label.campo input,label.campo select{padding:11px 12px;border:1px solid var(--linha);border-radius:10px;font-weight:400;font-size:15px;background:#fff}
+.pad{border:2px dashed var(--ouro);border-radius:12px;background:#fffdf6;position:relative;touch-action:none}
+.pad canvas{display:block;width:100%;height:190px;touch-action:none}
+.pad .dica{position:absolute;left:0;right:0;bottom:46px;text-align:center;color:#c9b98e;pointer-events:none;font-size:13px}
+.pad .base{position:absolute;left:8%;right:8%;bottom:40px;border-bottom:1px solid #d8c9a0;pointer-events:none}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:15px}
+.check input{width:22px;height:22px;margin-top:1px;flex:none}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--azul);color:#fff;padding:12px 20px;border-radius:12px;box-shadow:var(--sombra);transition:.3s;z-index:200;font-size:14px;max-width:92vw}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.toast.erro{background:var(--erro)}
+.carreg{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:g .7s linear infinite;vertical-align:-3px}
+@keyframes g{to{transform:rotate(360deg)}}
+/* tablet do vereador */
+.tabCard{text-align:center;display:grid;gap:14px;justify-items:center}
+.tabCard .fase{font-family:Merriweather;font-size:clamp(20px,4vw,30px);color:var(--azul)}
+.tabCard .quando{font-size:16px;color:var(--cinza)}
+/* impressão: só a folha */
+#impressao{display:none}
+@page{size:A4;margin:0}
+@media print{
+  html,body{background:#fff}
+  body>*{display:none!important}
+  #impressao{display:block!important}
+  #impressao .a4{box-shadow:none;transform:none!important;page-break-after:avoid}
+}
+</style>
+<script src="js/sem-barra.js"></script>
+</head>
+<body>
+<script>__fb()</script>
+
+<div class="topo">
+  <span class="iconeLp" aria-hidden="true"><svg viewBox="0 0 48 48" width="34" height="34" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="5" width="26" height="34" rx="3.5" fill="#fff" stroke="#0f2a4a" stroke-width="2"/>
+    <path d="M14 13h4M20 13h10M14 19h4M20 19h10M14 25h4M20 25h10" stroke="#9aa6b5" stroke-width="2"/>
+    <path d="M20 31c2-3 3-3.4 3.8-1.6s1.4 2.2 3-.4" stroke="#0f2a4a" stroke-width="2.2"/>
+    <circle cx="37" cy="35" r="8" fill="#1f7a4d" stroke="#fff" stroke-width="2"/>
+    <path d="M33.5 35l2.5 2.5 4.5-5" stroke="#fff" stroke-width="2.2"/>
+  </svg></span>
+  <div>
+    <h1>Lista de Presença do Vereador</h1>
+    <small>Câmara Municipal de Almadina — Plenário</small>
+  </div>
+  <a class="voltarAtas" href="atas.html" id="lnkVoltar" title="Voltar para Atas / Proposições">← Atas<span class="lblLonga"> / Proposições</span></a>
+  <div class="esp"></div>
+  <span class="selo" id="seloModo">…</span>
+</div>
+
+<main>
+  <!-- OPERADOR: LISTAS -->
+  <section class="painel oculto" id="vListas">
+    <div class="linha">
+      <div style="flex:1;min-width:220px">
+        <h2 style="margin:0;color:var(--azul);font-family:Merriweather;font-size:20px">Listas de presença das sessões</h2>
+        <div class="info">Crie a lista da sessão e envie aos tablets. Cada vereador assina a própria presença; você recebe aqui em tempo real e imprime.</div>
+      </div>
+      <button class="btn ouro" id="btnNova">+ Nova lista de presença</button>
+    </div>
+    <div class="lista" id="lista"></div>
+  </section>
+
+  <!-- OPERADOR: UMA LISTA -->
+  <section class="oculto" id="vLista">
+    <div class="painel" style="margin-bottom:16px">
+      <div class="linha">
+        <button class="btn claro peq" id="btnVoltar">← Voltar</button>
+        <div style="flex:1;min-width:200px">
+          <h2 id="lTitulo" style="margin:0;color:var(--azul);font-family:Merriweather;font-size:19px"></h2>
+          <div class="info" id="lMeta"></div>
+        </div>
+        <span id="lTag"></span>
+      </div>
+    </div>
+    <div class="grade">
+      <div class="a4box" id="prevMesa"></div>
+      <div class="painel" style="display:grid;gap:14px">
+        <div id="lEstado"></div>
+        <div class="faseBox">
+          <h3>Enviar aos tablets</h3>
+          <div class="linha">
+            <button class="btn verde" id="aPeq">📲 Pequeno Expediente</button>
+            <button class="btn verde" id="aGra">📲 Grande Expediente</button>
+            <button class="btn claro" id="aRecolher">⏹ Recolher</button>
+          </div>
+          <div class="info" style="margin-top:8px">Os tablets mostram só o botão de assinar do expediente enviado. Ao enviar o Grande Expediente, o Pequeno é encerrado nos tablets.</div>
+        </div>
+        <div>
+          <table class="tabPres"><thead><tr><th>Vereador(a)</th><th style="text-align:center">Pequeno</th><th style="text-align:center">Grande</th></tr></thead><tbody id="lTabela"></tbody></table>
+        </div>
+        <div class="faseBox">
+          <h3>Atas / Proposições</h3>
+          <div id="lSync" class="info"></div>
+          <div class="linha" style="margin-top:8px"><button class="btn claro peq" id="aSync">↻ Sincronizar agora</button></div>
+        </div>
+        <div class="linha">
+          <button class="btn ouro" id="aImprimir">🖨 Imprimir lista</button>
+          <button class="btn verm" id="aExcluir">Excluir lista</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TABLET DO VEREADOR -->
+  <section class="painel oculto" id="vTablet">
+    <div id="tConteudo"></div>
+  </section>
+
+  <div class="rodape">
+    Sistema Plenário — Câmara Municipal de Almadina · Lista de Presença do Vereador<br>
+    <small>(PLD) Plenário Legislativo Digital · Todos os direitos reservados a André Almeida — Desenvolvedor do Sistema · versão 1</small>
+  </div>
+</main>
+
+<div class="fundo" id="fundo"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<div id="impressao"></div>
+
+<script>
+/* =====================================================================
+   UTILITÁRIOS
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const chave = nome => nome.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"");
+const MESES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+const dataBR = iso => iso.split("-").reverse().join("/");
+const dataModelo = iso => { const [a,m,d] = iso.split("-"); return `ALMADINA, ${d}/${MESES[+m-1]} DE ${a}`; };
+const horaBR = ms => new Date(ms).toLocaleTimeString("pt-BR",{timeZone:"America/Bahia",hour:"2-digit",minute:"2-digit"});
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const FASES = {pequeno: "PEQUENO EXPEDIENTE", grande: "GRANDE EXPEDIENTE"};
+const faseNome = f => f === "grande" ? "Grande Expediente" : "Pequeno Expediente";
+// assinaturas com traço alto: descem um pouco mais sobre a linha (igual à Assinatura de Atas)
+const BAIXAR_ASSIN = {"jose_lindomar": 0.26};
+
+function toast(msg, erro){
+  const t = $("#toast"); t.textContent = msg; t.className = "toast on" + (erro ? " erro" : "");
+  clearTimeout(t._t); t._t = setTimeout(() => t.className = "toast", 4200);
+}
+function abrirModal(html){ $("#modal").innerHTML = html; $("#fundo").classList.add("on"); }
+function fecharModal(){ $("#fundo").classList.remove("on"); $("#modal").innerHTML = ""; }
+$("#fundo").addEventListener("click", e => { if (e.target.id === "fundo" && !$("#modal").dataset.fixo) fecharModal(); });
+function confirmar(titulo, texto, rotuloOk, perigo){
+  return new Promise(res => {
+    abrirModal(`<header><h2>${esc(titulo)}</h2></header><div class="corpo"><div>${texto}</div></div>
+      <footer><button class="btn claro" id="mNao">Cancelar</button><button class="btn ${perigo?"verm":""}" id="mSim">${esc(rotuloOk)}</button></footer>`);
+    $("#mNao").onclick = () => { fecharModal(); res(false); };
+    $("#mSim").onclick = () => { fecharModal(); res(true); };
+  });
+}
+function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+function lsSet(k, v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e){} }
+
+/* =====================================================================
+   DADOS — Firebase (mesmo do Legislar)
+     legislar/listaPresenca/listas/{id}  -> {id, data, titulo, criadaEm, pequeno:{vk:reg}, grande:{vk:reg}}
+     legislar/listaPresenca/enviada      -> {id, fase, em}  (o que está nos tablets agora)
+   ===================================================================== */
+const RAIZ = "legislar/listaPresenca";
+let db = null, OFFSET = 0;
+const agora = () => Date.now() + (OFFSET || 0);
+let LISTAS = {}, ENVIADA = null, listaAtual = null, LISTAS_OK = false;
+
+/* ---------- tipo de aparelho (mesma regra da Assinatura de Atas / fb-auth.js) ---------- */
+let EH_NOTEBOOK = false, EH_TABLET = false, CONTA = null, EH_MESA = false;
+try { EH_NOTEBOOK = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') && matchMedia('(any-pointer: fine)').matches; } catch(e){}
+try { EH_TABLET = !EH_NOTEBOOK && navigator.maxTouchPoints > 0; } catch(e){}
+const ehMesaAparelho = () => CONTA === "mesa" || (EH_NOTEBOOK && CONTA !== "tv");
+
+/* ---------- dono do tablet (mesmo vínculo da Votação, Presença, Anotações e Assinatura) ---------- */
+const VID_NOME = {v1:"Jackson Costa", v2:"Dilson Junior", v3:"Lucas Cavalcante", v4:"Marilene Santos", v5:"Nilza Damasceno",
+  v6:"Rogério Gotado", v7:"Sylas Souza", v8:"José Lindomar", v9:"Wilson Freitas"};
+let APARELHOS = {}, AP_OK = false, MEU_VID = null;
+function devId(){ let d = lsGet("vp_dev"); if (!d){ d = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); lsSet("vp_dev", d); } return d; }
+function calcMeuVid(){
+  const dev = devId();
+  for (const vid in APARELHOS) if (APARELHOS[vid] && APARELHOS[vid].dev === dev && VID_NOME[vid]) return vid;
+  return null;
+}
+function escolherDono(){
+  if (EH_MESA || MEU_VID || !AP_OK || $("#fundo").classList.contains("on")) return;
+  const dev = devId();
+  abrirModal(`<header><h2>De quem é este tablet?</h2></header>
+  <div class="corpo">
+    <div class="info">Toque no seu nome. O tablet fica reservado para você (o mesmo vínculo da Votação, da Presença e da Assinatura de Atas).</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px">
+      ${Object.keys(VID_NOME).map(vid => { const outro = APARELHOS[vid] && APARELHOS[vid].dev && APARELHOS[vid].dev !== dev;
+        return `<button class="btn ${outro ? "claro" : ""}" data-dono="${vid}" ${outro ? "disabled" : ""} style="padding:14px">${esc(VID_NOME[vid])}${outro ? "<br><small>🔒 outro tablet</small>" : ""}</button>`; }).join("")}
+    </div>
+  </div>`);
+  document.querySelectorAll("[data-dono]").forEach(b => b.onclick = async () => {
+    const vid = b.dataset.dono;
+    if (!await confirmar(VID_NOME[vid], `Este tablet ficará reservado para <b>${esc(VID_NOME[vid])}</b>. Confira se é o seu nome.`, "Sim, sou eu")) { escolherDono(); return; }
+    db.ref(`legislar/votacao/aparelhos/${vid}`).transaction(cur => {
+      if (cur && cur.dev && cur.dev !== dev) return;
+      return {dev, em: Date.now()};
+    }, (err, ok, snap) => {
+      const v = snap && snap.val();
+      if (err || !ok || !v || v.dev !== dev){ toast(err ? "Sem internet. Tente de novo." : VID_NOME[vid] + " já está vinculado a outro tablet.", true); escolherDono(); return; }
+      APARELHOS[vid] = v; MEU_VID = vid; render();
+    }, false);
+  });
+}
+
+/* =====================================================================
+   FOLHA (réplica do modelo)
+   ===================================================================== */
+function ordenadas(lista, fase){
+  const o = (lista && lista[fase]) || {};
+  return Object.keys(o).map(vk => ({vk, ...o[vk]})).sort((a,b) => (a.em||0) - (b.em||0));
+}
+function linhasHTML(lista, fase){
+  const sigs = ordenadas(lista, fase);
+  let h = "";
+  for (let i = 0; i < 9; i++){
+    const s = sigs[i];
+    const desce = s ? (0.22 + (BAIXAR_ASSIN[s.vk] || 0)) * 10.5 : 0;
+    h += `<div class="ln"><span class="n">${i+1}.</span><span class="t">${s ? `<img src="${s.img}" alt="" style="bottom:-${desce.toFixed(2)}mm"><span class="nm">${esc(s.nome)} · ${horaBR(s.em)}</span>` : ""}</span></div>`;
+  }
+  return h;
+}
+function folhaHTML(lista){
+  return `<div class="a4">
+    <img class="cab" src="img/cabecalho-presenca.png" alt="Câmara Municipal de Almadina">
+    <div class="tit">PLENÁRIO DA CÂMARA MUNICIPAL DE ALMADINA</div>
+    <div class="dt">${esc(dataModelo(lista.data))}</div>
+    <div class="exp">PEQUENO EXPEDIENTE</div>
+    ${linhasHTML(lista, "pequeno")}
+    <div class="exp g">GRANDE EXPEDIENTE</div>
+    ${linhasHTML(lista, "grande")}
+    <div class="dt f">${esc(dataModelo(lista.data))}</div>
+  </div>`;
+}
+function escalar(){
+  document.querySelectorAll(".a4box").forEach(b => {
+    const a4 = b.querySelector(".a4"); if (!a4) return;
+    const s = (b.clientWidth - 20) / a4.offsetWidth;
+    a4.style.transform = `scale(${s})`;
+    b.style.height = (a4.offsetHeight * s + 20) + "px";
+  });
+}
+window.addEventListener("resize", escalar);
+
+/* =====================================================================
+   OPERADOR (notebook da Mesa)
+   ===================================================================== */
+function mostrar(v){ ["vListas","vLista","vTablet"].forEach(id => $("#"+id).classList.toggle("oculto", id !== v)); }
+
+function render(){
+  if (!LISTAS_OK) return;
+  if (!EH_MESA) return renderTablet();
+  if (listaAtual && LISTAS[listaAtual]) renderLista(); else { listaAtual = null; renderListas(); }
+}
+
+function renderListas(){
+  mostrar("vListas");
+  const itens = Object.values(LISTAS).sort((a,b) => b.data.localeCompare(a.data) || b.criadaEm - a.criadaEm);
+  if (!itens.length){ $("#lista").innerHTML = `<div class="vazio">Nenhuma lista ainda. Clique em <b>+ Nova lista de presença</b>.</div>`; return; }
+  $("#lista").innerHTML = itens.map(l => {
+    const p = ordenadas(l,"pequeno").length, g = ordenadas(l,"grande").length;
+    const nos = ENVIADA && ENVIADA.id === l.id;
+    return `<div class="card">
+      <div class="esp">
+        <h3>${esc(l.titulo || "Sessão")} — ${dataBR(l.data)}</h3>
+        <div class="meta">Pequeno Expediente: ${p} assinatura(s) · Grande Expediente: ${g} assinatura(s)</div>
+      </div>
+      ${nos ? `<span class="tag aberta">📲 Nos tablets: ${faseNome(ENVIADA.fase)}</span>` : `<span class="tag cinza">Fora dos tablets</span>`}
+      <button class="lixeira" data-apagar="${l.id}" title="Apagar esta lista" aria-label="Apagar lista">🗑</button>
+      <button class="btn peq" data-abrir="${l.id}">Abrir</button>
+    </div>`;
+  }).join("");
+  document.querySelectorAll("[data-abrir]").forEach(b => b.onclick = () => { listaAtual = b.dataset.abrir; location.hash = "lista-" + listaAtual; render(); });
+  document.querySelectorAll("[data-apagar]").forEach(b => b.onclick = () => apagarLista(b.dataset.apagar));
+}
+
+function renderLista(){
+  mostrar("vLista");
+  const l = LISTAS[listaAtual];
+  const p = ordenadas(l,"pequeno"), g = ordenadas(l,"grande");
+  $("#lTitulo").textContent = `${l.titulo || "Sessão"} — ${dataBR(l.data)}`;
+  $("#lMeta").textContent = `Pequeno Expediente: ${p.length} · Grande Expediente: ${g.length}`;
+  const nos = ENVIADA && ENVIADA.id === l.id;
+  $("#lTag").innerHTML = nos ? `<span class="tag aberta">📲 Nos tablets: ${faseNome(ENVIADA.fase)}</span>` : `<span class="tag cinza">Fora dos tablets</span>`;
+  $("#lEstado").innerHTML = nos
+    ? `<div class="alerta ok" style="margin:0">📲 Os tablets estão recebendo a assinatura do <b>${faseNome(ENVIADA.fase)}</b>. Cada assinatura aparece aqui na hora.</div>`
+    : `<div class="alerta aviso" style="margin:0">Esta lista não está nos tablets. Toque em <b>📲 Pequeno Expediente</b> ou <b>📲 Grande Expediente</b> para os vereadores assinarem.</div>`;
+  $("#aPeq").disabled = nos && ENVIADA.fase === "pequeno";
+  $("#aGra").disabled = nos && ENVIADA.fase === "grande";
+  $("#aRecolher").disabled = !nos;
+  // tabela
+  const reg = (fase, nome) => (l[fase] || {})[chave(nome)];
+  $("#lTabela").innerHTML = CONFIG.VEREADORES.map(n => {
+    const cel = fase => { const r = reg(fase, n); return r ? `<span class="ok">✔ ${horaBR(r.em)}</span><button class="desf" data-desf="${fase}|${chave(n)}" title="Desfazer esta assinatura">desfazer</button>` : `<span class="info">—</span>`; };
+    return `<tr><td>${esc(n)}</td><td class="c">${cel("pequeno")}</td><td class="c">${cel("grande")}</td></tr>`;
+  }).join("");
+  document.querySelectorAll("[data-desf]").forEach(b => b.onclick = async () => {
+    const [fase, vk] = b.dataset.desf.split("|"); const r = (l[fase] || {})[vk];
+    if (!r || !await confirmar("Desfazer assinatura", `Apagar a assinatura de <b>${esc(r.nome)}</b> no <b>${faseNome(fase)}</b>? A linha fica livre para assinar de novo.`, "Desfazer", true)) return;
+    try { await db.ref(`${RAIZ}/listas/${l.id}/${fase}/${vk}`).remove(); toast("Assinatura desfeita."); } catch(err){ toast("Erro: " + err.message, true); }
+  });
+  $("#prevMesa").innerHTML = folhaHTML(l);
+  escalar(); setTimeout(escalar, 60);
+  const n = p.length + g.length;
+  $("#lSync").innerHTML = SINCRONIZANDO[l.id] ? `<span class="carreg"></span> Atualizando a lista em Atas / Proposições…`
+    : !n ? `A lista entra em Atas / Proposições sozinha, assim que chegar a primeira assinatura.`
+    : l.docAtasSig === assinDigital(l) ? `<span class="ok">✅ Sincronizada:</span> a lista (PDF) já está em Atas / Proposições com ${n} assinatura(s) e é atualizada a cada nova assinatura.`
+    : `<span class="carreg"></span> Aguardando sincronizar as novas assinaturas…`;
+}
+
+$("#btnVoltar").onclick = () => { listaAtual = null; location.hash = ""; render(); };
+$("#aPeq").onclick = () => enviar("pequeno");
+$("#aGra").onclick = () => enviar("grande");
+$("#aRecolher").onclick = async () => {
+  try { await db.ref(`${RAIZ}/enviada`).set(null); toast("Lista recolhida dos tablets."); } catch(err){ toast("Erro: " + err.message, true); }
+};
+async function enviar(fase){
+  if (!listaAtual) return;
+  try {
+    await db.ref(`${RAIZ}/enviada`).set({id: listaAtual, fase, em: firebase.database.ServerValue.TIMESTAMP});
+    toast(`${faseNome(fase)} enviado aos tablets.`);
+  } catch(err){ toast("Não foi possível enviar: " + err.message, true); }
+}
+$("#aImprimir").onclick = () => imprimir(LISTAS[listaAtual]);
+$("#aSync").onclick = () => { const l = LISTAS[listaAtual]; if (l) sincronizarAtas(l, true); };
+
+/* =====================================================================
+   SINCRONIZAÇÃO COM ATAS / PROPOSIÇÕES
+   A lista vira PDF (mesmo modelo da folha) e fica em legislar/docs/atas, no mesmo formato
+   dos PDFs de lá. Usa um id fixo por lista (lp_<id>): cada nova assinatura ATUALIZA o mesmo
+   documento, sem duplicar. Só o notebook da Mesa grava.
+   ===================================================================== */
+const SINCRONIZANDO = {}, filaSync = {};
+const docKey = l => "lp_" + l.id;
+const assinDigital = l => ["pequeno","grande"].map(f => ordenadas(l, f).map(s => s.vk + ":" + s.em).join(",")).join("|");
+const nomeDoc = l => `Lista de Presença — ${l.titulo && l.titulo !== "Sessão" ? l.titulo + " — " : ""}${dataBR(l.data)}`;
+function verificarSync(){
+  if (!EH_MESA) return;
+  for (const id in LISTAS){
+    const l = LISTAS[id], sig = assinDigital(l);
+    if (l.docAtasSig === sig || SINCRONIZANDO[id]) continue;
+    if (sig === "|" && !l.docAtasSig) continue;                       // ainda sem assinatura: nada a enviar
+    clearTimeout(filaSync[id]);
+    filaSync[id] = setTimeout(() => { if (LISTAS[id]) sincronizarAtas(LISTAS[id]); }, 2500);   // junta assinaturas que chegam juntas
+  }
+}
+async function sincronizarAtas(l, manual){
+  if (!EH_MESA || SINCRONIZANDO[l.id]) return;
+  SINCRONIZANDO[l.id] = true; if (listaAtual === l.id) renderLista();
+  const sig = assinDigital(l), base = db.ref("legislar/docs/atas"), k = docKey(l);
+  try {
+    if (sig === "|"){                                                  // todas desfeitas: tira de Atas / Proposições
+      await base.child("itens/" + k).remove(); await base.child("arquivos/" + k).remove();
+    } else {
+      const bytes = await gerarPdfLista(l);
+      const d = "data:application/pdf;base64," + bytesToB64(bytes), PARTE = 1000000, partes = Math.ceil(d.length / PARTE), arq = {};
+      for (let i = 0; i < partes; i++) arq[i] = d.slice(i * PARTE, (i + 1) * PARTE);
+      await base.child("arquivos/" + k).set(arq);
+      const ant = (await base.child("itens/" + k + "/criadoEm").get()).val();
+      await base.child("itens/" + k).set({
+        nome: nomeDoc(l), tamanho: bytes.length, partes, tipo: "application/pdf",
+        criadoEm: ant || firebase.database.ServerValue.TIMESTAMP,       // mantém a posição na lista de Atas
+        data: l.data, ano: +l.data.slice(0, 4), por: "mesa", assinada: true, listaPresenca: l.id
+      });
+    }
+    await db.ref(`${RAIZ}/listas/${l.id}`).update({docAtasSig: sig, docAtasEm: firebase.database.ServerValue.TIMESTAMP});
+    if (manual) toast(sig === "|" ? "Lista sem assinaturas: retirada de Atas / Proposições." : "Lista sincronizada com Atas / Proposições.");
+  } catch(err){ console.error(err); toast("Não foi possível sincronizar com Atas / Proposições: " + err.message, true); }
+  finally { delete SINCRONIZANDO[l.id]; if (listaAtual === l.id && LISTAS[l.id]) renderLista(); }
+}
+function bytesToB64(bytes){
+  let s = ""; const n = 0x8000;
+  for (let i = 0; i < bytes.length; i += n) s += String.fromCharCode.apply(null, bytes.subarray(i, i + n));
+  return btoa(s);
+}
+/* PDF A4 desenhado no mesmo desenho da folha (modelo "Nova lista de presença 2026") */
+let CAB_BYTES = null;
+async function gerarPdfLista(l){
+  const {PDFDocument, StandardFonts, rgb} = PDFLib;
+  const mm = v => v * 72 / 25.4, H = 841.89, Y = topo => H - mm(topo);   // posições em mm a partir do topo
+  const doc = await PDFDocument.create();
+  doc.setTitle(nomeDoc(l)); doc.setAuthor("Câmara Municipal de Almadina");
+  const pg = doc.addPage([595.28, H]);
+  const fB = await doc.embedFont(StandardFonts.HelveticaBold), fN = await doc.embedFont(StandardFonts.Helvetica);
+  if (!CAB_BYTES) CAB_BYTES = new Uint8Array(await (await fetch("img/cabecalho-presenca.png")).arrayBuffer());
+  const cab = await doc.embedPng(CAB_BYTES);
+  pg.drawImage(cab, {x: mm((210 - 175.8) / 2), y: Y(38), width: mm(175.8), height: mm(35)});
+  const centro = (txt, topo, tam) => { const w = fB.widthOfTextAtSize(txt, tam); pg.drawText(txt, {x: (595.28 - w) / 2, y: Y(topo), size: tam, font: fB}); };
+  const data = dataModelo(l.data);
+  centro("PLENÁRIO DA CÂMARA MUNICIPAL DE ALMADINA", 52, 16);
+  centro(data, 65.9, 14);
+  const bloco = async (fase, topoTitulo) => {
+    centro(FASES[fase], topoTitulo, 14);
+    const sigs = ordenadas(l, fase); let base = topoTitulo + 3.4;
+    for (let i = 0; i < 9; i++){
+      base += 8;                                                          // linha a cada 8 mm
+      pg.drawText((i + 1) + ".", {x: mm(24.7), y: Y(base - 0.6), size: 14, font: fB});
+      pg.drawLine({start: {x: mm(32.7), y: Y(base)}, end: {x: mm(193.3), y: Y(base)}, thickness: 0.75, color: rgb(0,0,0)});
+      const s = sigs[i]; if (!s) continue;
+      try {
+        const img = await doc.embedPng(s.img);
+        let h = mm(10.5), w = img.width / img.height * h;
+        if (w > mm(95)){ w = mm(95); h = w * img.height / img.width; }
+        const desce = (0.22 + (BAIXAR_ASSIN[s.vk] || 0)) * h;
+        pg.drawImage(img, {x: mm(50.7), y: Y(base) - desce, width: w, height: h});
+      } catch(e){ console.error(e); }
+      const nm = `${s.nome} · ${horaBR(s.em)}`, tw = fN.widthOfTextAtSize(nm, 6.5);
+      pg.drawText(nm, {x: mm(192.3) - tw, y: Y(base - 1.3), size: 6.5, font: fN, color: rgb(.33,.33,.33)});
+    }
+    return base;
+  };
+  const fimP = await bloco("pequeno", 80.6);
+  const fimG = await bloco("grande", fimP + 13.4);
+  centro(data, fimG + 14.4, 14);
+  return doc.save();
+}
+$("#aExcluir").onclick = () => apagarLista(listaAtual);
+
+async function apagarLista(id){
+  const l = LISTAS[id]; if (!l) return;
+  if (!await confirmar("Excluir lista", `Excluir a lista de presença de <b>${dataBR(l.data)}</b> e todas as assinaturas dela? Isso não pode ser desfeito.` + (l.docAtasSig ? `<div class="info" style="margin-top:8px">A cópia que está em Atas / Proposições <b>continua lá</b> (apague por lá, se quiser).</div>` : ""), "Excluir", true)) return;
+  try {
+    if (ENVIADA && ENVIADA.id === id) await db.ref(`${RAIZ}/enviada`).set(null);
+    await db.ref(`${RAIZ}/listas/${id}`).remove();
+    if (listaAtual === id){ listaAtual = null; location.hash = ""; }
+    toast("Lista excluída.");
+  } catch(err){ toast("Não foi possível excluir: " + err.message, true); }
+}
+
+$("#btnNova").onclick = () => {
+  const hoje = new Date(agora() - 3*3600e3).toISOString().slice(0,10);   // dia de hoje na Bahia
+  abrirModal(`<header><h2>Nova lista de presença</h2><button class="x" onclick="fecharModal()">×</button></header>
+  <form class="corpo" id="fNova">
+    <label class="campo">Data da sessão<input type="date" id="nData" value="${hoje}" required></label>
+    <label class="campo">Sessão (opcional — só para identificar na lista)<input id="nTitulo" placeholder="Ex.: 34ª Sessão Ordinária"></label>
+    <label class="check"><input type="checkbox" id="nEnviar" checked><span>Já enviar o <b>Pequeno Expediente</b> aos tablets</span></label>
+    <div id="nErro"></div>
+  </form>
+  <footer><button class="btn claro" onclick="fecharModal()">Cancelar</button><button class="btn ouro" form="fNova" id="nSalvar">Criar lista</button></footer>`);
+  $("#fNova").onsubmit = async e => {
+    e.preventDefault();
+    $("#nSalvar").disabled = true;
+    try {
+      const id = uid();
+      await db.ref(`${RAIZ}/listas/${id}`).set({id, data: $("#nData").value, titulo: $("#nTitulo").value.trim() || "Sessão", criadaEm: agora()});
+      if ($("#nEnviar").checked) await db.ref(`${RAIZ}/enviada`).set({id, fase: "pequeno", em: firebase.database.ServerValue.TIMESTAMP});
+      const enviou = $("#nEnviar").checked;
+      fecharModal(); listaAtual = id; location.hash = "lista-" + id; render();
+      toast(enviou ? "Lista criada e enviada aos tablets (Pequeno Expediente)." : "Lista criada.");
+    } catch(err){
+      $("#nSalvar").disabled = false;
+      $("#nErro").innerHTML = `<div class="alerta erro">Não foi possível criar: ${esc(err.message)}</div>`;
+    }
+  };
+};
+
+/* ---------- impressão: só a folha A4 ---------- */
+function imprimir(l){
+  if (!l) return;
+  const box = $("#impressao"); box.innerHTML = folhaHTML(l);
+  const imgs = [...box.querySelectorAll("img")];
+  Promise.all(imgs.map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; })))
+    .then(() => setTimeout(() => window.print(), 80));
+}
+
+/* =====================================================================
+   TABLET DO VEREADOR — só assina e confirma
+   ===================================================================== */
+const meuNome = () => MEU_VID ? VID_NOME[MEU_VID] : null;
+function renderTablet(){
+  mostrar("vTablet");
+  const l = ENVIADA && LISTAS[ENVIADA.id];
+  if (!l){
+    $("#tConteudo").innerHTML = `<div class="vazio" style="padding:50px 16px;font-size:18px">📝 Nenhuma lista de presença para assinar no momento.<br><small>Quando a Mesa enviar a lista, ela abre aqui automaticamente.</small></div>`;
+    return;
+  }
+  if (AP_OK && !MEU_VID) setTimeout(escolherDono, 0);
+  const fase = ENVIADA.fase, nome = meuNome();
+  const meu = nome && (l[fase] || {})[chave(nome)];
+  $("#tConteudo").innerHTML = `<div class="tabCard">
+      <div class="info" style="font-size:15px">${esc(l.titulo || "Sessão")} · ${dataBR(l.data)}</div>
+      <div class="fase">${FASES[fase]}</div>
+      ${!nome ? `<div class="alerta aviso" style="font-size:16px">Escolha de quem é este tablet para assinar.</div><button class="btn grande" id="tDono">Escolher meu nome</button>`
+        : meu ? `<div class="alerta ok" style="font-size:18px;margin:0">✅ ${esc(nome)}, sua presença no ${faseNome(fase)} já foi assinada às ${horaBR(meu.em)}.</div>
+                 <img src="${meu.img}" alt="Sua assinatura" style="max-width:min(420px,90%);max-height:90px">
+                 <a class="btn claro" href="dashboard.html" style="text-decoration:none">Voltar ao Legislar</a>`
+        : `<div class="alerta aviso" style="font-size:16px;margin:0">🔒 Este tablet é de <b>${esc(nome)}</b>. Só ${esc(nome)} assina aqui.</div>
+           <button class="btn grande verde" id="tAssinar">✍ Assinar minha presença</button>`}
+    </div>
+    <div class="a4box" style="margin-top:18px;max-width:560px;margin-left:auto;margin-right:auto">${folhaHTML(l)}</div>`;
+  if ($("#tDono")) $("#tDono").onclick = escolherDono;
+  if ($("#tAssinar")) $("#tAssinar").onclick = modalAssinar;
+  escalar(); setTimeout(escalar, 60);
+}
+
+function modalAssinar(){
+  const l = ENVIADA && LISTAS[ENVIADA.id], nome = meuNome();
+  if (!l || !nome) return;
+  const fase = ENVIADA.fase, vk = chave(nome), real = (typeof ASSINATURAS_REAIS !== "undefined") && ASSINATURAS_REAIS[vk];
+  $("#modal").dataset.fixo = "";
+  abrirModal(`<header><h2>Assinar presença — ${esc(nome)}</h2><button class="x" onclick="fecharModal()">×</button></header>
+  <div class="corpo">
+    <div class="alerta aviso" style="margin:0">${faseNome(fase)} · Sessão de ${dataBR(l.data)}</div>
+    ${real ? `<div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:5px;color:#374151">Sua assinatura</div>
+        <div style="border:1.5px solid var(--linha);border-radius:12px;background:#fffdf6;min-height:84px;display:grid;place-items:center;padding:8px"><img src="${real}" style="max-width:100%;max-height:72px" alt="Assinatura de ${esc(nome)}"></div>
+      </div>`
+      : `<div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:5px;color:#374151">Assine com o dedo no quadro abaixo</div>
+        <div class="pad"><canvas id="sPad"></canvas><div class="base"></div><div class="dica" id="sDica">assine aqui</div></div>
+        <div class="linha" style="justify-content:flex-end;margin-top:6px"><button class="btn claro peq" type="button" id="sLimpar">Limpar</button></div>
+      </div>`}
+    <label class="check"><input type="checkbox" id="sAceite"><span>Declaro que estou presente no <b>${faseNome(fase)}</b> da sessão de ${dataBR(l.data)}.</span></label>
+    <div id="sErro"></div>
+  </div>
+  <footer><button class="btn claro" onclick="fecharModal()">Cancelar</button><button class="btn verde" id="sOk">✔ Confirmar e enviar</button></footer>`);
+  let pad = null;
+  if (!real){ pad = criarPad($("#sPad"), () => $("#sDica").style.display = "none"); $("#sLimpar").onclick = () => { pad.limpar(); $("#sDica").style.display = ""; }; }
+  $("#sOk").onclick = async () => {
+    const erro = m => $("#sErro").innerHTML = `<div class="alerta erro">${m}</div>`;
+    if (!$("#sAceite").checked) return erro("Marque a declaração de presença.");
+    if (!real && pad.vazio()) return erro("Faça sua assinatura no quadro.");
+    const btn = $("#sOk"); btn.disabled = true; btn.innerHTML = '<span class="carreg"></span> Enviando…';
+    try {
+      // confere se a Mesa ainda está recebendo este expediente
+      const env = (await db.ref(`${RAIZ}/enviada`).get()).val();
+      if (!env || env.id !== l.id || env.fase !== fase) throw new Error("A Mesa encerrou este expediente nos tablets.");
+      const em = agora();
+      const registro = {nome, em, img: real || pad.png(), emServidor: firebase.database.ServerValue.TIMESTAMP, aparelho: navigator.userAgent.slice(0, 180)};
+      const r = await db.ref(`${RAIZ}/listas/${l.id}/${fase}/${vk}`).transaction(cur => cur ? undefined : registro);
+      if (!r.committed) throw new Error("Sua presença neste expediente já foi assinada.");
+      fecharModal();
+      abrirModal(`<header><h2>✅ Presença enviada</h2></header>
+        <div class="corpo" style="text-align:center">
+          <div style="font-size:54px;line-height:1">✅</div>
+          <div style="font-size:18px;font-weight:700;color:var(--azul)">${esc(nome)}, sua presença no ${faseNome(fase)} foi enviada à Mesa.</div>
+          <div class="info">${dataBR(l.data)} · ${horaBR(em)}</div>
+          <div style="font-weight:600;color:var(--azul)">Voltando ao Legislar em <span id="sVolta">3</span> s…</div>
+        </div>
+        <footer><button class="btn verde" id="sVoltarJa">Voltar ao Legislar agora</button></footer>`);
+      $("#modal").dataset.fixo = "1";
+      const irPainel = () => { clearInterval(tv); location.href = "dashboard.html"; };
+      let n = 3; const tv = setInterval(() => { n--; const e = $("#sVolta"); if (e) e.textContent = n; if (n <= 0) irPainel(); }, 1000);
+      $("#sVoltarJa").onclick = irPainel;
+    } catch(err){
+      console.error(err); btn.disabled = false; btn.textContent = "✔ Confirmar e enviar"; erro(esc(err.message));
+    }
+  };
+}
+
+/* quadro de assinatura à mão (só para quem ainda não tem assinatura cadastrada) */
+function criarPad(canvas, aoDesenhar){
+  const ctx = canvas.getContext("2d"); let desenhando = false, tracos = 0, ult = null;
+  const dpr = Math.max(window.devicePixelRatio || 1, 1);
+  function ajustar(){ const r = canvas.getBoundingClientRect(); canvas.width = r.width * dpr; canvas.height = r.height * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.lineWidth = 2.6; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#0b1f4d"; }
+  setTimeout(ajustar, 30);
+  const pos = e => { const r = canvas.getBoundingClientRect(); return {x: e.clientX - r.left, y: e.clientY - r.top}; };
+  canvas.addEventListener("pointerdown", e => { e.preventDefault(); desenhando = true; ult = pos(e); canvas.setPointerCapture(e.pointerId); tracos++; aoDesenhar && aoDesenhar(); });
+  canvas.addEventListener("pointermove", e => { if (!desenhando) return; const p = pos(e); ctx.beginPath(); ctx.moveTo(ult.x, ult.y); ctx.lineTo(p.x, p.y); ctx.stroke(); ult = p; });
+  ["pointerup","pointercancel","pointerleave"].forEach(t => canvas.addEventListener(t, () => desenhando = false));
+  return {
+    vazio: () => tracos === 0,
+    limpar(){ ctx.clearRect(0,0,canvas.width,canvas.height); tracos = 0; },
+    png(){ // recorta as margens vazias
+      const w = canvas.width, h = canvas.height, d = ctx.getImageData(0,0,w,h).data;
+      let x0=w,y0=h,x1=0,y1=0;
+      for (let y=0;y<h;y++) for (let x=0;x<w;x++) if (d[(y*w+x)*4+3] > 10){ if(x<x0)x0=x; if(y<y0)y0=y; if(x>x1)x1=x; if(y>y1)y1=y; }
+      if (x1 < x0) return canvas.toDataURL("image/png");
+      const m = 6*dpr; x0=Math.max(0,x0-m); y0=Math.max(0,y0-m); x1=Math.min(w,x1+m); y1=Math.min(h,y1+m);
+      const r = document.createElement("canvas"); const esc2 = Math.min(1, 160 / (y1-y0));
+      r.width = Math.round((x1-x0)*esc2); r.height = Math.round((y1-y0)*esc2);
+      r.getContext("2d").drawImage(canvas, x0,y0,x1-x0,y1-y0, 0,0,r.width,r.height);
+      return r.toDataURL("image/png");
+    }
+  };
+}
+
+/* =====================================================================
+   INÍCIO
+   ===================================================================== */
+function aplicarPermissao(ehMesa){
+  EH_MESA = !!ehMesa;
+  $("#lnkVoltar").href = EH_MESA ? "atas.html" : "dashboard.html";
+  $("#lnkVoltar").innerHTML = EH_MESA ? '← Atas<span class="lblLonga"> / Proposições</span>' : '← Legislar';
+  if (!EH_MESA) fecharModal();
+  render(); verificarSync();
+}
+(async () => {
+  if (!(window.firebase && CONFIG.FIREBASE.databaseURL)){ toast("Sem conexão com o Firebase.", true); return; }
+  if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
+  db = firebase.database();
+  $("#seloModo").textContent = "● Sincronizado";
+  db.ref(".info/serverTimeOffset").on("value", s => OFFSET = s.val() || 0);
+  // notebook = Mesa (operador); tablet/celular = vereador. A decisão final vem do login do aparelho.
+  aplicarPermissao(EH_NOTEBOOK && !EH_TABLET);
+  if (firebase.auth) firebase.auth().onAuthStateChanged(u => {
+    if (!u || !u.email) return;
+    CONTA = u.email.split("@")[0];
+    aplicarPermissao(ehMesaAparelho());
+  });
+  db.ref("legislar/votacao/aparelhos").on("value", s => {
+    APARELHOS = s.val() || {}; AP_OK = true;
+    const antes = MEU_VID; MEU_VID = calcMeuVid();
+    if (antes !== MEU_VID || !EH_MESA) render();
+  });
+  const m = location.hash.match(/^#lista-(.+)$/); if (m) listaAtual = m[1];
+  db.ref(`${RAIZ}/listas`).on("value", s => {
+    const novas = s.val() || {};
+    // operador: aviso em tempo real a cada presença assinada
+    if (EH_MESA && LISTAS_OK) for (const id in novas) for (const fase of ["pequeno","grande"]){
+      const a0 = (LISTAS[id] && LISTAS[id][fase]) || {}, a1 = novas[id][fase] || {};
+      const novos = Object.keys(a1).filter(k => !a0[k]).map(k => a1[k].nome);
+      if (novos.length) toast(`✔ ${novos.join(", ")} ${novos.length > 1 ? "assinaram" : "assinou"} a presença — ${faseNome(fase)} (${Object.keys(a1).length}).`);
+    }
+    LISTAS = novas; LISTAS_OK = true; render(); verificarSync();
+  });
+  db.ref(`${RAIZ}/enviada`).on("value", s => {
+    const v = s.val(); ENVIADA = v && v.id ? v : null;
+    if (!EH_MESA && $("#fundo").classList.contains("on") && !$("#modal").dataset.fixo && !$("[data-dono]")) fecharModal();   // expediente trocado: fecha o quadro aberto
+    render();
+  });
+})();
+</script>
+<script src="js/tablets-ligados.js?v=1"></script>
+</body>
+</html>

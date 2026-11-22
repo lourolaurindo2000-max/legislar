@@ -29,34 +29,47 @@
 <script src="js/docs.js?v=15"></script>
 
 <!-- ====================================================================
-     BOTÃO "ASSINATURA DIGITAL DE ATAS"
+     BOTÕES "ASSINATURA DIGITAL DE ATAS" e "LISTA DE PRESENÇA DO VEREADOR"
      Injetado após a página montar (a página monta o conteúdo por JS).
      Tem auto-reparo: se o script recriar o corpo, o botão volta sozinho.
-     Abre assinatura.html (na mesma pasta do legislar).
+     Abrem assinatura.html e presenca-lista.html (na mesma pasta do legislar).
      ==================================================================== -->
 <script>
 (function () {
+  /* cartão de acesso (mesmo estilo nos dois botões) */
+  function cartao(id, href, rotulo, icone, titulo, sub, cor) {
+    var a = document.createElement('a');
+    a.id = id;
+    a.href = href;
+    // sempre a versão mais nova (evita cópia antiga guardada no tablet)
+    a.addEventListener('click', function () { a.href = href + '?v=' + Date.now(); });
+    a.setAttribute('aria-label', rotulo);
+    a.innerHTML =
+      '<span style="width:44px;height:44px;flex:none;border-radius:12px;display:grid;place-items:center;background:radial-gradient(circle at 30% 30%,#e7d3a3,#b8913a);color:#0f2a4a;font-size:22px">' + icone + '</span>' +
+      '<span style="flex:1;text-align:left;line-height:1.25">' +
+        '<strong style="display:block;font-size:16px;font-family:\'Barlow Condensed\',\'Source Sans 3\',system-ui,sans-serif;letter-spacing:.3px">' + titulo + '</strong>' +
+        '<small style="opacity:.85">' + sub + '</small>' +
+      '</span>' +
+      '<span style="background:#0f2a4a;color:#fff;border-radius:10px;padding:9px 14px;font-weight:600;font-size:14px;white-space:nowrap">Abrir →</span>';
+    a.style.cssText = 'display:flex;align-items:center;gap:14px;flex:1 1 300px;max-width:580px;padding:14px 16px;' +
+      'text-decoration:none;color:#0f2a4a;background:#fff;border:1px solid #d9d4c7;border-left:5px solid ' + cor + ';' +
+      'border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-family:\'Source Sans 3\',system-ui,sans-serif';
+    return a;
+  }
+  /* BOTÕES "ASSINATURA DIGITAL DE ATAS" e "LISTA DE PRESENÇA DO VEREADOR", lado a lado.
+     Injetados após a página montar (a página monta o conteúdo por JS).
+     Auto-reparo: se o script recriar o corpo, os botões voltam sozinhos. */
   function criarBtn() {
     if (document.getElementById('btnAssinaturaAtas')) return;
     if (!document.body) return;
-    var a = document.createElement('a');
-    a.id = 'btnAssinaturaAtas';
-    a.href = 'assinatura.html';
-    // sempre a versão mais nova (evita cópia antiga guardada no tablet)
-    a.addEventListener('click', function () { a.href = 'assinatura.html?v=' + Date.now(); });
-    a.setAttribute('aria-label', 'Abrir Assinatura Digital de Atas');
-    a.innerHTML =
-      '<span style="width:44px;height:44px;flex:none;border-radius:12px;display:grid;place-items:center;background:radial-gradient(circle at 30% 30%,#e7d3a3,#b8913a);color:#0f2a4a;font-size:22px">✍️</span>' +
-      '<span style="flex:1;text-align:left;line-height:1.25">' +
-        '<strong style="display:block;font-size:16px;font-family:\'Barlow Condensed\',\'Source Sans 3\',system-ui,sans-serif;letter-spacing:.3px">ASSINATURA DIGITAL DE ATAS</strong>' +
-        '<small style="opacity:.85">Os vereadores assinam a ata sobre as linhas do modelo</small>' +
-      '</span>' +
-      '<span style="background:#0f2a4a;color:#fff;border-radius:10px;padding:9px 14px;font-weight:600;font-size:14px;white-space:nowrap">Abrir →</span>';
-    a.style.cssText = 'display:flex;align-items:center;gap:14px;max-width:580px;margin:16px auto;padding:14px 16px;' +
-      'text-decoration:none;color:#0f2a4a;background:#fff;border:1px solid #d9d4c7;border-left:5px solid #b8913a;' +
-      'border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-family:\'Source Sans 3\',system-ui,sans-serif;' +
-      'position:relative;z-index:99999';
-    document.body.insertBefore(a, document.body.firstChild);
+    var w = document.createElement('div');
+    w.id = 'acessosAtas';
+    w.style.cssText = 'display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:1184px;margin:16px auto;padding:0 8px;position:relative;z-index:99999';
+    w.appendChild(cartao('btnAssinaturaAtas', 'assinatura.html', 'Abrir Assinatura Digital de Atas', '✍️',
+      'ASSINATURA DIGITAL DE ATAS', 'Os vereadores assinam a ata sobre as linhas do modelo', '#b8913a'));
+    w.appendChild(cartao('btnListaPresenca', 'presenca-lista.html', 'Abrir Lista de Presença do Vereador', '📝',
+      'LISTA DE PRESENÇA DO VEREADOR', 'Os vereadores assinam a presença no tablet; a Mesa imprime', '#1f7a4d'));
+    document.body.insertBefore(w, document.body.firstChild);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', criarBtn);
   else criarBtn();
