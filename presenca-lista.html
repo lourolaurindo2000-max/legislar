@@ -338,7 +338,7 @@ function linhasHTML(lista, fase){
   for (let i = 0; i < 9; i++){
     const s = sigs[i];
     const desce = s ? (0.22 + (BAIXAR_ASSIN[s.vk] || 0)) * 10.5 : 0;
-    h += `<div class="ln"><span class="n">${i+1}.</span><span class="t">${s ? `<img src="${s.img}" alt="" style="bottom:-${desce.toFixed(2)}mm"><span class="nm">${esc(s.nome)} · ${horaBR(s.em)}</span>` : ""}</span></div>`;
+    h += `<div class="ln"><span class="n">${i+1}.</span><span class="t">${s ? `<img src="${s.img}" alt="" style="bottom:-${desce.toFixed(2)}mm">` : ""}</span></div>`;
   }
   return h;
 }
@@ -542,8 +542,7 @@ async function gerarPdfLista(l){
         const desce = (0.22 + (BAIXAR_ASSIN[s.vk] || 0)) * h;
         pg.drawImage(img, {x: mm(50.7), y: Y(base) - desce, width: w, height: h});
       } catch(e){ console.error(e); }
-      const nm = `${s.nome} · ${horaBR(s.em)}`, tw = fN.widthOfTextAtSize(nm, 6.5);
-      pg.drawText(nm, {x: mm(192.3) - tw, y: Y(base - 1.3), size: 6.5, font: fN, color: rgb(.33,.33,.33)});
+      // sem nome/horário ao lado da assinatura (pedido do usuário): só a assinatura na linha
     }
     return base;
   };
