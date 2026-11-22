@@ -207,7 +207,7 @@ label.campo input,label.campo select{padding:11px 12px;border:1px solid var(--li
             <button class="btn verde" id="aGra">📲 Grande Expediente</button>
             <button class="btn claro" id="aRecolher">⏹ Recolher</button>
           </div>
-          <div class="info" style="margin-top:8px">Os tablets mostram só o botão de assinar do expediente enviado. Ao enviar o Grande Expediente, o Pequeno é encerrado nos tablets.</div>
+          <div class="info" style="margin-top:8px">Quem assina o Pequeno Expediente já fica assinado no Grande automaticamente. O botão do Grande só é preciso para quem chegar depois.</div>
         </div>
         <div>
           <table class="tabPres"><thead><tr><th>Vereador(a)</th><th style="text-align:center">Pequeno</th><th style="text-align:center">Grande</th></tr></thead><tbody id="lTabela"></tbody></table>
@@ -457,8 +457,25 @@ const SINCRONIZANDO = {}, filaSync = {};
 const docKey = l => "lp_" + l.id;
 const assinDigital = l => ["pequeno","grande"].map(f => ordenadas(l, f).map(s => s.vk + ":" + s.em).join(",")).join("|");
 const nomeDoc = l => `Lista de Presença — ${l.titulo && l.titulo !== "Sessão" ? l.titulo + " — " : ""}${dataBR(l.data)}`;
+const COPIANDO = {};
+function completarGrande(){
+  if (!EH_MESA) return;
+  for (const id in LISTAS){
+    const p = LISTAS[id].pequeno || {}, g = LISTAS[id].grande || {};
+    for (const vk in p){
+      const r = p[vk], ch = id + "/" + vk;
+      if (!r || r.grandeAuto || COPIANDO[ch]) continue;
+      COPIANDO[ch] = true;
+      const copia = Object.assign({}, r, {automatico: true}); delete copia.grandeAuto;
+      const tarefa = g[vk] ? Promise.resolve() : db.ref(`${RAIZ}/listas/${id}/grande/${vk}`).transaction(cur => cur ? undefined : copia);
+      tarefa.then(() => db.ref(`${RAIZ}/listas/${id}/pequeno/${vk}/grandeAuto`).set(true))
+        .catch(e => console.warn(e)).finally(() => { delete COPIANDO[ch]; });
+    }
+  }
+}
 function verificarSync(){
   if (!EH_MESA) return;
+  completarGrande();
   for (const id in LISTAS){
     const l = LISTAS[id], sig = assinDigital(l);
     if (l.docAtasSig === sig || SINCRONIZANDO[id]) continue;
@@ -633,7 +650,7 @@ function modalAssinar(){
         <div class="pad"><canvas id="sPad"></canvas><div class="base"></div><div class="dica" id="sDica">assine aqui</div></div>
         <div class="linha" style="justify-content:flex-end;margin-top:6px"><button class="btn claro peq" type="button" id="sLimpar">Limpar</button></div>
       </div>`}
-    <label class="check"><input type="checkbox" id="sAceite"><span>Declaro que estou presente no <b>${faseNome(fase)}</b> da sessão de ${dataBR(l.data)}.</span></label>
+    <label class="check"><input type="checkbox" id="sAceite"><span>Declaro que estou presente no <b>${fase === "pequeno" ? "Pequeno e no Grande Expediente" : faseNome(fase)}</b> da sessão de ${dataBR(l.data)}.</span></label>
     <div id="sErro"></div>
   </div>
   <footer><button class="btn claro" onclick="fecharModal()">Cancelar</button><button class="btn verde" id="sOk">✔ Confirmar e enviar</button></footer>`);
@@ -650,13 +667,18 @@ function modalAssinar(){
       if (!env || env.id !== l.id || env.fase !== fase) throw new Error("A Mesa encerrou este expediente nos tablets.");
       const em = agora();
       const registro = {nome, em, img: real || pad.png(), emServidor: firebase.database.ServerValue.TIMESTAMP, aparelho: navigator.userAgent.slice(0, 180)};
+      if (fase === "pequeno") registro.grandeAuto = true;   // presente no Pequeno = presente no Grande (automático)
       const r = await db.ref(`${RAIZ}/listas/${l.id}/${fase}/${vk}`).transaction(cur => cur ? undefined : registro);
       if (!r.committed) throw new Error("Sua presença neste expediente já foi assinada.");
+      if (fase === "pequeno"){
+        const g = Object.assign({}, registro, {automatico: true}); delete g.grandeAuto;
+        try { await db.ref(`${RAIZ}/listas/${l.id}/grande/${vk}`).transaction(cur => cur ? undefined : g); } catch(e){ console.warn(e); }   // se falhar, o notebook completa
+      }
       fecharModal();
       abrirModal(`<header><h2>✅ Presença enviada</h2></header>
         <div class="corpo" style="text-align:center">
           <div style="font-size:54px;line-height:1">✅</div>
-          <div style="font-size:18px;font-weight:700;color:var(--azul)">${esc(nome)}, sua presença no ${faseNome(fase)} foi enviada à Mesa.</div>
+          <div style="font-size:18px;font-weight:700;color:var(--azul)">${esc(nome)}, sua presença no ${fase === "pequeno" ? "Pequeno e no Grande Expediente" : faseNome(fase)} foi enviada à Mesa.</div>
           <div class="info">${dataBR(l.data)} · ${horaBR(em)}</div>
           <div style="font-weight:600;color:var(--azul)">Voltando ao Legislar em <span id="sVolta">3</span> s…</div>
         </div>
