@@ -407,7 +407,8 @@ function renderLista(){
   $("#lEstado").innerHTML = nos
     ? `<div class="alerta ok" style="margin:0">📲 Os tablets estão recebendo a assinatura (<b>Pequeno e Grande Expediente</b>). Cada assinatura aparece aqui na hora.</div>`
     : `<div class="alerta aviso" style="margin:0">Esta lista não está nos tablets. Toque em <b>📲 Enviar aos tablets</b> para os vereadores assinarem.</div>`;
-  $("#aEnviar").disabled = nos && ENVIADA.fase === "pequeno";
+  $("#aEnviar").disabled = false;   // sempre ativo: se já está nos tablets, reenvia (o aviso volta para quem ainda não assinou)
+  $("#aEnviar").textContent = nos ? "📲 Reenviar aos tablets" : "📲 Enviar aos tablets";
   $("#aRecolher").disabled = !nos;
   // tabela
   const reg = (fase, nome) => (l[fase] || {})[chave(nome)];
@@ -438,7 +439,7 @@ async function enviar(fase){
   if (!listaAtual) return;
   try {
     await db.ref(`${RAIZ}/enviada`).set({id: listaAtual, fase, em: firebase.database.ServerValue.TIMESTAMP});
-    toast("Lista enviada aos tablets (Pequeno e Grande Expediente).");
+    toast(ENVIADA && ENVIADA.id === listaAtual ? "Lista reenviada aos tablets: o aviso volta para quem ainda não assinou." : "Lista enviada aos tablets (Pequeno e Grande Expediente).");
   } catch(err){ toast("Não foi possível enviar: " + err.message, true); }
 }
 $("#aImprimir").onclick = () => imprimir(LISTAS[listaAtual]);
