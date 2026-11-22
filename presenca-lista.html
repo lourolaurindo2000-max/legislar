@@ -203,11 +203,10 @@ label.campo input,label.campo select{padding:11px 12px;border:1px solid var(--li
         <div class="faseBox">
           <h3>Enviar aos tablets</h3>
           <div class="linha">
-            <button class="btn verde" id="aPeq">📲 Pequeno Expediente</button>
-            <button class="btn verde" id="aGra">📲 Grande Expediente</button>
+            <button class="btn verde" id="aEnviar">📲 Enviar aos tablets</button>
             <button class="btn claro" id="aRecolher">⏹ Recolher</button>
           </div>
-          <div class="info" style="margin-top:8px">Quem assina o Pequeno Expediente já fica assinado no Grande automaticamente. O botão do Grande só é preciso para quem chegar depois.</div>
+          <div class="info" style="margin-top:8px">O vereador assina uma vez e fica presente no Pequeno e no Grande Expediente.</div>
         </div>
         <div>
           <table class="tabPres"><thead><tr><th>Vereador(a)</th><th style="text-align:center">Pequeno</th><th style="text-align:center">Grande</th></tr></thead><tbody id="lTabela"></tbody></table>
@@ -388,7 +387,7 @@ function renderListas(){
         <h3>${esc(l.titulo || "Sessão")} — ${dataBR(l.data)}</h3>
         <div class="meta">Pequeno Expediente: ${p} assinatura(s) · Grande Expediente: ${g} assinatura(s)</div>
       </div>
-      ${nos ? `<span class="tag aberta">📲 Nos tablets: ${faseNome(ENVIADA.fase)}</span>` : `<span class="tag cinza">Fora dos tablets</span>`}
+      ${nos ? `<span class="tag aberta">📲 Nos tablets</span>` : `<span class="tag cinza">Fora dos tablets</span>`}
       <button class="lixeira" data-apagar="${l.id}" title="Apagar esta lista" aria-label="Apagar lista">🗑</button>
       <button class="btn peq" data-abrir="${l.id}">Abrir</button>
     </div>`;
@@ -404,12 +403,11 @@ function renderLista(){
   $("#lTitulo").textContent = `${l.titulo || "Sessão"} — ${dataBR(l.data)}`;
   $("#lMeta").textContent = `Pequeno Expediente: ${p.length} · Grande Expediente: ${g.length}`;
   const nos = ENVIADA && ENVIADA.id === l.id;
-  $("#lTag").innerHTML = nos ? `<span class="tag aberta">📲 Nos tablets: ${faseNome(ENVIADA.fase)}</span>` : `<span class="tag cinza">Fora dos tablets</span>`;
+  $("#lTag").innerHTML = nos ? `<span class="tag aberta">📲 Nos tablets</span>` : `<span class="tag cinza">Fora dos tablets</span>`;
   $("#lEstado").innerHTML = nos
-    ? `<div class="alerta ok" style="margin:0">📲 Os tablets estão recebendo a assinatura do <b>${faseNome(ENVIADA.fase)}</b>. Cada assinatura aparece aqui na hora.</div>`
-    : `<div class="alerta aviso" style="margin:0">Esta lista não está nos tablets. Toque em <b>📲 Pequeno Expediente</b> ou <b>📲 Grande Expediente</b> para os vereadores assinarem.</div>`;
-  $("#aPeq").disabled = nos && ENVIADA.fase === "pequeno";
-  $("#aGra").disabled = nos && ENVIADA.fase === "grande";
+    ? `<div class="alerta ok" style="margin:0">📲 Os tablets estão recebendo a assinatura (<b>Pequeno e Grande Expediente</b>). Cada assinatura aparece aqui na hora.</div>`
+    : `<div class="alerta aviso" style="margin:0">Esta lista não está nos tablets. Toque em <b>📲 Enviar aos tablets</b> para os vereadores assinarem.</div>`;
+  $("#aEnviar").disabled = nos && ENVIADA.fase === "pequeno";
   $("#aRecolher").disabled = !nos;
   // tabela
   const reg = (fase, nome) => (l[fase] || {})[chave(nome)];
@@ -432,8 +430,7 @@ function renderLista(){
 }
 
 $("#btnVoltar").onclick = () => { listaAtual = null; location.hash = ""; render(); };
-$("#aPeq").onclick = () => enviar("pequeno");
-$("#aGra").onclick = () => enviar("grande");
+$("#aEnviar").onclick = () => enviar("pequeno");   // um envio só: assinar vale para o Pequeno e o Grande
 $("#aRecolher").onclick = async () => {
   try { await db.ref(`${RAIZ}/enviada`).set(null); toast("Lista recolhida dos tablets."); } catch(err){ toast("Erro: " + err.message, true); }
 };
@@ -441,7 +438,7 @@ async function enviar(fase){
   if (!listaAtual) return;
   try {
     await db.ref(`${RAIZ}/enviada`).set({id: listaAtual, fase, em: firebase.database.ServerValue.TIMESTAMP});
-    toast(`${faseNome(fase)} enviado aos tablets.`);
+    toast("Lista enviada aos tablets (Pequeno e Grande Expediente).");
   } catch(err){ toast("Não foi possível enviar: " + err.message, true); }
 }
 $("#aImprimir").onclick = () => imprimir(LISTAS[listaAtual]);
@@ -573,7 +570,7 @@ $("#btnNova").onclick = () => {
   <form class="corpo" id="fNova">
     <label class="campo">Data da sessão<input type="date" id="nData" value="${hoje}" required></label>
     <label class="campo">Sessão (opcional — só para identificar na lista)<input id="nTitulo" placeholder="Ex.: 34ª Sessão Ordinária"></label>
-    <label class="check"><input type="checkbox" id="nEnviar" checked><span>Já enviar o <b>Pequeno Expediente</b> aos tablets</span></label>
+    <label class="check"><input type="checkbox" id="nEnviar" checked><span>Já enviar aos tablets</span></label>
     <div id="nErro"></div>
   </form>
   <footer><button class="btn claro" onclick="fecharModal()">Cancelar</button><button class="btn ouro" form="fNova" id="nSalvar">Criar lista</button></footer>`);
@@ -586,7 +583,7 @@ $("#btnNova").onclick = () => {
       if ($("#nEnviar").checked) await db.ref(`${RAIZ}/enviada`).set({id, fase: "pequeno", em: firebase.database.ServerValue.TIMESTAMP});
       const enviou = $("#nEnviar").checked;
       fecharModal(); listaAtual = id; location.hash = "lista-" + id; render();
-      toast(enviou ? "Lista criada e enviada aos tablets (Pequeno Expediente)." : "Lista criada.");
+      toast(enviou ? "Lista criada e enviada aos tablets." : "Lista criada.");
     } catch(err){
       $("#nSalvar").disabled = false;
       $("#nErro").innerHTML = `<div class="alerta erro">Não foi possível criar: ${esc(err.message)}</div>`;
@@ -619,7 +616,7 @@ function renderTablet(){
   const meu = nome && (l[fase] || {})[chave(nome)];
   $("#tConteudo").innerHTML = `<div class="tabCard">
       <div class="info" style="font-size:15px">${esc(l.titulo || "Sessão")} · ${dataBR(l.data)}</div>
-      <div class="fase">${FASES[fase]}</div>
+      <div class="fase">${fase === "pequeno" ? "PEQUENO E GRANDE EXPEDIENTE" : FASES[fase]}</div>
       ${!nome ? `<div class="alerta aviso" style="font-size:16px">Escolha de quem é este tablet para assinar.</div><button class="btn grande" id="tDono">Escolher meu nome</button>`
         : meu ? `<div class="alerta ok" style="font-size:18px;margin:0">✅ ${esc(nome)}, sua presença no ${faseNome(fase)} já foi assinada às ${horaBR(meu.em)}.</div>
                  <img src="${meu.img}" alt="Sua assinatura" style="max-width:min(420px,90%);max-height:90px">
