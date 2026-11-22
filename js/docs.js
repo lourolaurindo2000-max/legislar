@@ -179,6 +179,7 @@
   var dono = null, liberado = null;   // tablet pessoal: dono do tablet e se já digitou a senha
   function podeVer(d) {
     if (!MESA && CFG.ordemEnvio && d.por && d.por !== 'mesa') return false;   // arquivos pessoais do vereador (Anotações) não aparecem para todos
+    if (!MESA && d.listaPresenca) return false;   // Lista de Presença: só o notebook da Mesa vê (fica salva lá para imprimir)
     if (!pessoal || MESA) return true;
     return !!liberado && (d.dono === 'todos' || d.dono === liberado);
   }
