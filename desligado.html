@@ -25,12 +25,11 @@
 <div id="c">
   <img src="img/brasao.png" alt="">
   <b>Sessão encerrada</b>
-  <p>Tablet desligado pelo operador.<br>A tela vai apagar sozinha.</p>
-  <small>Toque na tela para abrir o sistema novamente.</small>
+  <p>Tablet desligado</p>
 </div>
 <script>
-  // depois de 15 s o texto some (tela totalmente preta) até o tablet apagar
-  setTimeout(function () { document.getElementById('c').className = 'apagado'; }, 15000);
+  // depois de 5 s o texto some (tela totalmente preta) até o tablet apagar
+  setTimeout(function () { document.getElementById('c').className = 'apagado'; }, 5000);
   document.body.onclick = function () { location.replace('dashboard.html'); };
 </script>
 </body>
