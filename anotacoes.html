@@ -411,6 +411,8 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   // Celular do vereador: entra com nome + senha, sem prender o aparelho a ninguém
   var EH_CEL = EH_TABLET && !!(window.PldLogin && PldLogin.celular && PldLogin.celular());
   if (window.__AN_CEL !== undefined) EH_CEL = !!window.__AN_CEL;
+  // Tablets entram nas anotações sem senha (pedido de 23/11/2026); celulares continuam pedindo
+  var SEM_SENHA = EH_TABLET && !EH_CEL;
 
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -881,9 +883,12 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     if (!apOk || !enOk) return;
     var d = calcDono();
     if (d !== dono) { dono = d; trancar(); }
+    // Tablet: abre as anotações direto, sem senha (o tablet já é do vereador pelo vínculo). Celular continua com senha.
+    if (SEM_SENHA && dono && liberado !== dono) { liberado = dono; iniciarNotas(dono); }
     var aberto = !!dono && liberado === dono;
     $('vEscolha').hidden = !!dono; $('vSenha').hidden = !dono || aberto; $('vTablet').hidden = !aberto;
-    $('btnSairV').hidden = !aberto;
+    $('btnSairV').hidden = !aberto || (SEM_SENHA && !ensaio);
+    if (SEM_SENHA) $('btnSairV').innerHTML = '↺ <span class="lbl">Trocar o nome</span>';
     $('sTroca').hidden = !(ensaio || EH_CEL);
     if (dono && !aberto) $('sNome').textContent = NOME[dono];
     if (EH_CEL && dono) $('sTroca').textContent = 'Não é ' + NOME[dono] + '? Escolher outro nome';
@@ -908,7 +913,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     notas = []; fecharEditor(); fecharLeitor(); $('notas').innerHTML = ''; $('listaMesa').innerHTML = '';
     $('sPw').value = ''; $('sErr').textContent = '';
   }
-  $('btnSairV').onclick = function () { trancar(); avaliar(); };
+  $('btnSairV').onclick = function () { if (SEM_SENHA) ls('an_meu', null); trancar(); avaliar(); };
   $('sTroca').onclick = function () { ls(EH_CEL ? 'an_cel' : 'an_meu', null); trancar(); avaliar(); };
   $('formSenha').onsubmit = function (e) {
     e.preventDefault();
