@@ -435,7 +435,9 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   }
 
   // Tela cheia (tablet)
-  function emTela() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  // instalado como aplicativo (manifest, display fullscreen) já está em tela cheia: não pede de novo (evitava o aviso "para sair do ecrã inteiro" a cada toque)
+  function comoApp() { try { return matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } }
+  function emTela() { return comoApp() || !!(document.fullscreenElement || document.webkitFullscreenElement); }
   if (EH_TABLET && !EH_CEL) {
     // Tablets: sem a parte "Meus arquivos" (título, envio, frase e lista) — pedido do usuário. Celular continua com ela.
     $('mArqEnviar').parentNode.hidden = true;

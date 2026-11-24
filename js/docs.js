@@ -155,7 +155,9 @@
   }
   document.title = CFG.titulo + ' — Câmara de Almadina';
 
-  function emTela() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  // instalado como aplicativo (manifest, display fullscreen) já está em tela cheia: não pede de novo (evitava o aviso "para sair do ecrã inteiro" a cada toque)
+  function comoApp() { try { return matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } }
+  function emTela() { return comoApp() || !!(document.fullscreenElement || document.webkitFullscreenElement); }
   if (EH_TABLET && !EH_CEL) {
     $('btnTela').onclick = function () { try { var el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) {} };
     document.addEventListener('click', function () { if (!emTela()) { try { var el = document.documentElement; var p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if (p && p.catch) p.catch(function () {}); } catch (e) {} } }, true);
