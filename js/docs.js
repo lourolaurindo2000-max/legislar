@@ -157,7 +157,6 @@
 
   function emTela() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
   if (EH_TABLET && !EH_CEL) {
-    $('btnTela').hidden = false;
     $('btnTela').onclick = function () { try { var el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) {} };
     document.addEventListener('click', function () { if (!emTela()) { try { var el = document.documentElement; var p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if (p && p.catch) p.catch(function () {}); } catch (e) {} } }, true);
   }
