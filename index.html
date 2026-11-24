@@ -388,6 +388,11 @@
                 font-size: 1.15rem;
             }
         }
+        /* olhinho para ver a senha */
+        .senha-box { position: relative; }
+        .senha-box input { padding-right: 3.4rem !important; }
+        .olho-senha { position: absolute; top: 0; right: 0; bottom: 0; width: 3.2rem; display: flex; align-items: center; justify-content: center; background: none; border: none; color: #94a3b8; font-size: 1.15rem; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .olho-senha:hover, .olho-senha:focus-visible { color: #e6b955; outline: none; }
     </style>
 <script src="js/sem-barra.js"></script>
 </head>
@@ -421,7 +426,10 @@
                 
                 <div class="input-group">
                     <label for="password">Senha</label>
-                    <input type="password" id="password" name="password" value="" placeholder="••••••••" required autocomplete="current-password">
+                    <div class="senha-box">
+                        <input type="password" id="password" name="password" value="" placeholder="••••••••" required autocomplete="current-password">
+                        <button type="button" class="olho-senha" id="olhoSenha" aria-label="Mostrar senha" title="Mostrar senha"><i class="fa-solid fa-eye"></i></button>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn-login">
@@ -592,5 +600,19 @@
         });
     </script>
 <script>__es5('app-index', '__ok_index')</script>
+<script>
+(function () {
+  var b = document.getElementById("olhoSenha"), c = document.getElementById("password");
+  if (!b || !c) return;
+  b.addEventListener("click", function () {
+    var ver = c.type === "password";
+    c.type = ver ? "text" : "password";
+    b.innerHTML = ver ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+    b.setAttribute("aria-label", ver ? "Esconder senha" : "Mostrar senha"); b.title = b.getAttribute("aria-label");
+  });
+  // ao entrar, volta a esconder (o navegador não guarda a senha como texto)
+  var f = document.getElementById("loginForm"); if (f) f.addEventListener("submit", function () { c.type = "password"; }, true);
+})();
+</script>
 </body>
 </html>
