@@ -441,7 +441,6 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     $('mArqEnviar').parentNode.hidden = true;
     $('mArqDica').hidden = true; $('mProg').hidden = true; $('mLista').hidden = true;
     $('mLista').style.display = 'none';
-    $('btnTela').hidden = false;
     $('btnTela').onclick = function () { try { var el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) {} };
     document.addEventListener('click', function () { if (!emTela()) { try { var el = document.documentElement; var p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el); if (p && p.catch) p.catch(function () {}); } catch (e) {} } }, true);
   }
