@@ -76,6 +76,9 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
 /* Anotações */
 .barra{display:flex;align-items:center;flex-wrap:wrap;margin-top:22px}
 .barra h2{margin:0;flex:1}
+.barra .btn+.btn{margin-left:8px}
+.senha.pasta{margin:12px 0 0}
+.senha.pasta b{font-size:24px}
 .notas{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));grid-gap:14px;margin-top:12px}
 .nota{background:#fdf6dd;color:#2b2310;border-radius:4px 14px 14px 14px;border-top:5px solid var(--gold);padding:12px 14px;cursor:pointer;min-width:0}
 .nota h4{margin:0 0 6px;font-family:var(--f-display);font-size:21px;line-height:1.1;overflow-wrap:anywhere}
@@ -243,15 +246,26 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     <div id="listaMesa"><div class="vazio">Carregando…</div></div>
 
     <div class="barra">
-      <h2>Minhas anotações</h2>
-      <button class="btn btn-ouro" id="btnNova" type="button">+ Nova anotação</button>
+      <h2>🔒 Pasta privada</h2>
+      <button class="btn btn-sec" id="btnTrancar" type="button" hidden>🔒 Trancar</button>
+      <button class="btn btn-ouro" id="btnNova" type="button" hidden>+ Nova anotação</button>
     </div>
-    <form class="editor" id="editor" hidden>
-      <input id="eTit" maxlength="120" placeholder="Título" autocomplete="off">
-      <textarea id="eTxt" maxlength="100000" placeholder="Escreva aqui…"></textarea>
-      <div class="acoes"><button class="btn btn-sec" type="button" id="eCanc">Cancelar</button><button class="btn btn-ouro" type="submit" id="eSalvar">Salvar</button></div>
+    <!-- Pasta privada do vereador: no tablet pede a senha dele toda vez que abre -->
+    <form class="senha pasta" id="formPasta" autocomplete="off" hidden>
+      <b>Pasta privada</b>
+      <p>Suas anotações privadas. Digite a sua senha para abrir.</p>
+      <input id="pPw" type="password" inputmode="text" placeholder="Senha" autocomplete="off">
+      <button class="btn btn-ouro" type="submit" id="pOk">Abrir pasta</button>
+      <div class="erro" id="pErr"></div>
     </form>
-    <div class="notas" id="notas"></div>
+    <div id="pasta" hidden>
+      <form class="editor" id="editor" hidden>
+        <input id="eTit" maxlength="120" placeholder="Título" autocomplete="off">
+        <textarea id="eTxt" maxlength="100000" placeholder="Escreva aqui…"></textarea>
+        <div class="acoes"><button class="btn btn-sec" type="button" id="eCanc">Cancelar</button><button class="btn btn-ouro" type="submit" id="eSalvar">Salvar</button></div>
+      </form>
+      <div class="notas" id="notas"></div>
+    </div>
 
     <div class="barra">
       <h2>Meus arquivos</h2>
@@ -912,6 +926,7 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     pararArqs();
     notas = []; fecharEditor(); fecharLeitor(); $('notas').innerHTML = ''; $('listaMesa').innerHTML = '';
     $('sPw').value = ''; $('sErr').textContent = '';
+    mostrarPasta(false);
   }
   $('btnSairV').onclick = function () { if (SEM_SENHA) ls('an_meu', null); trancar(); avaliar(); };
   $('sTroca').onclick = function () { ls(EH_CEL ? 'an_cel' : 'an_meu', null); trancar(); avaliar(); };
@@ -920,19 +935,31 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
     var vid = dono, pw = $('sPw').value, err = $('sErr'), b = $('sOk');
     err.textContent = '';
     if (!vid) return;
-    if (Date.now() < travaAte) { err.textContent = 'Muitas tentativas. Aguarde ' + Math.ceil((travaAte - Date.now()) / 1000) + ' segundos.'; return; }
-    if (!seOk) { err.textContent = 'Carregando… tente de novo em instantes.'; return; }
-    var sv = senhas[vid];
-    if (!sv || !sv.hash) { err.textContent = 'Sua senha ainda não foi cadastrada. Procure a Mesa.'; return; }
-    if (!pw) { err.textContent = 'Digite a sua senha.'; $('sPw').focus(); return; }
+    var msg = antesDaSenha(vid, pw); if (msg) { err.textContent = msg; if (!pw) $('sPw').focus(); return; }
     b.disabled = true; b.textContent = 'Verificando…';
-    kdf(pw, sv.salt).then(function (h) { return h === sv.hash; }, function () { return false; }).then(function (ok) {
+    conferirSenha(vid, pw).then(function (ok) {
       b.disabled = false; b.textContent = 'Entrar'; $('sPw').value = '';
       if (vid !== dono) return;
-      if (!ok) { falhas++; if (falhas >= 5) { travaAte = Date.now() + 30000; falhas = 0; } err.textContent = 'Senha incorreta.'; $('sPw').focus(); return; }
-      falhas = 0; liberado = vid; iniciarNotas(vid); avaliar();
+      if (!ok) { err.textContent = 'Senha incorreta.'; $('sPw').focus(); return; }
+      liberado = vid; iniciarNotas(vid); avaliar();
     });
   };
+  // Mesma senha do vereador (legislar/anotacoes/senhas/{vid}) — usada no celular e na Pasta privada do tablet
+  function antesDaSenha(vid, pw) {
+    if (Date.now() < travaAte) return 'Muitas tentativas. Aguarde ' + Math.ceil((travaAte - Date.now()) / 1000) + ' segundos.';
+    if (!seOk) return 'Carregando… tente de novo em instantes.';
+    var sv = senhas[vid];
+    if (!sv || !sv.hash) return 'Sua senha ainda não foi cadastrada. Procure a Mesa.';
+    if (!pw) return 'Digite a sua senha.';
+    return '';
+  }
+  function conferirSenha(vid, pw) {
+    var sv = senhas[vid];
+    return kdf(pw, sv.salt).then(function (h) { return h === sv.hash; }, function () { return false; }).then(function (ok) {
+      if (ok) falhas = 0; else { falhas++; if (falhas >= 5) { travaAte = Date.now() + 30000; falhas = 0; } }
+      return ok;
+    });
+  }
 
   var avisoT = null;
   function iniciarTablet() {
@@ -963,8 +990,40 @@ h2 .n{margin-left:10px;font-family:var(--f-body);font-size:13px;font-weight:700;
   var notas = [], refNotas = null, editando = null, lendo = null, fs = +ls('an_fs') || 24;
   function iniciarNotas(vid) {
     iniciarArqs(vid);
+    trancarPasta();
+    if (!SEM_SENHA) abrirPasta(vid);   // celular: já entrou com a senha
+  }
+  // ---------- Pasta privada: trancada até o vereador digitar a senha dele ----------
+  function mostrarPasta(aberta) {
+    $('pasta').hidden = !aberta; $('btnNova').hidden = !aberta; $('btnTrancar').hidden = !aberta || !SEM_SENHA;
+    $('formPasta').hidden = aberta; $('pPw').value = ''; $('pErr').textContent = '';
+  }
+  function trancarPasta() {
+    if (refNotas) { refNotas.off(); refNotas = null; }
+    notas = []; fecharEditor(); fecharLeitor(); $('notas').innerHTML = '';
+    mostrarPasta(false);
+  }
+  $('btnTrancar').onclick = function () { trancarPasta(); toast('Pasta trancada.'); };
+  // tablet apagou a tela ou saiu da página: a pasta tranca sozinha
+  document.addEventListener('visibilitychange', function () { if (document.hidden && SEM_SENHA && refNotas) trancarPasta(); });
+  $('formPasta').onsubmit = function (e) {
+    e.preventDefault();
+    var vid = dono, pw = $('pPw').value, err = $('pErr'), b = $('pOk');
+    err.textContent = '';
+    if (!vid || liberado !== vid) return;
+    var msg = antesDaSenha(vid, pw); if (msg) { err.textContent = msg; if (!pw) $('pPw').focus(); return; }
+    b.disabled = true; b.textContent = 'Verificando…';
+    conferirSenha(vid, pw).then(function (ok) {
+      b.disabled = false; b.textContent = 'Abrir pasta'; $('pPw').value = '';
+      if (vid !== dono || liberado !== vid) return;
+      if (!ok) { err.textContent = 'Senha incorreta.'; $('pPw').focus(); return; }
+      abrirPasta(vid);
+    });
+  };
+  function abrirPasta(vid) {
     if (refNotas) refNotas.off();
     notas = []; fecharEditor(); fecharLeitor();
+    mostrarPasta(true);
     refNotas = db.ref(BASE + '/notas/' + vid);
     $('notas').innerHTML = '<div class="vazio">Carregando…</div>';
     refNotas.on('value', function (s) {
