@@ -48,15 +48,25 @@
       else if (t.className === 'lp-fechar') { caixa.style.display = 'none'; if (chaveFechado) ss(chaveFechado, '1'); }
     });
   }
-  function mostrar(titulo, texto, botao, url, kFechado) {
+  // fixo = sem o botão "Depois": o aviso fica na tela até o vereador assinar
+  function mostrar(titulo, texto, botao, url, kFechado, fixo) {
     if (kFechado && ss(kFechado)) return esconder();
     if (!caixa) montar();
     destino = url; chaveFechado = kFechado || '';
     caixa.innerHTML = '<b>' + esc(titulo) + '</b><p>' + texto + '</p>' +
-      '<div class="lp-l"><button type="button" class="lp-fechar">Depois</button><button type="button" class="lp-abrir">' + esc(botao) + '</button></div>';
+      '<div class="lp-l">' + (fixo ? '' : '<button type="button" class="lp-fechar">Depois</button>') + '<button type="button" class="lp-abrir">' + esc(botao) + '</button></div>';
     caixa.style.display = 'block';
+    empilhar();
   }
   function esconder() { if (caixa) caixa.style.display = 'none'; }
+  // Se o aviso da Ata (#as-aviso) também estiver na tela, este sobe para ficar logo acima dele (não se cobrem)
+  function empilhar() {
+    if (!caixa || caixa.style.display === 'none') return;
+    var as = D.getElementById('as-aviso'), base = 'calc(3vmin + 4px)';
+    if (as && as.style.display !== 'none' && as.offsetHeight) base = 'calc(3vmin + ' + (as.offsetHeight + 12) + 'px)';
+    if (caixa.style.bottom !== base) caixa.style.bottom = base;
+  }
+  setInterval(empilhar, 800);
   function ehMesa() {
     var c = null; try { c = W.PldAuth && PldAuth.conta(); } catch (e) {}
     return c === 'mesa' || (ehNotebook && c !== 'tv');
@@ -87,7 +97,7 @@
       if (meuNome && sigs[chave(meuNome)]) return esconder();   // já assinou este expediente
       mostrar('📝 Lista de presença para você assinar', tit + '<br><small>A Mesa enviou a lista de presença' +
         (meuNome ? ', ' + esc(meuNome) : '') + '. Assine pelo tablet.</small>',
-        'Assinar agora', 'presenca-lista.html?v=' + Date.now(), 'lp_tab_' + env.id + '_' + env.fase + '_' + (env.em || ''));
+        'Assinar agora', 'presenca-lista.html?v=' + Date.now(), '', true);   // não dá para fechar: some só quando assinar
     }
 
     db.ref((W.__DOC_RAIZ || 'legislar') + '/votacao/aparelhos').on('value', function (s) {

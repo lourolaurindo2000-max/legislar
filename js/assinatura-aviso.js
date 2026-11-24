@@ -54,12 +54,13 @@
       else if (t.className === 'as-fechar') { caixa.style.display = 'none'; if (chaveFechado) ss(chaveFechado, '1'); }
     });
   }
-  function mostrar(titulo, texto, botao, url, kFechado) {
+  // fixo = sem o botão "Depois": o aviso fica na tela até o vereador assinar
+  function mostrar(titulo, texto, botao, url, kFechado, fixo) {
     if (kFechado && ss(kFechado)) return esconder();
     if (!caixa) montar();
     destino = url; chaveFechado = kFechado || '';
     caixa.innerHTML = '<b>' + esc(titulo) + '</b><p>' + texto + '</p>' +
-      '<div class="as-l"><button type="button" class="as-fechar">Depois</button><button type="button" class="as-abrir">' + esc(botao) + '</button></div>';
+      '<div class="as-l">' + (fixo ? '' : '<button type="button" class="as-fechar">Depois</button>') + '<button type="button" class="as-abrir">' + esc(botao) + '</button></div>';
     caixa.style.display = 'block';
   }
   function esconder() { if (caixa) caixa.style.display = 'none'; }
@@ -98,7 +99,7 @@
       if (meuNome && (sigs[chave(meuNome)] || aus[chave(meuNome)])) return esconder();   // já assinou ou está ausente
       mostrar('✍ Ata para você assinar', tit + '<br><small>A Mesa enviou a ata para assinatura' +
         (meuNome ? ', ' + esc(meuNome) : '') + '. Leia o documento e assine pelo tablet.</small>',
-        'Assinar agora', 'assinatura.html?v=' + Date.now(), 'as_tab_' + env.id + '_' + (env.em || ''));
+        'Assinar agora', 'assinatura.html?v=' + Date.now(), '', true);   // não dá para fechar: some só quando assinar
     }
 
     db.ref((W.__DOC_RAIZ || 'legislar') + '/votacao/aparelhos').on('value', function (s) {
