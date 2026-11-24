@@ -99,7 +99,7 @@
       if (meuNome && (sigs[chave(meuNome)] || aus[chave(meuNome)])) return esconder();   // já assinou ou está ausente
       mostrar('✍ Ata para você assinar', tit + '<br><small>A Mesa enviou a ata para assinatura' +
         (meuNome ? ', ' + esc(meuNome) : '') + '. Leia o documento e assine pelo tablet.</small>',
-        'Assinar agora', 'assinatura.html?v=' + Date.now(), '', true);   // não dá para fechar: some só quando assinar
+        'Assinar agora', 'assinatura.html?v=' + Date.now(), meuNome ? '' : 'as_tab_' + env.id + '_' + (env.em || ''), !!meuNome);   // tablet do vereador: não dá para fechar, some só quando assinar (tablet sem vínculo mantém o "Depois")
     }
 
     db.ref((W.__DOC_RAIZ || 'legislar') + '/votacao/aparelhos').on('value', function (s) {
