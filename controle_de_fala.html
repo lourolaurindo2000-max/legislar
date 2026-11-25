@@ -486,10 +486,6 @@
                 <i class="fa-solid fa-tv"></i><span id="btn-tv-tela-txt">TV: espera</span>
             </button>
 
-            <!-- Nome da sessão na tela de espera da Smart TV (só no notebook) -->
-            <button id="btn-sessao-nome" type="button" title="Nome da sessão na Smart TV" class="bg-governo-darkBlue hover:bg-governo-accent text-white px-3 py-2.5 rounded-xl border border-governo-gold/60 transition hidden sm:flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
-                <i class="fa-solid fa-pen text-governo-gold"></i><span>Nome da sessão</span>
-            </button>
 
             <!-- Encerrar o acesso do Presidente (não aparece na Smart TV) -->
             <button id="cf-sair" type="button" title="Sair (voltar ao painel)" class="bg-governo-darkBlue hover:bg-rose-700 text-white px-3 py-2.5 rounded-xl border border-gray-600 transition flex items-center gap-2 text-sm font-bold">
@@ -667,18 +663,6 @@
         </div>
     </div>
 
-    <!-- NOME DA SESSÃO (só no notebook) — o mesmo nome aparece no telão da Votação -->
-    <div id="sessao-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label="Nome da sessão">
-        <form id="sessao-form" class="bg-governo-blue border border-governo-gold/60 rounded-2xl shadow-2xl w-full max-w-lg p-6 flex flex-col gap-3" autocomplete="off">
-            <h3 class="font-black uppercase tracking-wider text-governo-gold flex items-center gap-2"><i class="fa-solid fa-pen"></i> Nome da sessão</h3>
-            <p class="text-xs text-gray-400">Aparece no topo da tela de espera da Smart TV (e também no telão da Votação). Deixe vazio para não mostrar.</p>
-            <input id="sessao-input" maxlength="60" placeholder="Ex.: VIGÉSIMA SESSÃO ORDINÁRIA" class="w-full bg-governo-dark border border-gray-600 rounded-lg px-3 py-3 text-white uppercase font-bold focus:outline-none focus:border-governo-gold">
-            <div class="flex justify-end gap-2 mt-2">
-                <button type="button" id="sessao-cancelar" class="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition">Cancelar</button>
-                <button type="submit" class="bg-governo-gold hover:brightness-110 text-governo-dark text-xs font-black uppercase px-4 py-2 rounded-lg transition">Salvar</button>
-            </div>
-        </form>
-    </div>
 
     <!-- MODO ADMINISTRADOR (só no notebook / computador) -->
     <div id="admin-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label="Modo administrador">
@@ -1213,7 +1197,7 @@
             let ehTV = false;
             try { ehTV = window.self !== window.top || (localStorage.getItem('pld_tv') === '1' && !(navigator.maxTouchPoints > 0)); } catch (e) { ehTV = true; }
             if (/SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|BRAVIA|SonyDTV|\bAFT[A-Z]|GoogleTV|Google TV|Android ?TV|CrKey|Roku|VIDAA|NETTV|Viera|AQUOS|Opera TV|LG Browser|Large Screen|PhilipsTV|Hisense.*TV|TV Safari/i.test(navigator.userAgent || '')) ehTV = true;   // navegador de Smart TV (Samsung, LG, Sony, Android/Google TV, Fire TV, Roku…)
-            if (ehTV) { $('#btn-admin').remove(); $('#btn-tv-tela').remove(); $('#cf-sair').remove(); $('#btn-sessao-nome').remove(); }
+            if (ehTV) { $('#btn-admin').remove(); $('#btn-tv-tela').remove(); $('#cf-sair').remove(); }
 
             // Nome da sessão: mesmo dado do telão da Votação (legislar/votacao/config/sessaoNome). Padrão até alguém salvar outro.
             (function () {
@@ -1237,21 +1221,6 @@
                 }
                 mostrar();
                 refNome.on('value', function (s) { var v = s.val(); if (v && typeof v.texto === 'string') nome = v.texto; mostrar(); });
-                if (ehTV) return;
-                function fechar() { $('#sessao-modal').addClass('hidden').removeClass('flex'); }
-                $('#btn-sessao-nome').on('click', function () {
-                    $('#sessao-input').val(nome);
-                    $('#sessao-modal').removeClass('hidden').addClass('flex');
-                    setTimeout(function () { $('#sessao-input').trigger('focus').trigger('select'); }, 50);
-                });
-                $('#sessao-cancelar').on('click', fechar);
-                $('#sessao-modal').on('click', function (e) { if (e.target === this) fechar(); });
-                $('#sessao-form').on('submit', function (e) {
-                    e.preventDefault();
-                    var t = String($('#sessao-input').val() || '').replace(/\s+/g, ' ').trim().toUpperCase();
-                    nome = t; mostrar(); fechar();
-                    refNome.set({ texto: t, em: Date.now() });
-                });
             })();
 
             // Tela de espera da TV: "Online" (verde) quando conectado ao servidor, "Offline" (vermelho) se a internet cair
