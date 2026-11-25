@@ -21,7 +21,7 @@ const CONFIG = {
   PLENARIO: "PLENÁRIO DA CÂMARA MUNICIPAL DE ALMADINA",
   VEREADORES: [
     "José Lindomar", "Wilson Freitas", "Marilene Santos",
-    "Sylas Souza", "Jackson Costa", "Rogério Gotado",
+    "Sylas Souza", "Jackson Costa", "Rogério Gotádo",
     "Lucas Cavalcante", "Dilson Junior", "Nilza Damasceno"
   ],
   // Mesmo Firebase do Legislar (sincroniza entre os 9 tablets, usando o login já existente do aparelho).
@@ -458,7 +458,7 @@ function aplicarPermissao(ehMesa){
 }
 /* ---------- DONO DO TABLET (mesmo vínculo da Votação, Presença e Anotações: legislar/votacao/aparelhos) ---------- */
 const VID_NOME = {v1:"Jackson Costa", v2:"Dilson Junior", v3:"Lucas Cavalcante", v4:"Marilene Santos", v5:"Nilza Damasceno",
-  v6:"Rogério Gotado", v7:"Sylas Souza", v8:"José Lindomar", v9:"Wilson Freitas"};
+  v6:"Rogério Gotádo", v7:"Sylas Souza", v8:"José Lindomar", v9:"Wilson Freitas"};
 let APARELHOS = {}, AP_OK = false, ENSAIO = false, MEU_VID = null;
 function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
 function lsSet(k, v){ try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e){} }

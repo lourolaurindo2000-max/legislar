@@ -20,7 +20,7 @@
 const CONFIG = {
   VEREADORES: [
     "José Lindomar", "Wilson Freitas", "Marilene Santos",
-    "Sylas Souza", "Jackson Costa", "Rogério Gotado",
+    "Sylas Souza", "Jackson Costa", "Rogério Gotádo",
     "Lucas Cavalcante", "Dilson Junior", "Nilza Damasceno"
   ],
   // Mesmo Firebase do Legislar (sincroniza entre os 9 tablets, usando o login já existente do aparelho).
@@ -292,7 +292,7 @@ const ehMesaAparelho = () => CONTA === "mesa" || (EH_NOTEBOOK && CONTA !== "tv")
 
 /* ---------- dono do tablet (mesmo vínculo da Votação, Presença, Anotações e Assinatura) ---------- */
 const VID_NOME = {v1:"Jackson Costa", v2:"Dilson Junior", v3:"Lucas Cavalcante", v4:"Marilene Santos", v5:"Nilza Damasceno",
-  v6:"Rogério Gotado", v7:"Sylas Souza", v8:"José Lindomar", v9:"Wilson Freitas"};
+  v6:"Rogério Gotádo", v7:"Sylas Souza", v8:"José Lindomar", v9:"Wilson Freitas"};
 let APARELHOS = {}, AP_OK = false, MEU_VID = null;
 function devId(){ let d = lsGet("vp_dev"); if (!d){ d = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); lsSet("vp_dev", d); } return d; }
 function calcMeuVid(){

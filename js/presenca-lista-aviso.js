@@ -15,7 +15,7 @@
 
   var RAIZ = (W.__DOC_RAIZ || 'legislar') + '/listaPresenca';
   var NOME = { v1: 'Jackson Costa', v2: 'Dilson Junior', v3: 'Lucas Cavalcante', v4: 'Marilene Santos', v5: 'Nilza Damasceno',
-    v6: 'Rogério Gotado', v7: 'Sylas Souza', v8: 'José Lindomar', v9: 'Wilson Freitas' };
+    v6: 'Rogério Gotádo', v7: 'Sylas Souza', v8: 'José Lindomar', v9: 'Wilson Freitas' };
   var FASE = { pequeno: 'Pequeno Expediente', grande: 'Grande Expediente' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }

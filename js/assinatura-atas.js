@@ -31,7 +31,7 @@
 
   // Ordem dos "Demais vereadores" na folha de assinaturas (ids iguais aos da Votação/Anotações)
   var VERS = [['v8', 'José Lindomar'], ['v9', 'Wilson Freitas'], ['v4', 'Marilene Santos'], ['v7', 'Sylas Souza'], ['v1', 'Jackson Costa'],
-    ['v6', 'Rogério Gotado'], ['v3', 'Lucas Cavalcante'], ['v2', 'Dilson Junior'], ['v5', 'Nilza Damasceno']];
+    ['v6', 'Rogério Gotádo'], ['v3', 'Lucas Cavalcante'], ['v2', 'Dilson Junior'], ['v5', 'Nilza Damasceno']];
   var NOME = {}; VERS.forEach(function (v) { NOME[v[0]] = v[1]; });
   var CARGOS = [['presidente', 'Presidente'], ['vice', 'Vice-presidente'], ['sec1', '1º secretário'], ['sec2', '2º secretário']];
 

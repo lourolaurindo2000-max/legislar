@@ -17,7 +17,7 @@
   var ITEM = CFG.item || 'documento';
   var VERS = [
     { id: 'v1', nome: 'Jackson Costa', ap: 1 }, { id: 'v4', nome: 'Marilene Santos', ap: 2 }, { id: 'v5', nome: 'Nilza Damasceno', ap: 3 },
-    { id: 'v9', nome: 'Wilson Freitas', ap: 4 }, { id: 'v6', nome: 'Rogério Gotado', ap: 5 }, { id: 'v2', nome: 'Dilson Junior', ap: 6 },
+    { id: 'v9', nome: 'Wilson Freitas', ap: 4 }, { id: 'v6', nome: 'Rogério Gotádo', ap: 5 }, { id: 'v2', nome: 'Dilson Junior', ap: 6 },
     { id: 'v3', nome: 'Lucas Cavalcante', ap: 7 }, { id: 'v7', nome: 'Sylas Souza', ap: 8 }, { id: 'v8', nome: 'José Lindomar', ap: 9 }
   ];
   var NOME = {}; VERS.forEach(function (v) { NOME[v.id] = v.nome; });

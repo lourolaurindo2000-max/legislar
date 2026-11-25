@@ -13,14 +13,14 @@
   if (!ehTablet || typeof firebase === 'undefined') return;
 
   var PADRAO = {
-    1: { nome: 'Ver. Rogério Gotado', partido: 'PT', cargo: 'Presidente', foto: 'https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=400' },
+    1: { nome: 'Ver. Rogério Gotádo', partido: 'PT', cargo: 'Presidente', foto: 'https://2.gravatar.com/userimage/277172047/cd0c7fd16ed7a3be204e382e86af7e23?size=400' },
     2: { nome: 'Ver. Lucas Cavalcante', partido: 'PODEMOS', cargo: 'Vice-Presidente', foto: 'https://2.gravatar.com/userimage/277172047/21cee79305a9e7882d6ae14f87a77652?size=400' },
     3: { nome: 'Ver. Dilson Junior', partido: 'PV', cargo: '1º Secretário', foto: 'https://1.gravatar.com/userimage/277172047/663db92eb90b94a5fce1914f09f97435?size=400' },
     4: { nome: 'Ver. Wilson Freitas', partido: 'PC do B', cargo: '2º Secretário', foto: 'https://0.gravatar.com/userimage/277172047/9342d191dbd2a0115384f72754b0056b?size=400' },
     5: { nome: 'ver. José Lindomar (Bimba)', partido: 'PODEMOS', cargo: 'Vereador', foto: 'https://1.gravatar.com/userimage/277172047/8b0bc09db080b520bb5efcac97fdac7d?size=400' },
     6: { nome: 'Prof. Sylas Souza', partido: 'PODEMOS', cargo: 'Vereador', foto: 'https://2.gravatar.com/userimage/277172047/599489b917ada4c8af9a7add57a38d56?size=400' },
-    7: { nome: 'Vera. Maria Nilza', partido: 'PODEMOS', cargo: 'Vereadora', foto: 'https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=400' },
-    8: { nome: 'Vera. Marilene Costa', partido: 'PP', cargo: 'Vereadora', foto: 'https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=400' },
+    7: { nome: 'Vera. Nilza Damasceno', partido: 'PODEMOS', cargo: 'Vereadora', foto: 'https://1.gravatar.com/userimage/277172047/1664047f373debf8b5651065a72ff1ea?size=400' },
+    8: { nome: 'Vera. Marilene Santos', partido: 'PP', cargo: 'Vereadora', foto: 'https://2.gravatar.com/userimage/277172047/649f18d55aefc7b14c929b5b4cbb3f0d?size=400' },
     9: { nome: 'Ver. Jackson Costa', partido: 'AVANTE', cargo: 'Vereador', foto: 'https://2.gravatar.com/userimage/277172047/8039d08ed8a294328b8f8b70bbbeb765?size=400' }
   };
 

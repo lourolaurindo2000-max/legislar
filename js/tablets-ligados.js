@@ -134,7 +134,7 @@
     // ordem dos aparelhos igual à Votação (ids v1..v9 seguem a pessoa)
     var VERS = [
       { id: 'v1', ap: 1, nome: 'Jackson Costa' }, { id: 'v4', ap: 2, nome: 'Marilene Santos' }, { id: 'v5', ap: 3, nome: 'Nilza Damasceno' },
-      { id: 'v9', ap: 4, nome: 'Wilson Freitas' }, { id: 'v6', ap: 5, nome: 'Rogério Gotado' }, { id: 'v2', ap: 6, nome: 'Dilson Junior' },
+      { id: 'v9', ap: 4, nome: 'Wilson Freitas' }, { id: 'v6', ap: 5, nome: 'Rogério Gotádo' }, { id: 'v2', ap: 6, nome: 'Dilson Junior' },
       { id: 'v3', ap: 7, nome: 'Lucas Cavalcante' }, { id: 'v7', ap: 8, nome: 'Sylas Souza' }, { id: 'v8', ap: 9, nome: 'José Lindomar' }
     ];
     var PAGS = { 'dashboard.html': 'Painel', 'votacao.html': 'Votação', 'anotacoes.html': 'Anotações', 'atas.html': 'Atas',
