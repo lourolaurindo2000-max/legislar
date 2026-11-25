@@ -51,7 +51,7 @@
     capa.setAttribute('role', 'button');
     capa.setAttribute('aria-label', 'Toque para começar');
     capa.innerHTML = '<img src="' + raiz + 'img/brasao.png" alt="">' +
-      '<b>(PLD) Plenário Legislativo Digital</b><div class="ln"></div>' +
+      '<b>Câmara Municipal de Almadina-BA</b><div class="ln"></div>' +
       '<span class="bt">Toque para começar</span><p>Votação Plenária</p>';
     function tocar(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
