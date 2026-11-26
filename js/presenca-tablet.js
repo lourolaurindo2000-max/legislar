@@ -146,7 +146,7 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function agora() { return Date.now() + offset; }
   function norm(s) { return s === 'presente' || s === 'justificado' ? s : 'ausente'; }
-  function rotulo(s) { return s === 'presente' ? 'Presente' : s === 'justificado' ? 'Justificado' : 'Ausente'; }
+  function rotulo(s) { return s === 'presente' ? 'Presente' : s === 'justificado' ? 'Justificado' : 'Registrar presença'; }
   function iniciais(n) { n = String(n || '').replace(/^(ver|vera|prof)\.?\s+/i, '').replace(/^\s+|\s+$/g, ''); var p = n.split(/\s+/); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
   function foto(id, v) { var f = v && v.foto; if (f && /^(data:|https?:)/.test(f)) return f; return FOTOS[id] || ''; }
   function avatar(id, v) {
@@ -250,7 +250,7 @@
     if (!L.length) html = '<div class="pt-vazio">Carregando os vereadores…</div>';
     if (grid.getAttribute('data-h') !== html) { grid.innerHTML = html; grid.setAttribute('data-h', html); }
     el('pt-np').textContent = np; el('pt-nt').textContent = L.length;
-    el('pt-cam').textContent = (camara.nome || 'Plenário Jonas Plínio') + (sess.numero ? ' · ' + sess.numero + 'ª Sessão ' + (sess.tipo || '') : '');
+    el('pt-cam').textContent = (camara.nome || 'Plenário Jonas Plínio');
     var e = sess.estado, se = el('pt-sess');
     se.textContent = e === 'aberta' ? 'Sessão aberta' : e === 'suspensa' ? 'Sessão suspensa' : e === 'encerrada' ? 'Sessão encerrada' : 'Aguardando';
     se.className = 'pt-sess' + (e === 'aberta' || e === 'suspensa' ? ' ' + e : '');
